@@ -1,13 +1,85 @@
 header {
-  background: #2c97de;
-  color: white;
-  padding: 20px;
-  text-align: center;
+  background: var(--primary-very-light, #e0f2f2);
+  padding: 20px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
 }
 
 .imagen-logo {
   width: 70px;
   height: auto;
-  object-fit: contain;
-  background-color: #eee;
+  padding: 5px;
+  border-radius: 50%;
+  background-color: var(--primary-color, #008080);
+}
+
+.header-content {
+  text-align: center;
+}
+
+.header-content h1 {
+  color: var(--primary-color, #008080);
+  margin: 0;
+  font-size: 2.2rem;
+}
+
+.slogan {
+  color: var(--text-light, #666);
+  margin: 5px 0 0;
+  font-style: italic;
+}
+
+.header-contact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.contact-item i {
+  color: var(--primary-color, #008080);
+  margin-right: 8px;
+}
+
+.contact-item span {
+  color: var(--text-dark, #333);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .header-content {
+    order: 1;
+  }
+  
+  .logo-container {
+    order: 0;
+  }
+  
+  .header-contact {
+    order: 2;
+    align-items: center;
+  }
 }
