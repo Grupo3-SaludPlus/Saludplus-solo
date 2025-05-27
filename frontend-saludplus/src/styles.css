@@ -96,3 +96,57 @@ section.content {
   max-width: 1200px;
   margin: auto;
 }
+
+:root {
+  /* Paleta de colores verde cerceta */
+  --primary-color: #008080; /* Verde cerceta/teal principal */
+  --primary-dark: #006666; /* Verde cerceta oscuro para hover */
+  --primary-light: #33adad; /* Verde cerceta claro */
+  --primary-very-light: #e0f2f2; /* Verde cerceta muy claro para fondos */
+  --accent-color: #00a99d; /* Verde cerceta con tono más vibrante */
+  --text-on-primary: #ffffff; /* Texto sobre fondos verde cerceta */
+  --text-dark: #333333; /* Texto oscuro general */
+  --text-light: #666666; /* Texto gris claro */
+  --background-light: #f8fbfa; /* Fondo claro con toque verdoso */
+  --border-color: #d9eeec; /* Bordes con tono cerceta claro */
+}
+
+/* Resto de estilos globales */
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--text-dark);
+  background-color: #ffffff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  margin-top: 0;
+}
+
+/* Clases utilitarias globales */
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.titulo-seccion {
+  text-align: center;
+  font-size: 2rem;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+
+.texto-descriptivo {
+  text-align: center;
+  color: var(--text-light);
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mb-30 {
+  margin-bottom: 30px;
+}

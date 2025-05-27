@@ -1,1 +1,24 @@
-<p>doctors works!</p>
+<main>
+  <section class="content">
+    <h2 class="titulo-seccion">{{ title }}</h2>
+    <p class="texto-descriptivo mb-30">{{ subtitle }}</p>
+    
+    <div class="doctor-grid">
+      <div class="doctor-card" *ngFor="let doctor of doctors">
+        <div class="doctor-profile">
+          <div class="doctor-avatar">
+            <div class="doctor-initials">{{ doctor.name.charAt(0) }}</div>
+          </div>
+          <h3>{{ doctor.name }}</h3>
+          <p class="specialty">{{ doctor.specialty }}</p>
+        </div>
+        <div class="doctor-info">
+          <p><strong>Formación:</strong> {{ doctor.education }}</p>
+          <p><strong>Experiencia:</strong> {{ doctor.experience }}</p>
+          <p><strong>Horario:</strong> {{ doctor.availability }}</p>
+        </div>
+        <button class="agendar-btn">Agendar cita</button>
+      </div>
+    </div>
+  </section>
+</main>

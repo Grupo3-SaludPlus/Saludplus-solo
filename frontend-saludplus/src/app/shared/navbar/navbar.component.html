@@ -1,5 +1,20 @@
-<nav>
-  @for (item of navItems; track item.path) {
-    <a [routerLink]="item.path">{{ item.label }}</a>
-  }
+<nav class="navbar">
+  <div class="nav-container">
+    <a class="navbar-brand" routerLink="/">
+      <img src="assets/LogoSaludPlus.png" alt="Logo SaludPlus" class="navbar-logo" />
+      <span>SaludPlus</span>
+    </a>
+    
+    <button class="navbar-toggler" (click)="toggleMenu()">
+      <i class="fas fa-bars"></i>
+    </button>
+    
+    <ul class="navbar-nav" [class.show]="menuOpen">
+      @for (item of navItems; track item.path) {
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+        </li>
+      }
+    </ul>
+  </div>
 </nav>
