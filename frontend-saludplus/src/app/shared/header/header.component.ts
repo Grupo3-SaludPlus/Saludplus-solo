@@ -8,6 +8,6 @@ import { Component } from '@angular/core';
   styleUrl: './header.component.css'
 })
 export class HeaderComponent {
-  title = 'SaludPlus';
-  slogan = 'Nos preocupamos de tu Salud';
+  title: string = 'SaludPlus';
+  slogan: string = 'Cuidando tu salud, siempre cerca de ti';
 }
