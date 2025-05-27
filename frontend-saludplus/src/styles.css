@@ -111,13 +111,13 @@ section.content {
   --border-color: #d9eeec; /* Bordes con tono cerceta claro */
 }
 
-/* Resto de estilos globales */
+/* Estilos globales para textos consistentes */
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Poppins', 'Roboto', sans-serif;
   margin: 0;
   padding: 0;
   color: var(--text-dark);
-  background-color: #ffffff;
+  line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -125,7 +125,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 0;
 }
 
-/* Clases utilitarias globales */
 .content {
   max-width: 1200px;
   margin: 0 auto;
@@ -134,9 +133,22 @@ h1, h2, h3, h4, h5, h6 {
 
 .titulo-seccion {
   text-align: center;
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: var(--text-dark);
   margin-bottom: 10px;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.titulo-seccion::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background-color: var(--primary-color);
 }
 
 .texto-descriptivo {
@@ -145,8 +157,44 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
+  font-size: 1.1rem;
 }
 
 .mb-30 {
   margin-bottom: 30px;
+}
+
+/* Botón de estilo global */
+.btn {
+  display: inline-block;
+  padding: 12px 25px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+  background-color: white;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--primary-very-light);
+  transform: translateY(-3px);
 }
