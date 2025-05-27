@@ -1,0 +1,13 @@
+header {
+  background: #2c97de;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.imagen-logo {
+  width: 70px;
+  height: auto;
+  object-fit: contain;
+  background-color: #eee;
+}

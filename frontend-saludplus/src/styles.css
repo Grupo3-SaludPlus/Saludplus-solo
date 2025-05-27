@@ -1,0 +1,98 @@
+/* You can add global styles to this file, and also import other style files */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Open Sans', sans-serif;
+}
+
+p {
+  font-size: 13px;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f0f4f8;
+  color: #333;
+}
+
+main {
+  flex: 1;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+  margin-bottom: 10px;
+  color: #2c97de;
+}
+
+.convenios-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.convenio {
+  background: white;
+  border-left: 6px solid #2c97de;
+  padding: 20px;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.convenio:hover {
+  transform: translateY(-5px);
+}
+
+.logo-ficticio {
+  font-weight: bold;
+  font-size: 20px;
+  color: #2c97de;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.titulo-seccion {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.mb-30 {
+  margin-bottom: 30px;
+}
+
+.texto-descriptivo {
+  text-align: center;
+  max-width: 800px;
+  margin: auto;
+  font-size: 15px;
+}
+
+section.content {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: auto;
+}

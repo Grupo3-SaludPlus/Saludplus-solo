@@ -1,0 +1,30 @@
+section.hero {
+  background: url('/assets/hero-background.jpg') no-repeat center/cover;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-shadow: 0 0 5px black;
+}
+
+section.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.boton-agenda {
+  background-color: #1b6ca8;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.boton-agenda:hover {
+  background-color: #155a8a;
+}

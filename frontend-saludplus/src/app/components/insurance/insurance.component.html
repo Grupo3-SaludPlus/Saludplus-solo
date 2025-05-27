@@ -1,0 +1,11 @@
+<section class="content convenios">
+  <h2 class="titulo-seccion mb-30">{{ title }}</h2>
+  <div class="convenios-grid">
+    @for (insurance of insurances; track insurance.name) {
+      <div class="convenio">
+        <div class="logo-ficticio">{{ insurance.name }}</div>
+        <p>{{ insurance.description }}</p>
+      </div>
+    }
+  </div>
+</section>
