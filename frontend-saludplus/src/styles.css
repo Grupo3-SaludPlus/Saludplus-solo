@@ -98,17 +98,14 @@ section.content {
 }
 
 :root {
-  /* Paleta de colores verde cerceta */
-  --primary-color: #008080; /* Verde cerceta/teal principal */
-  --primary-dark: #006666; /* Verde cerceta oscuro para hover */
-  --primary-light: #33adad; /* Verde cerceta claro */
-  --primary-very-light: #e0f2f2; /* Verde cerceta muy claro para fondos */
-  --accent-color: #00a99d; /* Verde cerceta con tono más vibrante */
-  --text-on-primary: #ffffff; /* Texto sobre fondos verde cerceta */
-  --text-dark: #333333; /* Texto oscuro general */
-  --text-light: #666666; /* Texto gris claro */
-  --background-light: #f8fbfa; /* Fondo claro con toque verdoso */
-  --border-color: #d9eeec; /* Bordes con tono cerceta claro */
+  /* Paleta de colores verde cerceta ajustada */
+  --primary-color: #009688; /* Verde teal más moderno */
+  --primary-dark: #00796b; /* Verde teal oscuro para hover */
+  --primary-light: #4db6ac; /* Verde teal claro */
+  --accent-color: #26a69a; /* Verde teal vibrante */
+  --text-dark: #222831; /* Texto oscuro general */
+  --text-light: #607d8b; /* Texto gris azulado claro */
+ 
 }
 
 /* Estilos globales para textos consistentes */

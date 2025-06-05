@@ -1,0 +1,213 @@
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.popup-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.popup-container {
+  width: 450px;
+  max-width: 95%;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transform: translateY(-20px);
+  transition: transform 0.3s;
+}
+
+.popup-overlay.show .popup-container {
+  transform: translateY(0);
+}
+
+.popup-header {
+  background-color: #008080;
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popup-title {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.popup-title i {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+.popup-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.popup-body {
+  padding: 20px;
+}
+
+/* Estilos específicos para las alertas */
+.alert-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.alert-item {
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  border-left: 4px solid;
+}
+
+.alert-item:last-child {
+  margin-bottom: 0;
+}
+
+.alert-item.critical {
+  background-color: #fff5f5;
+  border-left-color: #dc3545;
+}
+
+.alert-item.warning {
+  background-color: #fff9e6;
+  border-left-color: #ffc107;
+}
+
+.alert-item.info {
+  background-color: #e6f7ff;
+  border-left-color: #0dcaf0;
+}
+
+.alert-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.alert-item.critical .alert-icon {
+  background-color: #dc3545;
+  color: white;
+}
+
+.alert-item.warning .alert-icon {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.alert-item.info .alert-icon {
+  background-color: #0dcaf0;
+  color: white;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-message {
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #212529;
+  font-weight: 500;
+}
+
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.alert-button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+.alert-button-primary {
+  background-color: #008080;
+  color: white;
+}
+
+.alert-button-primary:hover {
+  background-color: #006666;
+}
+
+.popup-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alert-counter {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.alert-actions-footer {
+  display: flex;
+  gap: 10px;
+}
+
+/* Estilos para el botón de alertas en el dashboard */
+.alert-trigger {
+  position: relative;
+  background-color: transparent;
+  border: none;
+  color: #333;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.alert-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #dc3545;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,0 +1,48 @@
+<div class="popup-overlay" [ngClass]="{'show': show}" (click)="closePopup()">
+  <div class="popup-container" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <div class="popup-title">
+        <i class="fas" [ngClass]="type === 'alert' ? 'fa-exclamation-triangle' : 'fa-info-circle'"></i>
+        {{ title }}
+      </div>
+      <button class="popup-close" (click)="closePopup()">×</button>
+    </div>
+    
+    <div class="popup-body">
+      <!-- Alerts Type Popup -->
+      <ng-container *ngIf="type === 'alert'">
+        <ul class="alert-list">
+          <li *ngFor="let alert of alerts" class="alert-item" [ngClass]="alert.severity">
+            <div class="alert-icon">
+              <i class="fas" [ngClass]="getAlertTypeIcon(alert.severity)"></i>
+            </div>
+            <div class="alert-content">
+              <div class="alert-message">{{ alert.message }}</div>
+              <div class="alert-actions">
+                <button 
+                  *ngFor="let action of alert.actions" 
+                  class="alert-button alert-button-primary"
+                  (click)="handleAction(alert.id, action.id)">
+                  {{ action.label }}
+                </button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </ng-container>
+      
+      <!-- Content for other popup types (form, confirmation, etc.) -->
+      <ng-content *ngIf="type !== 'alert'"></ng-content>
+    </div>
+    
+    <div class="popup-footer" *ngIf="type === 'alert' && alerts.length > 0">
+      <div class="alert-counter">{{ alerts.length }} alertas activas</div>
+      <div class="alert-actions-footer">
+        <button class="alert-button alert-button-secondary" (click)="handleMarkAllAsRead()">Marcar todas como leídas</button>
+        <button class="alert-button alert-button-primary" (click)="handleRefresh()">
+          <i class="fas fa-sync-alt"></i> Actualizar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

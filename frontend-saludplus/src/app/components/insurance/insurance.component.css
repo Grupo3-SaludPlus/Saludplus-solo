@@ -1,170 +1,236 @@
+/* Add your CSS styles for the insurance component here */
 .insurance {
-  padding: 80px 0;
-  background-color: var(--background-light);
+  padding: 60px 0 50px 0;
+  background: #ffffff;
 }
 
-.insurance-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  margin-top: 40px;
-  align-items: center;
+.content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: center;
 }
 
-.logo-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
+.titulo-seccion {
+  font-size: 2.5rem;
+  color: #008080;
+  margin-bottom: 15px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  position: relative;
+  display: inline-block;
 }
 
-.insurance-logo {
-  background-color: white;
-  border-radius: 10px;
-  padding: 20px;
+.titulo-seccion::after {
+  content: '';
+  display: block;
+  width: 90px;
+  height: 3px;
+  background-color: #008080;
+  margin: 15px auto 0;
+  border-radius: 2px;
+}
+
+.texto-descriptivo {
+  color: #555;
+  max-width: 800px;
+  margin: 0 auto 50px auto;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Estilos para el panel de logos */
+.logo-panel {
   display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
   justify-content: center;
+  margin-top: 30px;
+}
+
+.logo-panel-title { 
+  text-align: center; 
+  margin-bottom: 1rem; 
+  font-size: 1.8rem;
+  color: #008080;
+  font-weight: 600;
+}
+
+.logo-box {
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  display: flex;
   align-items: center;
-  height: 100px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s, box-shadow 0.3s;
+  justify-content: center;
+  width: 150px;
+  height: 70px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.insurance-logo:hover {
+.logo-box:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 15px rgba(0,128,128,0.1);
 }
 
-.insurance-logo img {
+.logo-box img {
   max-width: 100%;
-  max-height: 60px;
+  max-height: 40px;
   object-fit: contain;
 }
 
-.insurance-card {
-  background-color: white;
-  border-radius: 10px;
-  padding: 25px;
-  margin-bottom: 25px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s;
+/* Diseño para info-section */
+.info-section-alt {
+  max-width: 1000px;
+  margin: 50px auto 0;
 }
 
-.insurance-card:hover {
-  transform: translateY(-5px);
+.info-cards-horizontal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.info-card-modern {
+  background: linear-gradient(135deg, #f8fdfd, #ffffff);
+  padding: 35px 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0,128,128,0.08);
+  border: 1px solid rgba(0,128,128,0.1);
+  transition: all 0.3s ease;
+}
+
+.info-card-modern:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(0,128,128,0.15);
 }
 
 .card-header {
   display: flex;
   align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.card-icon-large {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #008080, #20b2aa);
+  color: white;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.card-title-modern {
+  color: #008080;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.card-text-modern {
+  color: #555;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.documents-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.document-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  font-size: 0.9rem;
+  color: #555;
+  transition: all 0.2s ease;
+}
+
+.document-item:hover {
+  background: #e6f7f7;
+  transform: translateX(5px);
+}
+
+.document-item i {
+  color: #008080;
+  font-size: 1rem;
+  width: 16px;
+  text-align: center;
+}
+
+.contact-section {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.contact-text {
+  color: #333;
+  font-size: 1.1rem;
   margin-bottom: 15px;
 }
 
-.card-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: var(--primary-very-light);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 15px;
-}
-
-.card-icon i {
-  font-size: 24px;
-  color: var(--primary-color);
-}
-
-.card-title {
-  margin: 0;
-  color: var(--primary-color);
-  font-size: 20px;
-}
-
-.card-text {
-  margin: 0;
-  line-height: 1.6;
-  color: var(--text-light);
-}
-
-.card-list {
-  margin: 0;
-  padding-left: 20px;
-  list-style-type: none;
-}
-
-.card-list li {
-  margin-bottom: 8px;
-  position: relative;
-  padding-left: 20px;
-  color: var(--text-light);
-}
-
-.card-list li:before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: var(--primary-color);
-}
-
-.insurance-contact {
-  margin-top: 50px;
-  text-align: center;
-  padding: 30px;
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.insurance-contact p {
-  margin-bottom: 20px;
-  font-weight: 500;
-}
-
 .contact-btn {
-  display: inline-block;
-  background-color: var(--primary-color);
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: #008080;
   color: white;
-  padding: 12px 25px;
-  border-radius: 6px;
-  text-decoration: none;
+  padding: 12px 28px;
+  border-radius: 30px;
   font-weight: 600;
-  transition: all 0.3s;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,128,128,0.2);
 }
 
 .contact-btn:hover {
-  background-color: var(--primary-dark);
-  transform: translateY(-3px);
+  background: #006666;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0,128,128,0.25);
 }
 
-@media (max-width: 992px) {
-  .insurance-container {
+/* Responsive */
+@media (max-width: 768px) {
+  .logo-panel {
+    margin-top: 40px;
+    justify-content: center;
+  }
+  
+  .logo-box {
+    width: 130px;
+    height: 60px;
+  }
+  
+  .info-cards-horizontal {
     grid-template-columns: 1fr;
     gap: 30px;
   }
   
-  .insurance-logos {
-    order: 2;
-  }
-  
-  .insurance-info {
-    order: 1;
-  }
-}
-
-@media (max-width: 768px) {
-  .insurance {
-    padding: 60px 0;
-  }
-  
-  .logo-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-}
-
-@media (max-width: 576px) {
-  .logo-grid {
+  .documents-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  
+  .info-card-modern {
+    padding: 25px 20px;
   }
 }

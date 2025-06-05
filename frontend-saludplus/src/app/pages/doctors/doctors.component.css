@@ -73,3 +73,267 @@
 .agendar-btn:hover {
   background-color: var(--primary-dark);
 }
+
+.doctors-hero {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 80px 0 60px;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.page-subtitle {
+  font-size: 1.2rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.doctors-container {
+  padding-bottom: 80px;
+}
+
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  gap: 15px;
+}
+
+.search-bar {
+  flex: 1;
+  position: relative;
+  min-width: 250px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px 15px 12px 40px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+}
+
+.specialty-filter {
+  min-width: 220px;
+}
+
+.specialty-filter select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-color: white;
+}
+
+.reset-button {
+  padding: 12px 20px;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-dark);
+  transition: all 0.3s;
+}
+
+.reset-button:hover {
+  background-color: var(--primary-very-light);
+  color: var(--primary-color);
+}
+
+.doctors-count {
+  margin-bottom: 20px;
+}
+
+.doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 30px;
+}
+
+.doctor-card {
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+.doctor-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 128, 128, 0.1);
+}
+
+.doctor-image {
+  height: 240px;
+  overflow: hidden;
+}
+
+.doctor-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.doctor-card:hover .doctor-image img {
+  transform: scale(1.05);
+}
+
+.doctor-info {
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.doctor-info h3 {
+  margin: 0 0 5px;
+  font-size: 1.5rem;
+  color: var(--text-dark);
+}
+
+.doctor-specialty {
+  color: var(--primary-color);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.doctor-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.doctor-rating i {
+  color: #ffc107;
+  margin-right: 3px;
+}
+
+.rating-value {
+  margin-left: 5px;
+  font-weight: 600;
+}
+
+.doctor-details {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 15px;
+}
+
+.doctor-details li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--text-light);
+}
+
+.doctor-details li i {
+  color: var(--primary-color);
+  margin-right: 10px;
+  width: 20px;
+  text-align: center;
+}
+
+.doctor-bio {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  flex-grow: 1;
+}
+
+.appointment-btn {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s;
+  align-self: flex-start;
+}
+
+.appointment-btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-light);
+}
+
+.no-results i {
+  display: block;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+.no-results h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: var(--text-dark);
+}
+
+@media (max-width: 992px) {
+  .doctors-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-bar,
+  .specialty-filter,
+  .reset-button {
+    width: 100%;
+  }
+  
+  .doctors-hero {
+    padding: 60px 0 40px;
+  }
+  
+  .page-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .doctors-grid {
+    grid-template-columns: 1fr;
+  }
+}

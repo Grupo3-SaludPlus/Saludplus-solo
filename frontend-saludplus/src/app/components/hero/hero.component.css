@@ -1,25 +1,58 @@
 section.hero {
   position: relative;
-  background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), 
-              url('/assets/images/hero-background.jpg') no-repeat center center;
-  background-size: cover;
   color: white;
 }
 
+section.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+              url('/assets/Clinica-moderna.png') no-repeat center center;
+  background-size: cover;
+  filter: blur(4px);
+  z-index: -1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Si la imagen tiene poco contraste con el texto, puedes oscurecer más el overlay */
 .hero-overlay {
-  padding: 120px 0 80px;
+  padding: 130px 0 90px;
   text-align: center;
 }
 
+/* Agrega este estilo para que el título destaque más */
 .hero-title {
-  font-size: 3.2rem;
+  font-size: 3.5rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
   line-height: 1.2;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .highlight {
   color: var(--accent-color);
+  position: relative;
+  display: inline-block;
+}
+
+/* Efecto decorativo opcional para el highlight */
+.highlight::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--accent-color);
+  border-radius: 2px;
 }
 
 .hero-description {

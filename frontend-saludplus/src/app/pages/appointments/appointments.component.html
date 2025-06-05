@@ -4,24 +4,37 @@
     <p class="texto-descriptivo mb-30">{{ subtitle }}</p>
     
     <div class="stepper-container">
+      <!-- Actualización de iconos en el stepper -->
       <div class="stepper">
         <div class="step" [ngClass]="{'active': currentStep >= 1, 'completed': currentStep > 1}">
-          <div class="step-number">1</div>
+          <div class="step-number">
+            <i class="fas fa-clipboard-list" *ngIf="currentStep > 1"></i>
+            <span *ngIf="currentStep <= 1">1</span>
+          </div>
           <div class="step-title">Especialidad</div>
         </div>
         <div class="step-separator"></div>
         <div class="step" [ngClass]="{'active': currentStep >= 2, 'completed': currentStep > 2}">
-          <div class="step-number">2</div>
+          <div class="step-number">
+            <i class="fas fa-user-md" *ngIf="currentStep > 2"></i>
+            <span *ngIf="currentStep <= 2">2</span>
+          </div>
           <div class="step-title">Médico</div>
         </div>
         <div class="step-separator"></div>
         <div class="step" [ngClass]="{'active': currentStep >= 3, 'completed': currentStep > 3}">
-          <div class="step-number">3</div>
+          <div class="step-number">
+            <i class="fas fa-calendar-check" *ngIf="currentStep > 3"></i>
+            <span *ngIf="currentStep <= 3">3</span>
+          </div>
           <div class="step-title">Fecha y Hora</div>
         </div>
         <div class="step-separator"></div>
         <div class="step" [ngClass]="{'active': currentStep >= 4, 'completed': currentStep > 4}">
-          <div class="step-number">4</div>
+          <div class="step-number">
+            <i class="fas fa-id-card" *ngIf="currentStep > 4"></i>
+            <span *ngIf="currentStep <= 4">4</span>
+          </div>
           <div class="step-title">Datos Personales</div>
         </div>
       </div>
@@ -30,15 +43,20 @@
     <div class="appointment-container">
       <!-- Paso 1: Selección de especialidad -->
       <div class="appointment-form" *ngIf="isCurrentStep(1)">
-        <h3>Selecciona la especialidad médica</h3>
+        <h3>
+          <span class="step-number">1</span>
+          Selecciona la especialidad médica
+        </h3>
         
         <div class="specialty-grid">
+          <!-- Actualización de iconos para especialidades médicas -->
+          <!-- Estructura más robusta para las tarjetas de especialidad -->
           <div class="specialty-card" 
                *ngFor="let specialty of specialties"
-               [ngClass]="{'selected': appointmentForm.specialty === specialty}"
-               (click)="appointmentForm.specialty = specialty">
+               [class.selected]="appointmentForm.specialty === specialty"
+               (click)="selectSpecialty(specialty)">
             <div class="specialty-icon">
-              <i class="fas fa-stethoscope"></i>
+              <i class="fas" [ngClass]="getSpecialtyIcon(specialty)"></i>
             </div>
             <div class="specialty-name">{{ specialty }}</div>
           </div>
@@ -53,7 +71,10 @@
       
       <!-- Paso 2: Selección de médico -->
       <div class="appointment-form" *ngIf="isCurrentStep(2)">
-        <h3>Selecciona el médico de preferencia</h3>
+        <h3>
+          <span class="step-number">2</span>
+          Selecciona el médico de preferencia
+        </h3>
         
         <div class="doctor-selection">
           <div class="doctor-option" 
@@ -69,11 +90,11 @@
             </div>
           </div>
           
-          <div class="doctor-option any-doctor"
+          <div class="doctor-option"
                [ngClass]="{'selected': appointmentForm.doctor === 'Cualquier especialista disponible'}"
                (click)="appointmentForm.doctor = 'Cualquier especialista disponible'">
             <div class="doctor-avatar any-avatar">
-              <i class="fas fa-user-md"></i>
+              <i class="fas fa-user-friends"></i>
             </div>
             <div class="doctor-details">
               <div class="doctor-name">Cualquier médico disponible</div>
@@ -94,11 +115,14 @@
       
       <!-- Paso 3: Fecha y hora -->
       <div class="appointment-form" *ngIf="isCurrentStep(3)">
-        <h3>Selecciona fecha y hora</h3>
+        <h3>
+          <span class="step-number">3</span>
+          Selecciona fecha y hora
+        </h3>
         
         <div class="date-time-container">
           <div class="date-selector">
-            <h4>Selecciona una fecha</h4>
+            <h4><i class="far fa-calendar-alt"></i> Selecciona una fecha</h4>
             <div class="date-grid">
               <div class="date-card" 
                    *ngFor="let date of availableDates"
@@ -110,7 +134,7 @@
           </div>
           
           <div class="time-selector" *ngIf="appointmentForm.date">
-            <h4>Selecciona una hora</h4>
+            <h4><i class="far fa-clock"></i> Selecciona una hora</h4>
             <div class="time-grid">
               <div class="time-card" 
                    *ngFor="let hour of availableHours"
@@ -134,7 +158,10 @@
       
       <!-- Paso 4: Información personal -->
       <div class="appointment-form" *ngIf="isCurrentStep(4)">
-        <h3>Completa tus datos personales</h3>
+        <h3>
+          <span class="step-number">4</span>
+          Completa tus datos personales
+        </h3>
         
         <div class="form-group">
           <label for="name">Nombre completo*</label>
@@ -172,13 +199,17 @@
         </div>
         
         <div class="form-group">
-          <label for="message">Motivo de consulta (opcional)</label>
+          <label for="message">
+            Motivo de consulta (opcional)
+            <span class="tip">Puedes ajustar el tamaño desde la esquina inferior derecha</span>
+          </label>
           <textarea 
             id="message" 
             [(ngModel)]="appointmentForm.message" 
             name="message" 
             rows="3"
-            placeholder="Describe brevemente el motivo de tu consulta"></textarea>
+            placeholder="Describe brevemente el motivo de tu consulta"
+            aria-label="Motivo de consulta"></textarea>
         </div>
         
         <div class="appointment-summary">
@@ -208,7 +239,7 @@
             <i class="fas fa-arrow-left"></i> Atrás
           </button>
           <button class="submit-btn" [disabled]="!canAdvance()" (click)="submitAppointment()">
-            Confirmar Cita
+            <i class="fas fa-check-circle"></i> Confirmar Cita
           </button>
         </div>
         
@@ -218,14 +249,14 @@
       <!-- Información adicional (visible en todos los pasos) -->
       <div class="appointment-info">
         <div class="info-card">
-          <h3>Horario de atención</h3>
+          <h3><i class="far fa-clock"></i> Horario de atención</h3>
           <p><strong>Lunes a Viernes:</strong> 8:00 - 20:00 hrs.</p>
           <p><strong>Sábados:</strong> 9:00 - 14:00 hrs.</p>
           <p><strong>Domingos:</strong> Cerrado</p>
         </div>
         
         <div class="info-card">
-          <h3>Contacto</h3>
+          <h3><i class="far fa-address-card"></i> Contacto</h3>
           <p><strong>Teléfono:</strong> +56 2 2345 6789</p>
           <p><strong>Email:</strong> contacto&#64;saludplus.cl</p>
           <p><strong>Dirección:</strong> Av. Providencia 1234, Santiago</p>
@@ -234,3 +265,12 @@
     </div>
   </section>
 </main>
+
+<style>
+.tip {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: normal;
+  margin-left: 10px;
+}
+</style>

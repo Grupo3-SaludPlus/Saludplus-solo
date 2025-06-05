@@ -1,0 +1,1082 @@
+<div class="admin-dashboard">
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <a href="#" class="logo-link">
+        <img src="assets/LogoSaludPlus.png" alt="SaludPlus" class="sidebar-logo">
+        <h2>Centro Médico</h2>
+        <small>Panel Administrativo</small>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button [class.active]="isActiveSection('dashboard')" (click)="setActiveSection('dashboard')">
+        <i class="fas fa-chart-line"></i>
+        Dashboard
+      </button>
+      <button [class.active]="isActiveSection('patients')" (click)="setActiveSection('patients')">
+        <i class="fas fa-user-injured"></i>
+        Pacientes
+      </button>
+      <button [class.active]="isActiveSection('staff')" (click)="setActiveSection('staff')">
+        <i class="fas fa-user-md"></i>
+        Personal Médico
+      </button>
+      <button [class.active]="isActiveSection('appointments')" (click)="setActiveSection('appointments')">
+        <i class="fas fa-calendar-plus"></i>
+        Citas Médicas
+      </button>
+      <button [class.active]="isActiveSection('reports')" (click)="setActiveSection('reports')">
+        <i class="fas fa-file-medical-alt"></i>
+        Reportes Médicos
+      </button>
+      <button [class.active]="isActiveSection('settings')" (click)="setActiveSection('settings')">
+        <i class="fas fa-hospital"></i>
+        Config. Hospital
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-info">
+        <div class="admin-avatar">
+          <i class="fas fa-user-shield"></i>
+        </div>
+        <div class="admin-details">
+          <p class="admin-name">{{ currentUser?.name || 'Administrador' }}</p>
+          <p class="admin-role">Director Médico</p>
+        </div>
+      </div>
+      
+      <button class="logout-btn" (click)="confirmLogout()">
+        <i class="fas fa-sign-out-alt"></i>
+        Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Contenido Principal -->
+  <main class="dashboard-content">
+    
+    <!-- SECCIÓN DASHBOARD MÉDICO -->
+    <div *ngIf="activeSection === 'dashboard'" class="section-content">
+      <div class="content-header">
+        <div>
+          <h1>Panel de Control Médico</h1>
+          <p>Bienvenido, {{ currentUser?.name || 'Administrador' }} - SaludPlus Centro Médico</p>
+        </div>
+        <div class="header-actions">
+          <button class="emergency-btn" *ngIf="medicalStats.emergencyAlerts > 0">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ medicalStats.emergencyAlerts }} Alertas
+          </button>
+          <button class="refresh-btn" (click)="refreshMedicalData()">
+            <i class="fas fa-sync-alt"></i>
+            Actualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Estadísticas Médicas -->
+      <section class="stats-overview medical-stats">
+        <div class="stat-card patients">
+          <div class="stat-icon">
+            <i class="fas fa-user-injured"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ medicalStats.totalPatients }}</h3>
+            <p>Pacientes Registrados</p>
+            <small>+12 esta semana</small>
+          </div>
+        </div>
+
+        <div class="stat-card doctors">
+          <div class="stat-icon">
+            <i class="fas fa-user-md"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ medicalStats.totalDoctors }}</h3>
+            <p>Personal Médico</p>
+            <small>{{ medicalStats.activeSpecialties }} especialidades</small>
+          </div>
+        </div>
+
+        <div class="stat-card appointments">
+          <div class="stat-icon">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ medicalStats.todayAppointments }}</h3>
+            <p>Citas Hoy</p>
+            <small>{{ (medicalStats.todayAppointments * 0.87) | number:'1.0-0' }}% completadas</small>
+          </div>
+        </div>
+
+        <div class="stat-card revenue">
+          <div class="stat-icon">
+            <i class="fas fa-heartbeat"></i>
+          </div>
+          <div class="stat-info">
+            <h3>${{ medicalStats.monthlyRevenue | number }}</h3>
+            <p>Ingresos Mensuales</p>
+            <small>+8.5% vs mes anterior</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grid del dashboard médico -->
+      <div class="dashboard-grid">
+        <!-- Citas de Hoy -->
+        <section class="today-appointments">
+          <div class="section-header">
+            <h2>
+              <i class="fas fa-calendar-day"></i>
+              Citas de Hoy
+            </h2>
+            <button class="view-all-btn" (click)="setActiveSection('appointments')">
+              Ver todas
+            </button>
+          </div>
+
+          <div class="appointment-list">
+            <div *ngFor="let appointment of medicalAppointments.slice(0, 4)" 
+                 class="appointment-item" 
+                 [class]="getStatusClass(appointment.status)">
+              <div class="appointment-time">
+                <span class="time">{{ appointment.time }}</span>
+                <span class="priority" [class]="getPriorityClass(appointment.priority)">
+                  {{ getPriorityText(appointment.priority) }}
+                </span>
+              </div>
+              <div class="appointment-details">
+                <h4>{{ appointment.patientName }} ({{ appointment.patientAge }} años)</h4>
+                <p class="doctor">{{ appointment.doctorName }} - {{ appointment.specialty }}</p>
+                <p class="reason">{{ appointment.reason }}</p>
+                <span class="room" *ngIf="appointment.room">
+                  <i class="fas fa-map-marker-alt"></i>
+                  {{ appointment.room }}
+                </span>
+              </div>
+              <div class="appointment-status">
+                <span class="status-badge" [class]="getStatusClass(appointment.status)">
+                  {{ getStatusText(appointment.status) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Personal Médico en Guardia -->
+        <section class="on-call-staff">
+          <div class="section-header">
+            <h2>
+              <i class="fas fa-user-nurse"></i>
+              Personal de Guardia
+            </h2>
+            <button class="view-all-btn" (click)="setActiveSection('staff')">
+              Ver todo el personal
+            </button>
+          </div>
+
+          <div class="staff-list">
+            <div *ngFor="let doctor of medicalStaff.slice(0, 4)" 
+                 class="staff-item" 
+                 [class.on-call]="doctor.isOnCall">
+              <div class="doctor-avatar">
+                <i class="fas fa-user-md"></i>
+                <div class="status-dot" [class.active]="doctor.isOnCall"></div>
+              </div>
+              <div class="doctor-info">
+                <h4>{{ doctor.name }}</h4>
+                <p class="specialty">{{ doctor.specialty }}</p>
+                <p class="department">{{ doctor.department }}</p>
+                <span class="patients-count">
+                  <i class="fas fa-users"></i>
+                  {{ doctor.currentPatients }} pacientes
+                </span>
+              </div>
+              <div class="doctor-contact">
+                <button class="contact-btn" [disabled]="!doctor.isOnCall">
+                  <i class="fas fa-phone"></i>
+                </button>
+                <span class="availability">
+                  {{ doctor.isOnCall ? 'Disponible' : 'No Disponible' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Alertas y Notificaciones Médicas -->
+      <section class="medical-alerts" *ngIf="medicalStats.emergencyAlerts > 0">
+        <h3>
+          <i class="fas fa-exclamation-triangle"></i>
+          Alertas del Sistema
+        </h3>
+        <div class="alert-list">
+          <div class="alert-item critical">
+            <i class="fas fa-heart"></i>
+            <span>Paciente en UCI - Roberto Silva - Monitoreo constante requerido</span>
+            <button class="alert-action">Ver</button>
+          </div>
+          <div class="alert-item warning">
+            <i class="fas fa-pills"></i>
+            <span>Stock bajo: Insulina - Quedan 3 unidades</span>
+            <button class="alert-action">Gestionar</button>
+          </div>
+          <div class="alert-item info">
+            <i class="fas fa-wrench"></i>
+            <span>Mantenimiento programado: Resonancia Magnética - Mañana 08:00</span>
+            <button class="alert-action">Programar</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SECCIÓN PACIENTES -->
+    <div *ngIf="activeSection === 'patients'" class="section-content">
+      <div class="content-header">
+        <div>
+          <h1>
+            <i class="fas fa-user-injured"></i>
+            Gestión de Pacientes
+          </h1>
+          <p>Administra los registros médicos de todos los pacientes</p>
+        </div>
+        <div class="header-actions">
+          <button class="add-btn">
+            <i class="fas fa-plus"></i>
+            Nuevo Paciente
+          </button>
+          <button class="import-btn">
+            <i class="fas fa-file-import"></i>
+            Importar Registros
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table patients-table">
+          <thead>
+            <tr>
+              <th>Paciente</th>
+              <th>Edad/Género</th>
+              <th>Tipo Sangre</th>
+              <th>Condiciones</th>
+              <th>Última Visita</th>
+              <th>Total Visitas</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let patient of patientRecords">
+              <td>
+                <div class="patient-info">
+                  <div class="patient-avatar">
+                    {{ getPatientInitials(patient.name) }}
+                  </div>
+                  <div>
+                    <span class="patient-name">{{ patient.name }}</span>
+                    <small class="patient-contact">{{ patient.phone }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="age-gender">{{ patient.age }} años - {{ patient.gender }}</span>
+              </td>
+              <td>
+                <span class="blood-type">{{ patient.bloodType }}</span>
+              </td>
+              <td>
+                <div class="conditions">
+                  <span *ngFor="let condition of patient.chronic" class="condition-tag">
+                    {{ condition }}
+                  </span>
+                  <span *ngIf="patient.allergies.length > 0" class="allergy-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {{ patient.allergies.length }} alergia(s)
+                  </span>
+                </div>
+              </td>
+              <td>{{ formatDate(patient.lastVisit) }}</td>
+              <td>{{ patient.totalVisits }}</td>
+              <td>
+                <span class="status-badge" [class]="getStatusClass(patient.status)">
+                  {{ getStatusText(patient.status) }}
+                </span>
+              </td>
+              <td class="action-cell">
+                <button class="action-btn" (click)="viewPatientHistory(patient.id)" title="Historial Médico">
+                  <i class="fas fa-file-medical"></i>
+                </button>
+                <button class="action-btn" title="Editar Paciente">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <select class="status-select mini" [value]="patient.status" 
+                        (change)="updatePatientStatus(patient.id, $any($event.target).value)">
+                  <option value="active">Activo</option>
+                  <option value="inactive">Inactivo</option>
+                  <option value="critical">Crítico</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECCIÓN PERSONAL MÉDICO -->
+    <div *ngIf="activeSection === 'staff'" class="section-content">
+      <div class="content-header">
+        <div>
+          <h1>
+            <i class="fas fa-user-md"></i>
+            Personal Médico
+          </h1>
+          <p>Gestión del equipo médico y especialistas</p>
+        </div>
+        <div class="header-actions">
+          <button class="add-btn">
+            <i class="fas fa-plus"></i>
+            Nuevo Médico
+          </button>
+          <button class="schedule-btn">
+            <i class="fas fa-calendar-alt"></i>
+            Horarios
+          </button>
+        </div>
+      </div>
+
+      <!-- Sección de personal médico -->
+      <div class="medical-staff-header">
+        <h2><i class="fas fa-user-md"></i> Personal Médico</h2>
+        <div class="staff-actions">
+          <button class="btn-schedules">
+            <i class="fas fa-calendar-alt"></i> Horarios
+          </button>
+          <button class="btn-new-doctor" (click)="addDoctor()">
+            <i class="fas fa-plus"></i> Nuevo Médico
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="(medicalStaff?.length ?? 0) > 0; else noStaffData">
+        <table class="staff-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Especialidad</th>
+              <th>Licencia</th>
+              <th>Email</th>
+              <th>Estado</th>
+              <th>Pacientes</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let doctor of medicalStaff">
+              <td>{{ doctor.name }}</td>
+              <td>{{ doctor.specialty }}</td>
+              <td>{{ doctor.license }}</td>
+              <td>{{ doctor.email }}</td>
+              <td>
+                <span class="doctor-status" [class.status-available]="doctor.isOnCall" [class.status-unavailable]="!doctor.isOnCall">
+                  <i class="fas" [class.fa-check-circle]="doctor.isOnCall" [class.fa-times-circle]="!doctor.isOnCall"></i>
+                  {{ doctor.isOnCall ? 'Disponible' : 'No disponible' }}
+                </span>
+              </td>
+              <td>{{ doctor.currentPatients }}</td>
+              <td>
+                <div class="table-actions">
+                  <button class="btn-action btn-edit" (click)="editDoctor(doctor)" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn-action btn-delete" (click)="removeDoctor(doctor.id)" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mensaje para cuando no hay médicos -->
+      <ng-template #noStaffData>
+        <div class="no-data-message">
+          <i class="fas fa-user-md"></i>
+          <h4>No hay médicos registrados</h4>
+          <p>Actualmente no hay personal médico en el sistema.</p>
+          <button class="btn-new-doctor" (click)="addDoctor()">
+            <i class="fas fa-plus"></i> Añadir primer médico
+          </button>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- SECCIÓN CITAS MÉDICAS -->
+    <div *ngIf="activeSection === 'appointments'" class="section-content">
+      <div class="content-header">
+        <div>
+          <h1>
+            <i class="fas fa-calendar-plus"></i>
+            Gestión de Citas Médicas
+          </h1>
+          <p>Administra todas las citas y consultas médicas</p>
+        </div>
+        <div class="header-actions">
+          <button class="add-btn">
+            <i class="fas fa-plus"></i>
+            Nueva Cita
+          </button>
+          <button class="emergency-btn">
+            <i class="fas fa-ambulance"></i>
+            Emergencia
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table appointments-table">
+          <thead>
+            <tr>
+              <th>Paciente</th>
+              <th>Médico</th>
+              <th>Especialidad</th>
+              <th>Fecha y Hora</th>
+              <th>Prioridad</th>
+              <th>Estado</th>
+              <th>Sala/Consulta</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let appointment of medicalAppointments">
+              <td>
+                <div class="patient-info">
+                  <div class="patient-avatar">
+                    {{ getPatientInitials(appointment.patientName) }}
+                  </div>
+                  <div>
+                    <span class="patient-name">{{ appointment.patientName }}</span>
+                    <small class="patient-age">{{ appointment.patientAge }} años</small>
+                  </div>
+                </div>
+              </td>
+              <td>{{ appointment.doctorName }}</td>
+              <td>{{ appointment.specialty }}</td>
+              <td>{{ formatDate(appointment.date) }}<br><strong>{{ appointment.time }}</strong></td>
+              <td>
+                <span class="priority-badge" [class]="getPriorityClass(appointment.priority)">
+                  {{ getPriorityText(appointment.priority) }}
+                </span>
+              </td>
+              <td>
+                <select class="status-select" [value]="appointment.status" 
+                        (change)="updateAppointmentStatus(appointment.id, $any($event.target).value)">
+                  <option value="scheduled">Agendada</option>
+                  <option value="in-progress">En Curso</option>
+                  <option value="completed">Completada</option>
+                  <option value="cancelled">Cancelada</option>
+                  <option value="emergency">Emergencia</option>
+                </select>
+              </td>
+              <td>{{ appointment.room || 'Sin asignar' }}</td>
+              <td class="action-cell">
+                <button class="action-btn" title="Ver Detalles">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn danger" (click)="deleteAppointment(appointment.id)" title="Cancelar">
+                  <i class="fas fa-times"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECCIÓN REPORTES MÉDICOS -->
+    <div *ngIf="activeSection === 'reports'" class="section-content">
+      <div class="content-header">
+        <div>
+          <h1>
+            <i class="fas fa-file-medical-alt"></i>
+            Reportes Médicos
+          </h1>
+          <p>Genera y analiza reportes del sistema hospitalario</p>
+        </div>
+        <div class="header-actions">
+          <button class="add-btn" (click)="generateMedicalReport('patient-stats')">
+            <i class="fas fa-chart-line"></i>
+            Generar Reporte
+          </button>
+        </div>
+      </div>
+
+      <div class="reports-container">
+        <div class="reports-header">
+          <div>
+            <h2><i class="fas fa-file-medical-alt"></i> Reportes Médicos</h2>
+            <p class="reports-description">Genera y analiza reportes del sistema hospitalario</p>
+          </div>
+          <button class="btn-generate-report">
+            <i class="fas fa-plus-circle"></i> Generar Reporte
+          </button>
+        </div>
+
+        <div class="report-generator-panel">
+          <h3>Generar Nuevo Reporte Médico</h3>
+          <div class="report-filter-buttons">
+            <button class="filter-btn active">
+              <i class="fas fa-user-group"></i> Estadísticas de Pacientes
+            </button>
+            <button class="filter-btn">
+              <i class="fas fa-chart-pie"></i> Reporte Financiero
+            </button>
+            <button class="filter-btn">
+              <i class="fas fa-user-doctor"></i> Rendimiento Médico
+            </button>
+            <button class="filter-btn">
+              <i class="fas fa-pills"></i> Inventario Medicamentos
+            </button>
+            <button class="filter-btn">
+              <i class="fas fa-toolbox"></i> Estado de Equipos
+            </button>
+          </div>
+        </div>
+
+        <div class="reports-section">
+          <h3 class="section-title">Reportes Disponibles</h3>
+          <div class="reports-list">
+            <!-- Report 1 -->
+            <div class="report-card patient-stats">
+              <div class="report-icon">
+                <i class="fas fa-user-group"></i>
+              </div>
+              <div class="report-content">
+                <div class="report-header">
+                  <h4>Estadísticas de Pacientes - Enero 2024</h4>
+                  <div class="report-date">19/1/2024 <span class="report-type">patient-stats</span></div>
+                </div>
+                <div class="report-metrics">
+                  <div class="metric">
+                    <span class="label">Ingresos:</span>
+                    <span class="value">145</span>
+                  </div>
+                  <div class="metric">
+                    <span class="label">Egresos:</span>
+                    <span class="value">132</span>
+                  </div>
+                  <div class="metric">
+                    <span class="label">Ocupación:</span>
+                    <span class="value">87%</span>
+                  </div>
+                </div>
+                <div class="critical-alert">
+                  <i class="fas fa-triangle-exclamation"></i>
+                  <span>3 items críticos</span>
+                </div>
+              </div>
+              <div class="report-actions">
+                <button class="action-btn download-btn">
+                  <i class="fas fa-download"></i> Descargar
+                </button>
+                <button class="action-btn view-btn">
+                  <i class="fas fa-eye"></i> Ver
+                </button>
+              </div>
+            </div>
+
+            <!-- Report 2 -->
+            <div class="report-card staff">
+              <div class="report-icon">
+                <i class="fas fa-user-doctor"></i>
+              </div>
+              <div class="report-content">
+                <div class="report-header">
+                  <h4>Rendimiento del Personal Médico</h4>
+                  <div class="report-date">17/1/2024 <span class="report-type">staff-performance</span></div>
+                </div>
+                <div class="report-metrics">
+                  <div class="metric">
+                    <span class="label">Satisfacción pacientes:</span>
+                    <span class="value">94%</span>
+                  </div>
+                  <div class="metric">
+                    <span class="label">Tiempo promedio consulta:</span>
+                    <span class="value">28 min</span>
+                  </div>
+                </div>
+              </div>
+              <div class="report-actions">
+                <button class="action-btn download-btn">
+                  <i class="fas fa-download"></i> Descargar
+                </button>
+                <button class="action-btn view-btn">
+                  <i class="fas fa-eye"></i> Ver
+                </button>
+              </div>
+            </div>
+
+            <!-- Report 3 -->
+            <div class="report-card medications">
+              <div class="report-icon">
+                <i class="fas fa-pills"></i>
+              </div>
+              <div class="report-content">
+                <div class="report-header">
+                  <h4>Inventario de Medicamentos</h4>
+                  <div class="report-date">18/1/2024 <span class="report-type">medication-inventory</span></div>
+                </div>
+                <div class="report-metrics">
+                  <div class="metric">
+                    <span class="label">Stock crítico:</span>
+                    <span class="value">12 medicamentos</span>
+                  </div>
+                  <div class="metric">
+                    <span class="label">Vencimientos próximos:</span>
+                    <span class="value">8</span>
+                  </div>
+                </div>
+                <div class="critical-alert high">
+                  <i class="fas fa-triangle-exclamation"></i>
+                  <span>12 items críticos</span>
+                </div>
+              </div>
+              <div class="report-actions">
+                <button class="action-btn download-btn">
+                  <i class="fas fa-download"></i> Descargar
+                </button>
+                <button class="action-btn view-btn">
+                  <i class="fas fa-eye"></i> Ver
+                </button>
+              </div>
+            </div>
+
+            <!-- Report 4 -->
+            <div class="report-card equipment">
+              <div class="report-icon">
+                <i class="fas fa-toolbox"></i>
+              </div>
+              <div class="report-content">
+                <div class="report-header">
+                  <h4>Estado de Equipos Médicos</h4>
+                  <div class="report-date">20/1/2024 <span class="report-type">equipment-status</span></div>
+                </div>
+                <div class="report-metrics">
+                  <div class="metric">
+                    <span class="label">Equipos funcionando:</span>
+                    <span class="value">98%</span>
+                  </div>
+                  <div class="metric">
+                    <span class="label">Mantenimiento pendiente:</span>
+                    <span class="value">3 equipos</span>
+                  </div>
+                </div>
+                <div class="critical-alert">
+                  <i class="fas fa-triangle-exclamation"></i>
+                  <span>3 items críticos</span>
+                </div>
+              </div>
+              <div class="report-actions">
+                <button class="action-btn download-btn">
+                  <i class="fas fa-download"></i> Descargar
+                </button>
+                <button class="action-btn view-btn">
+                  <i class="fas fa-eye"></i> Ver
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN CONFIGURACIÓN HOSPITALARIA -->
+    <div *ngIf="activeSection === 'settings'" class="section-content">
+      <div class="settings-container">
+        <div class="settings-header">
+          <div>
+            <h2><i class="fas fa-hospital-alt"></i> Configuración Hospitalaria</h2>
+            <p class="settings-description">Administra la configuración del centro médico</p>
+          </div>
+        </div>
+
+        <div class="settings-form">
+          <!-- Información del Hospital -->
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-info-circle"></i> Información del Hospital</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="hospitalName">Nombre del Centro Médico</label>
+                  <input type="text" id="hospitalName" class="form-control" value="SaludPlus Centro Médico">
+                </div>
+                
+                <div class="form-group full-width">
+                  <label for="hospitalAddress">Dirección</label>
+                  <textarea id="hospitalAddress" class="form-control" rows="2">Av. Providencia 1234, Santiago, Chile</textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label for="hospitalPhone">Teléfono Principal</label>
+                  <div class="input-with-icon">
+                    <i class="fas fa-phone"></i>
+                    <input type="text" id="hospitalPhone" class="form-control" value="+56 2 2345 6789">
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="hospitalEmail">Email de Contacto</label>
+                  <div class="input-with-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="hospitalEmail" class="form-control" value="contacto@saludplus.com">
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="emergencyPhone">Teléfono de Emergencias</label>
+                  <div class="input-with-icon">
+                    <i class="fas fa-ambulance"></i>
+                    <input type="text" id="emergencyPhone" class="form-control" value="+56 2 2345 6700">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Configuración de Consultas -->
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-calendar-check"></i> Configuración de Consultas</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="consultDuration">Duración estándar de consulta</label>
+                  <select id="consultDuration" class="form-control">
+                    <option value="30">30 minutos</option>
+                    <option value="45">45 minutos</option>
+                    <option value="60" selected>60 minutos</option>
+                    <option value="90">90 minutos</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>Horario de atención</label>
+                  <div class="time-range">
+                    <div class="time-input">
+                      <input type="time" class="form-control" value="08:00">
+                    </div>
+                    <span>hasta</span>
+                    <div class="time-input">
+                      <input type="time" class="form-control" value="18:00">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label>Horario de visitas</label>
+                  <div class="time-range">
+                    <div class="time-input">
+                      <input type="time" class="form-control" value="14:00">
+                    </div>
+                    <span>hasta</span>
+                    <div class="time-input">
+                      <input type="time" class="form-control" value="20:00">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Capacidad y Recursos -->
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-bed"></i> Capacidad y Recursos</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="totalBeds">Capacidad total de camas</label>
+                  <input type="number" id="totalBeds" class="form-control" value="280" min="0">
+                </div>
+                
+                <div class="form-group">
+                  <label for="consultRooms">Número de consultorios</label>
+                  <input type="number" id="consultRooms" class="form-control" value="25" min="0">
+                </div>
+                
+                <div class="form-group">
+                  <label for="emergencyRooms">Salas de emergencia</label>
+                  <input type="number" id="emergencyRooms" class="form-control" value="8" min="0">
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Especialidades Médicas -->
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-stethoscope"></i> Especialidades Médicas</h3>
+            </div>
+            <div class="card-body">
+              <div class="specialties-grid">
+                <div class="specialty-checkbox">
+                  <input type="checkbox" id="cardiology" checked>
+                  <label for="cardiology">Cardiología</label>
+                </div>
+                
+                <div class="specialty-checkbox">
+                  <input type="checkbox" id="pediatrics" checked>
+                  <label for="pediatrics">Pediatría</label>
+                </div>
+                
+                <div class="specialty-checkbox">
+                  <input type="checkbox" id="neurology" checked>
+                  <label for="neurology">Neurología</label>
+                </div>
+                
+                <div class="specialty-checkbox">
+                  <input type="checkbox" id="gynecology" checked>
+                  <label for="gynecology">Ginecología</label>
+                </div>
+                
+                <div class="specialty-checkbox">
+                  <input type="checkbox" id="traumatology" checked>
+                  <label for="traumatology">Traumatología</label>
+                </div>
+                
+                <div class="specialty-checkbox">
+                  <input type="checkbox" id="internal-medicine" checked>
+                  <label for="internal-medicine">Medicina Interna</label>
+                </div>
+                
+                <div class="specialty-checkbox">
+                  <input type="checkbox" id="emergency" checked>
+                  <label for="emergency">Urgencias</label>
+                </div>
+                
+                <div class="specialty-checkbox">
+                  <input type="checkbox" id="surgery" checked>
+                  <label for="surgery">Cirugía General</label>
+                </div>
+                
+                <div class="specialty-checkbox add-specialty">
+                  <button class="btn-add-specialty">
+                    <i class="fas fa-plus-circle"></i> Añadir especialidad
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Notificaciones Médicas -->
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-bell"></i> Notificaciones Médicas</h3>
+            </div>
+            <div class="card-body">
+              <div class="notification-options">
+                <div class="notification-checkbox">
+                  <input type="checkbox" id="emergency-alerts" checked>
+                  <label for="emergency-alerts">Alertas de emergencia</label>
+                </div>
+                
+                <div class="notification-checkbox">
+                  <input type="checkbox" id="appointment-reminders" checked>
+                  <label for="appointment-reminders">Recordatorios de citas</label>
+                </div>
+                
+                <div class="notification-checkbox">
+                  <input type="checkbox" id="medication-alerts" checked>
+                  <label for="medication-alerts">Alertas de medicamentos</label>
+                </div>
+                
+                <div class="notification-checkbox">
+                  <input type="checkbox" id="maintenance-notifications" checked>
+                  <label for="maintenance-notifications">Notificaciones de mantenimiento</label>
+                </div>
+                
+                <div class="notification-checkbox">
+                  <input type="checkbox" id="auto-reports" checked>
+                  <label for="auto-reports">Reportes automáticos</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Seguridad del Sistema -->
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-shield-alt"></i> Seguridad del Sistema</h3>
+            </div>
+            <div class="card-body">
+              <div class="security-options">
+                <button class="btn-security">
+                  <i class="fas fa-key"></i> Cambiar Contraseña Admin
+                </button>
+                
+                <button class="btn-security">
+                  <i class="fas fa-database"></i> Respaldar Base de Datos
+                </button>
+                
+                <button class="btn-security">
+                  <i class="fas fa-sync"></i> Restaurar Sistema
+                </button>
+                
+                <button class="btn-security">
+                  <i class="fas fa-user-lock"></i> Configurar Permisos
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-actions">
+          <button class="btn-save">
+            <i class="fas fa-save"></i> Guardar Configuración
+          </button>
+          <button class="btn-cancel">
+            <i class="fas fa-times"></i> Cancelar Cambios
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- POPUP DE LOGOUT -->
+<div *ngIf="showLogoutPopup" class="popup-overlay" (click)="closePopupOnBackdrop($event)">
+  <div class="popup-content logout-popup">
+    <div class="popup-header">
+      <i class="fas fa-hospital"></i>
+      <h3>Cerrar Sesión - Sistema Médico</h3>
+    </div>
+    <div class="popup-body">
+      <p><strong>¿Confirma el cierre de sesión del sistema hospitalario?</strong></p>
+      <p>Se cerrará el acceso al panel administrativo médico. Asegúrese de que no hay emergencias pendientes.</p>
+      <div class="admin-info-logout">
+        <strong>{{ currentUser?.name || 'Administrador' }}</strong><br>
+        <small>Director Médico - SaludPlus Centro Médico</small>
+      </div>
+      <div class="popup-actions">
+        <button class="btn btn-secondary" (click)="cancelLogout()">
+          <i class="fas fa-times"></i>
+          Cancelar
+        </button>
+        <button class="btn btn-danger" (click)="executeLogout()">
+          <i class="fas fa-sign-out-alt"></i>
+          Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para editar/añadir médico -->
+<div class="modal-backdrop" *ngIf="showDoctorModal" (click)="closeModalOnBackdrop($event)">
+  <div class="doctor-modal">
+    <div class="modal-header">
+      <h3>{{ editingDoctor?.id ? 'Editar' : 'Añadir' }} Médico</h3>
+      <button class="btn-close" (click)="cancelEditDoctor()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form (ngSubmit)="saveDoctor()" #doctorForm="ngForm">
+        <div class="form-columns">
+          <div class="form-column">
+            <div class="form-group">
+              <label for="doctor-name">Nombre completo*</label>
+              <input type="text" id="doctor-name" [(ngModel)]="editingDoctor!.name" name="name" required 
+                    class="form-control" placeholder="Ej: Dra. Ana María Rodríguez">
+            </div>
+            
+            <div class="form-group">
+              <label for="doctor-specialty">Especialidad*</label>
+              <input type="text" id="doctor-specialty" [(ngModel)]="editingDoctor!.specialty" name="specialty" required 
+                    class="form-control" placeholder="Ej: Cardiología">
+            </div>
+            
+            <div class="form-group">
+              <label for="doctor-department">Departamento</label>
+              <input type="text" id="doctor-department" [(ngModel)]="editingDoctor!.department" name="department" 
+                    class="form-control" placeholder="Ej: Medicina Interna">
+            </div>
+            
+            <div class="form-group">
+              <label for="doctor-license">Número de licencia</label>
+              <input type="text" id="doctor-license" [(ngModel)]="editingDoctor!.license" name="license" 
+                    class="form-control" placeholder="Ej: MC-12345">
+            </div>
+            
+            <div class="form-group">
+              <label for="doctor-experience">Años de experiencia</label>
+              <input type="number" id="doctor-experience" [(ngModel)]="editingDoctor!.yearsExperience" name="yearsExperience" min="0" 
+                    class="form-control" placeholder="Ej: 15">
+            </div>
+          </div>
+          
+          <div class="form-column">
+            <div class="form-group">
+              <label for="doctor-email">Email*</label>
+              <input type="email" id="doctor-email" [(ngModel)]="editingDoctor!.email" name="email" required 
+                    class="form-control" placeholder="Ej: doctor@saludplus.com">
+            </div>
+            
+            <div class="form-group">
+              <label for="doctor-phone">Teléfono</label>
+              <input type="text" id="doctor-phone" [(ngModel)]="editingDoctor!.phone" name="phone" 
+                    class="form-control" placeholder="Ej: +56 9 1234 5678">
+            </div>
+            
+            <div class="form-group">
+              <label>Estado de disponibilidad</label>
+              <div class="doctor-status-toggle">
+                <div class="status-option" 
+                      [class.active]="editingDoctor!.isOnCall" 
+                      (click)="editingDoctor!.isOnCall = true">
+                  <i class="fas fa-check-circle"></i> Disponible de guardia
+                </div>
+                <div class="status-option" 
+                      [class.active]="!editingDoctor!.isOnCall" 
+                      (click)="editingDoctor!.isOnCall = false">
+                  <i class="fas fa-times-circle"></i> No disponible
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="doctor-patients">Pacientes actuales</label>
+              <input type="number" id="doctor-patients" [(ngModel)]="editingDoctor!.currentPatients" name="currentPatients" min="0" 
+                    class="form-control" placeholder="Ej: 0">
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-footer">
+          <p class="required-fields">* Campos obligatorios</p>
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" (click)="cancelEditDoctor()">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="btn-save" [disabled]="!doctorForm.form.valid">
+              <i class="fas fa-save"></i> Guardar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

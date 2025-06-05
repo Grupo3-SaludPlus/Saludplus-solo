@@ -1,0 +1,124 @@
+<main>
+  <section class="history-hero">
+    <div class="content">
+      <h1 class="page-title">Mi Historial de Citas</h1>
+      <p class="page-subtitle">Revisa el historial completo de tus citas médicas</p>
+    </div>
+  </section>
+  
+  <section class="history-container">
+    <div class="content">
+      <!-- Alerta de próxima cita -->
+      @if (upcomingAppointment) {
+        <div class="upcoming-alert">
+          <div class="alert-icon">
+            <i class="fas fa-bell"></i>
+          </div>
+          <div class="alert-content">
+            <h3>Próxima cita</h3>
+            <p>
+              Tienes una cita con <strong>{{ upcomingAppointment.doctorName }}</strong> 
+              ({{ upcomingAppointment.doctorSpecialty }}) el 
+              <strong>{{ formatDate(upcomingAppointment.date) }}</strong> a las 
+              <strong>{{ upcomingAppointment.time }} hrs</strong>.
+            </p>
+          </div>
+          <a href="#" class="alert-action">Ver detalles</a>
+        </div>
+      }
+      
+      <!-- Filtros -->
+      <div class="filter-section">
+        <div class="search-bar">
+          <input 
+            type="text" 
+            placeholder="Buscar por doctor o especialidad..." 
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+          >
+          <button class="search-icon">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+        
+        <div class="filter-group">
+          <select [(ngModel)]="statusFilter" (change)="onStatusFilterChange()">
+            <option value="">Todos los estados</option>
+            <option value="scheduled">Agendadas</option>
+            <option value="completed">Completadas</option>
+            <option value="cancelled">Canceladas</option>
+          </select>
+          
+          <input 
+            type="date" 
+            [(ngModel)]="dateFilter"
+            (change)="onDateFilterChange()"
+          >
+          
+          <button class="reset-button" (click)="resetFilters()">
+            <i class="fas fa-sync-alt"></i> Limpiar filtros
+          </button>
+        </div>
+      </div>
+      
+      <!-- Listado de citas -->
+      <div class="appointments-count">
+        <p>Mostrando {{ filteredAppointments.length }} citas</p>
+      </div>
+      
+      <div class="appointments-list">
+        @for (appointment of filteredAppointments; track appointment.id) {
+          <div class="appointment-card">
+            <div class="appointment-header">
+              <div class="appointment-doctor">
+                <h3>{{ appointment.doctorName }}</h3>
+                <p class="doctor-specialty">{{ appointment.doctorSpecialty }}</p>
+              </div>
+              <div class="appointment-status" [ngClass]="getStatusClass(appointment.status)">
+                {{ getStatusText(appointment.status) }}
+              </div>
+            </div>
+            
+            <div class="appointment-details">
+              <div class="detail-item">
+                <i class="far fa-calendar-alt"></i>
+                <span>{{ formatDate(appointment.date) }}</span>
+              </div>
+              <div class="detail-item">
+                <i class="far fa-clock"></i>
+                <span>{{ appointment.time }} hrs</span>
+              </div>
+            </div>
+            
+            @if (appointment.notes) {
+              <div class="appointment-notes">
+                <h4>Notas de la consulta</h4>
+                <p>{{ appointment.notes }}</p>
+              </div>
+            }
+            
+            <div class="appointment-actions">
+              @if (appointment.status === 'scheduled') {
+                <button class="cancel-btn">Cancelar cita</button>
+                <button class="reschedule-btn">Reagendar</button>
+              }
+              @if (appointment.status === 'completed') {
+                <button class="review-btn">Dejar reseña</button>
+              }
+              <button class="details-btn">Ver detalles</button>
+            </div>
+          </div>
+        }
+        
+        @if (filteredAppointments.length === 0) {
+          <div class="no-results">
+            <i class="far fa-calendar-times fa-3x"></i>
+            <h3>No se encontraron citas</h3>
+            <p>No hay citas que coincidan con los filtros aplicados.</p>
+            <button class="reset-button" (click)="resetFilters()">Mostrar todas las citas</button>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+</main>

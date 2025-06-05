@@ -1,18 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface Doctor {
-  name: string;
-  specialty: string;
-}
+import { ActivatedRoute } from '@angular/router';
+import { DoctorsService, Doctor } from '../../services/doctors.service';
 
 @Component({
   selector: 'app-appointments',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './appointments.component.html',
-  styleUrl: './appointments.component.css'
+  styleUrls: ['./appointments.component.css']
 })
 export class AppointmentsComponent implements OnInit {
   title = 'Agenda tu Hora Médica';
@@ -32,39 +29,35 @@ export class AppointmentsComponent implements OnInit {
     message: ''
   };
 
-  specialties = [
-    'Cardiología',
-    'Neurología',
-    'Traumatología',
-    'Pediatría',
-    'Dermatología',
-    'Oftalmología',
-    'Medicina General',
-    'Kinesiología',
-    'Psiquiatría / Psicología'
-  ];
-  
-  availableDoctors: Doctor[] = [
-    { name: 'Dra. Carla Mendoza', specialty: 'Cardiología' },
-    { name: 'Dr. Roberto Fuentes', specialty: 'Neurología' },
-    { name: 'Dra. Valentina Torres', specialty: 'Pediatría' },
-    { name: 'Dr. Andrés Soto', specialty: 'Traumatología' },
-    { name: 'Dra. María López', specialty: 'Dermatología' },
-    { name: 'Dr. Juan Pérez', specialty: 'Medicina General' }
-  ];
-  
+  specialties: string[] = [];
+  availableDoctors: Doctor[] = [];
+  filteredDoctors: Doctor[] = [];
+  availableDates: string[] = [];
+  selectedDate: string = '';
   availableHours: string[] = [
     '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', 
     '12:00', '14:00', '14:30', '15:00', '15:30', 
     '16:00', '16:30', '17:00', '17:30'
   ];
   
-  filteredDoctors: Doctor[] = [];
-  availableDates: string[] = [];
-  selectedDate: string = '';
+  constructor(
+    private doctorsService: DoctorsService,
+    private route: ActivatedRoute
+  ) {}
   
   ngOnInit() {
-    // Generar fechas disponibles (proximos 15 días, excluyendo domingos)
+    // Cargar médicos desde el servicio
+    this.doctorsService.getDoctors().subscribe(doctors => {
+      this.availableDoctors = doctors;
+      
+      // Extraer especialidades únicas de los médicos
+      this.specialties = [...new Set(doctors.map(doctor => doctor.specialty))];
+      
+      // Verificar parámetros de consulta para preseleccionar médico
+      this.checkQueryParams();
+    });
+    
+    // Generar fechas disponibles (próximos 15 días, excluyendo domingos)
     const today = new Date();
     this.availableDates = Array(15).fill(null).map((_, i) => {
       const date = new Date(today);
@@ -76,6 +69,32 @@ export class AppointmentsComponent implements OnInit {
       }
       
       return this.formatDate(date);
+    });
+  }
+  
+  // Método para verificar si hay parámetros de consulta
+  checkQueryParams() {
+    this.route.queryParams.subscribe(params => {
+      if (params['doctorId'] && params['specialty']) {
+        // Preseleccionar especialidad
+        this.appointmentForm.specialty = params['specialty'];
+        
+        // Avanzar al paso 2
+        this.currentStep = 2;
+        
+        // Filtrar médicos por especialidad
+        this.filteredDoctors = this.availableDoctors.filter(
+          doctor => doctor.specialty === params['specialty']
+        );
+        
+        // Seleccionar el médico específico si existe
+        if (params['doctorName']) {
+          this.appointmentForm.doctor = params['doctorName'];
+          
+          // Automáticamente avanzar al paso 3 (fecha y hora)
+          setTimeout(() => this.currentStep = 3, 300);
+        }
+      }
     });
   }
   
@@ -91,6 +110,7 @@ export class AppointmentsComponent implements OnInit {
       this.currentStep++;
       
       if (this.currentStep === 2) {
+        // Filtrar médicos por especialidad seleccionada
         this.filteredDoctors = this.availableDoctors.filter(
           doctor => doctor.specialty === this.appointmentForm.specialty
         );
@@ -139,6 +159,7 @@ export class AppointmentsComponent implements OnInit {
   
   submitAppointment() {
     console.log('Formulario enviado:', this.appointmentForm);
+    // Aquí integrarías con el servicio para guardar la cita
     alert('¡Tu solicitud ha sido recibida! Te contactaremos pronto para confirmar tu cita.');
     
     // Resetear formulario y volver al primer paso
@@ -154,5 +175,36 @@ export class AppointmentsComponent implements OnInit {
     };
     
     this.currentStep = 1;
+  }
+
+  // Método para seleccionar una especialidad de forma controlada
+  selectSpecialty(specialty: string): void {
+    this.appointmentForm.specialty = specialty;
+    // Forzar la detección de cambios si es necesario
+    // this.cd.detectChanges(); // Necesitarías inyectar ChangeDetectorRef
+  }
+
+  // Método para obtener el icono apropiado
+  getSpecialtyIcon(specialty: string): any {
+    const iconMap: {[key: string]: boolean} = {
+      'fa-baby': specialty === 'Pediatría',
+      'fa-heartbeat': specialty === 'Cardiología',
+      'fa-brain': specialty === 'Neurología',
+      'fa-bone': specialty === 'Traumatología',
+      'fa-allergies': specialty === 'Dermatología',
+      'fa-eye': specialty === 'Oftalmología',
+      'fa-stethoscope': specialty === 'Medicina General',
+      'fa-comments': specialty === 'Psiquiatría',
+      'fa-venus': specialty === 'Ginecología y Obstetricia',
+      'fa-pills': specialty === 'Endocrinología',
+      'fa-notes-medical': specialty === 'Gastroenterología',
+      'fa-dna': specialty === 'Oncología',
+      'fa-procedures': specialty === 'Urología',
+      'fa-lungs': specialty === 'Neumología',
+      'fa-tooth': specialty === 'Odontología'
+    };
+    
+    // Añadir siempre fa-user-md como respaldo
+    return {...iconMap, 'fa-user-md': true};
   }
 }

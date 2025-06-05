@@ -1,3 +1,557 @@
+/* Estilos para el diseño de reserva de horas tipo RedSalud */
+
+/* Variables CSS globales - Asegúrate que estas estén disponibles o añádelas */
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-darker: #1e40af;
+  --bg-light: #f1f5f9;
+  --text-dark: #334155;
+  --text-gray: #64748b;
+  --border-color: #e2e8f0;
+}
+
+/* Contenedor principal */
+.booking-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: 'Nunito Sans', 'Segoe UI', sans-serif;
+  color: #333;
+  padding: 20px;
+}
+
+/* Header y stepper */
+.booking-header {
+  text-align: left;
+  margin-bottom: 24px;
+  background: #f5f9f8;
+  padding: 24px;
+  border-radius: 8px;
+}
+
+.booking-title {
+  font-size: 26px;
+  color: #006c67;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.booking-subtitle {
+  font-size: 18px;
+  color: #333;
+  margin: 0 0 24px 0;
+}
+
+.booking-stepper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin: 30px 0;
+  height: 4px;
+  background-color: #e1e8e7;
+  border-radius: 2px;
+}
+
+.stepper-step {
+  position: relative;
+  z-index: 2;
+}
+
+.stepper-step::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #e1e8e7;
+  z-index: -1;
+}
+
+.stepper-step.active::before,
+.stepper-step.completed::before {
+  background-color: #00a99d;
+}
+
+.stepper-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e1e8e7;
+  color: #888;
+  font-weight: bold;
+  margin-top: -14px;
+  transition: all 0.3s ease;
+}
+
+.stepper-step.active .stepper-dot {
+  background: #00a99d;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 169, 157, 0.3);
+}
+
+.stepper-step.completed .stepper-dot {
+  background: #00a99d;
+  color: white;
+}
+
+/* Estilos del contenido principal */
+.booking-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.step-content {
+  padding: 32px;
+}
+
+.step-heading {
+  color: #00a99d;
+  font-size: 22px;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.step-description {
+  color: #666;
+  font-size: 16px;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+/* Estilos de formularios */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #334155;
+  font-size: 14px;
+}
+
+.form-select,
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #d1d1d1;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #333;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #334155;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus,
+.form-input:focus {
+  border-color: #00a99d;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 169, 157, 0.1);
+}
+
+input:focus, textarea:focus {
+  border-color: #008080;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.15);
+}
+
+.form-hint {
+  font-size: 14px;
+  color: #888;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Estilos base para todos los botones */
+button {
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Botones de navegación (Atrás, Continuar) */
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  gap: 15px;
+}
+
+.back-btn, .next-btn, .submit-btn {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+/* Botón atrás */
+.back-btn {
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.back-btn:hover {
+  background-color: #e2e8f0;
+}
+
+.back-btn:active {
+  background-color: #cbd5e1 !important;
+  transform: translateY(1px);
+}
+
+/* Estilos para el botón Continuar */
+.next-btn, .submit-btn {
+  background-color: #008080; /* Color verde-azulado que combina bien con temas médicos */
+  color: white;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0, 128, 128, 0.25);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.next-btn:hover, .submit-btn:hover {
+  background-color: #006666; /* Versión más oscura al pasar el cursor */
+  box-shadow: 0 4px 10px rgba(0, 128, 128, 0.3);
+  transform: translateY(-2px);
+}
+
+.next-btn:active, .submit-btn:active {
+  background-color: #006666 !important;
+  color: white !important;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 128, 128, 0.3);
+}
+
+.next-btn:disabled, .submit-btn:disabled {
+  background-color: #a0aec0;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.next-btn i, .submit-btn i {
+  transition: transform 0.2s ease;
+}
+
+.next-btn:hover i, .submit-btn:hover i {
+  transform: translateX(4px);
+}
+
+/* Opciones seleccionables (doctor, especialidad) */
+.doctor-option, .specialty-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.doctor-option.selected, .specialty-card.selected {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.doctor-option:active, .specialty-card:active {
+  transform: scale(0.98);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Fecha y hora */
+.date-card, .time-card {
+  background-color: white;
+  transition: all 0.2s;
+}
+
+.date-card:hover, .time-card:hover {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+.date-card.selected, .time-card.selected {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  font-weight: 500;
+}
+
+.date-card:active, .time-card:active {
+  transform: scale(0.98);
+}
+
+/* Aspecto general de botón activo para toda la aplicación */
+button:active, a.btn:active {
+  transform: translateY(1px);
+}
+
+/* Grids y tarjetas */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 30px 0;
+}
+
+.service-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 24px 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+.service-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.service-card.selected {
+  background: #e0f6f5;
+  border: 2px solid #00a99d;
+}
+
+.service-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #00a99d;
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+/* Mejora de los iconos de especialidad */
+.specialty-icon {
+  width: 70px;
+  height: 70px;
+  background-color: #f0f9f9; /* Fondo más claro */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 128, 128, 0.1);
+}
+
+/* Estado normal de los iconos */
+.specialty-icon i {
+  font-size: 28px; /* Tamaño de icono más grande */
+  color: #008080; /* Color teal/verde-azulado */
+  transition: all 0.3s ease;
+}
+
+/* Tarjeta en estado hover */
+.specialty-card:hover .specialty-icon {
+  background-color: #e0f2f2;
+  transform: scale(1.05);
+}
+
+/* Tarjeta en estado seleccionado */
+.specialty-card.selected .specialty-icon {
+  background-color: #008080; /* Fondo verde-azulado */
+  box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+  transform: scale(1.05);
+}
+
+.specialty-card.selected .specialty-icon i {
+  color: white; /* Icono blanco cuando está seleccionado */
+}
+
+/* Estilo específico para pediatría */
+.specialty-card .specialty-icon i.fa-baby {
+  font-size: 26px; /* Ajuste específico para este icono */
+}
+
+/* Mejora general para tarjetas */
+.specialty-card {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 22px 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.specialty-card:hover {
+  border-color: #008080;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+}
+
+.specialty-card.selected {
+  border-color: #008080 !important;
+  border-width: 2px !important;
+  background-color: #f0f9f9 !important; /* Color de fondo suave */
+  box-shadow: 0 5px 15px rgba(0, 128, 128, 0.2) !important;
+}
+
+.specialty-card.selected .specialty-icon {
+  background-color: #008080 !important; /* Fondo verde-azulado */
+  box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3) !important;
+}
+
+.specialty-card.selected .specialty-icon i {
+  color: white !important; /* Icono blanco cuando está seleccionado */
+}
+
+/* Estilo general del icono */
+.specialty-icon i {
+  font-size: 28px !important; /* Tamaño de icono consistente */
+  transition: all 0.3s ease;
+}
+
+/* Evitar cualquier comportamiento extraño en los estados */
+.specialty-card:active,
+.specialty-card:focus,
+.specialty-card:hover:active {
+  background-color: #f0f9f9 !important; /* Mantener color de fondo */
+}
+
+/* Asegurar que el color de fondo permanezca cuando está activo */
+.specialty-card.selected:active,
+.specialty-card.selected:focus,
+.specialty-card.selected:hover {
+  background-color: #f0f9f9 !important;
+}
+
+/* Estilo adicional específico para el estado activo */
+.specialty-card:active .specialty-icon {
+  transform: scale(0.95) !important;
+}
+
+.specialty-name {
+  font-weight: 600;
+  color: #334155;
+  font-size: 15px;
+  margin-top: 5px;
+}
+
+.doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin: 24px 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 30px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.empty-state p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.service-description {
+  display: block;
+  margin-top: 8px;
+  color: #666;
+  font-size: 0.85em;
+}
+
+/* Animaciones */
+.animate {
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Filtrar y compartir */
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.appointment-specialty {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.appointment-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-filter, .btn-share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  padding: 6px 16px;
+  cursor: pointer;
+  color: #00a99d;
+  font-size: 14px;
+}
+
+/* Nueva estructura para la cita */
 .appointment-container {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -17,6 +571,7 @@
   margin: 0 auto;
 }
 
+/* Estilos base para todos los pasos */
 .step {
   display: flex;
   flex-direction: column;
@@ -24,48 +579,72 @@
   position: relative;
 }
 
+/* Número del paso */
 .step-number {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background-color: #e0e0e0;
-  color: #666;
+  background-color: #e2e8f0; /* Color gris claro para pasos inactivos */
+  color: #64748b; /* Color de texto para pasos inactivos */
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   transition: all 0.3s ease;
+  font-size: 18px;
+  border: 2px solid transparent;
 }
 
+/* Paso activo */
 .step.active .step-number {
-  background-color: var(--primary-color);
-  color: white;
+  background-color: #008080 !important; /* Verde-azulado para el paso activo */
+  color: white !important; /* Texto blanco */
+  border-color: #008080 !important;
+  box-shadow: 0 0 0 5px rgba(0, 128, 128, 0.2); /* Efecto de halo suave */
 }
 
+/* Paso completado */
 .step.completed .step-number {
-  background-color: var(--primary-dark);
-  color: white;
+  background-color: #008080 !important; /* Verde-azulado para paso completado */
+  color: white !important; /* Texto blanco */
+  border-color: #008080 !important;
 }
 
+/* Icono para paso completado */
+.step.completed .step-number i {
+  font-size: 20px;
+}
+
+/* Título del paso */
 .step-title {
   font-size: 14px;
-  color: #666;
+  color: #64748b; /* Gris para pasos inactivos */
   transition: color 0.3s ease;
+  text-align: center;
+  font-weight: 500;
 }
 
+/* Título para paso activo o completado */
 .step.active .step-title,
 .step.completed .step-title {
-  color: var(--primary-color);
-  font-weight: 600;
+  color: #008080 !important; /* Verde-azulado para consistencia */
+  font-weight: 600 !important;
 }
 
+/* Separador entre pasos */
 .step-separator {
   flex-grow: 1;
   height: 2px;
-  background-color: #e0e0e0;
-  margin: 0 10px;
-  margin-bottom: 25px;
+  background-color: #e2e8f0; /* Gris claro por defecto */
+  margin: 0 15px;
+  margin-bottom: 25px; /* Alineado con los círculos de los números */
+  transition: background-color 0.3s ease;
+}
+
+/* Separador después de un paso completado */
+.step.completed + .step-separator {
+  background-color: #008080 !important; /* Verde-azulado para indicar progreso */
 }
 
 .appointment-form {
@@ -76,11 +655,24 @@
 }
 
 .appointment-form h3 {
-  color: var(--primary-color);
-  margin-top: 0;
+  color: #008080;
+  font-size: 20px;
   margin-bottom: 25px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e6f2f2;
+  position: relative;
   text-align: center;
-  font-weight: 600;
+}
+
+.appointment-form h3::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background-color: #008080;
 }
 
 .specialty-grid {
@@ -91,7 +683,7 @@
 }
 
 .specialty-card {
-  background-color: var(--primary-very-light);
+  background-color: var(--bg-light);
   padding: 20px;
   border-radius: 8px;
   display: flex;
@@ -108,13 +700,13 @@
 }
 
 .specialty-card.selected {
-  border-color: var(--primary-color);
+  border-color: var(--primary);
   background-color: white;
 }
 
 .specialty-icon {
   font-size: 24px;
-  color: var(--primary-color);
+  color: var(--primary);
   margin-bottom: 10px;
 }
 
@@ -134,35 +726,61 @@
   display: flex;
   align-items: center;
   padding: 15px;
-  border-radius: 8px;
+  border-radius: 10px;
   background-color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   cursor: pointer;
-  transition: transform 0.2s;
-  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
 }
 
 .doctor-option:hover {
   transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: #008080;
 }
 
 .doctor-option.selected {
-  border-color: var(--primary-color);
-  background-color: var(--primary-very-light);
+  border: 2px solid #008080;
+  background-color: #f0f9f9;
 }
 
+/* Avatar del médico */
 .doctor-avatar {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background-color: var(--primary-color);
   display: flex;
   justify-content: center;
   align-items: center;
   margin-right: 15px;
-  color: white;
-  font-weight: bold;
-  font-size: 20px;
+  transition: all 0.3s ease;
+}
+
+/* Corrección específica para el avatar de "Cualquier médico disponible" */
+.doctor-avatar.any-avatar {
+  background-color: #e6f2f2 !important; /* Fondo claro verde-azulado */
+  border: 1px solid #cce5e5 !important;
+}
+
+/* El icono dentro del avatar */
+.doctor-avatar.any-avatar i {
+  color: #008080 !important; /* Color verde-azulado para el icono */
+  font-size: 22px;
+}
+
+/* Elimina cualquier color de fondo gris específico */
+.doctor-option.any-doctor .doctor-avatar {
+  background-color: #e6f2f2 !important; /* Sobreescribe cualquier otro color */
+}
+
+/* Estado seleccionado */
+.doctor-option.selected .doctor-avatar {
+  background-color: #008080 !important;
+}
+
+.doctor-option.selected .doctor-avatar i {
+  color: white !important;
 }
 
 .doctor-details {
@@ -170,13 +788,19 @@
 }
 
 .doctor-name {
-  font-weight: bold;
-  margin-bottom: 3px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #334155;
+  font-size: 16px;
 }
 
 .doctor-specialty {
   font-size: 14px;
-  color: var(--text-light);
+  color: #64748b;
+}
+
+.doctor-option.selected .doctor-name {
+  color: #008080;
 }
 
 .date-time-container {
@@ -186,31 +810,56 @@
   margin-bottom: 30px;
 }
 
+/* Selectores de fecha y hora */
+.date-time-container h4 {
+  color: #334155;
+  font-size: 16px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-time-container h4 i {
+  color: #008080;
+}
+
 .date-grid, .time-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 10px;
-  margin-top: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  margin-bottom: 25px;
 }
 
 .date-card, .time-card {
-  padding: 10px;
-  border-radius: 6px;
+  padding: 12px 8px;
   text-align: center;
+  border-radius: 8px;
   cursor: pointer;
-  border: 1px solid var(--border-color);
-  transition: all 0.2s;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  transition: all 0.3s ease;
+  font-size: 14px;
 }
 
 .date-card:hover, .time-card:hover {
-  background-color: var(--primary-very-light);
+  border-color: #008080;
+  background-color: #f0f9f9;
 }
 
 .date-card.selected, .time-card.selected {
-  background-color: var(--primary-color);
+  border-color: #008080;
+  background-color: #008080;
   color: white;
-  border-color: var(--primary-color);
-  font-weight: bold;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0, 128, 128, 0.25);
+}
+
+.date-selector, .time-selector {
+  background-color: #f8fafc;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
 }
 
 h4 {
@@ -247,38 +896,42 @@ input, select, textarea {
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(0, 128, 128, 0.2);
 }
 
 .appointment-summary {
-  background-color: var(--primary-very-light);
+  background-color: #f0f9f9;
   padding: 20px;
-  border-radius: 8px;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  border-radius: 10px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  border: 1px solid #cce5e5;
 }
 
 .appointment-summary h4 {
+  color: #008080;
   margin-top: 0;
   margin-bottom: 15px;
-  color: var(--primary-color);
-  font-weight: 600;
+  font-size: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #cce5e5;
 }
 
 .summary-item {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
+  font-size: 14px;
 }
 
 .summary-label {
   font-weight: 600;
-  color: var(--text-dark);
+  color: #334155;
 }
 
 .summary-value {
-  color: var(--primary-color);
+  color: #008080;
   font-weight: 500;
 }
 
@@ -289,69 +942,197 @@ input:focus, select:focus, textarea:focus {
 }
 
 .back-btn, .next-btn, .submit-btn {
-  padding: 12px 20px;
-  border-radius: 5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 120px;
 }
 
+/* Botón atrás */
 .back-btn {
-  background-color: #f0f0f0;
-  color: var(--text-dark);
-  border: none;
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
 }
 
 .back-btn:hover {
-  background-color: #e0e0e0;
+  background-color: #e2e8f0;
 }
 
+.back-btn:active {
+  background-color: #cbd5e1 !important;
+  transform: translateY(1px);
+}
+
+/* Estilos para el botón Continuar */
 .next-btn, .submit-btn {
-  background-color: var(--primary-color);
+  background-color: #008080; /* Color verde-azulado que combina bien con temas médicos */
   color: white;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: none;
+  box-shadow: 0 2px 5px rgba(0, 128, 128, 0.25);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-width: 140px;
 }
 
 .next-btn:hover, .submit-btn:hover {
-  background-color: var(--primary-dark);
+  background-color: #006666; /* Versión más oscura al pasar el cursor */
+  box-shadow: 0 4px 10px rgba(0, 128, 128, 0.3);
+  transform: translateY(-2px);
+}
+
+.next-btn:active, .submit-btn:active {
+  background-color: #006666 !important;
+  color: white !important;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 128, 128, 0.3);
 }
 
 .next-btn:disabled, .submit-btn:disabled {
-  background-color: #cccccc;
+  background-color: #a0aec0;
+  box-shadow: none;
+  transform: none;
   cursor: not-allowed;
 }
 
-.form-disclaimer {
-  font-size: 12px;
-  color: var(--text-light);
-  margin-top: 20px;
-  text-align: center;
+.next-btn i, .submit-btn i {
+  transition: transform 0.2s ease;
 }
 
-.appointment-info {
+.next-btn:hover i, .submit-btn:hover i {
+  transform: translateX(4px);
+}
+
+/* Opciones seleccionables (doctor, especialidad) */
+.doctor-option, .specialty-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.doctor-option.selected, .specialty-card.selected {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.doctor-option:active, .specialty-card:active {
+  transform: scale(0.98);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Fecha y hora */
+.date-card, .time-card {
+  background-color: white;
+  transition: all 0.2s;
+}
+
+.date-card:hover, .time-card:hover {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+.date-card.selected, .time-card.selected {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  font-weight: 500;
+}
+
+.date-card:active, .time-card:active {
+  transform: scale(0.98);
+}
+
+/* Aspecto general de botón activo para toda la aplicación */
+button:active, a.btn:active {
+  transform: translateY(1px);
+}
+
+/* Estilos adicionales para los iconos */
+.step.completed .step-number {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  align-items: center;
+  justify-content: center;
 }
 
-.info-card {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+.step.completed .step-number i {
+  font-size: 18px;
+}
+
+.specialty-icon i {
+  font-size: 28px;
 }
 
 .info-card h3 {
-  color: var(--primary-color);
-  margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 18px;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.info-card p {
-  margin: 8px 0;
+.info-card h3 i {
+  color: var(--primary);
+}
+
+.step-actions button i {
+  transition: transform 0.3s ease;
+}
+
+.next-btn:hover i {
+  transform: translateX(3px);
+}
+
+.back-btn:hover i {
+  transform: translateX(-3px);
+}
+
+.submit-btn i {
+  font-size: 16px;
+}
+
+/* Iconos específicos para especialidades */
+.specialty-icon {
+  height: 60px;
+  width: 60px;
+  background-color: rgba(0, 128, 128, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.specialty-card:hover .specialty-icon {
+  background-color: rgba(0, 128, 128, 0.2);
+  transform: scale(1.1);
+}
+
+.specialty-card.selected .specialty-icon {
+  background-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+}
+
+.specialty-card.selected .specialty-icon i {
+  color: white;
+}
+
+.doctor-avatar.any-avatar {
+  background-color: #64748b;
+}
+
+.doctor-avatar.any-avatar i {
+  font-size: 22px;
 }
 
 @media (max-width: 768px) {
@@ -386,4 +1167,82 @@ input:focus, select:focus, textarea:focus {
   .specialty-grid {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+@media (max-width: 480px) {
+  .service-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .booking-header {
+    padding: 16px;
+  }
+  
+  .step-content {
+    padding: 24px 16px;
+  }
+  
+  /* Mejoras para móvil */
+  .calendar-day {
+    min-width: 80px;
+    padding: 10px;
+  }
+  
+  .doctor-card {
+    padding: 16px 12px;
+  }
+  
+  .time-slots {
+    margin-top: 16px;
+    width: 100%;
+  }
+  
+  .appointment-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Optimizar el scrolling horizontal en calendarios */
+.calendar-days::-webkit-scrollbar {
+  height: 5px;
+}
+
+.calendar-days::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.calendar-days::-webkit-scrollbar-thumb {
+  background: #00a99d;
+  border-radius: 10px;
+}
+
+/* Accesibilidad y focus */
+.service-card:focus-visible,
+.time-slot:focus-visible,
+.btn-primary:focus-visible {
+  outline: 2px solid #00a99d;
+  outline-offset: 2px;
+}
+
+/* Estilos para el campo de motivo de consulta */
+textarea#message {
+  width: 100%;
+  min-height: 80px;
+  max-height: 200px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 15px;
+  color: #334155;
+  resize: vertical; /* Permite al usuario ajustar la altura */
+  transition: border-color 0.2s ease;
+}
+
+textarea#message:focus {
+  border-color: #008080;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.15);
 }

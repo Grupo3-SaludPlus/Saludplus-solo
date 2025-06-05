@@ -1,0 +1,608 @@
+/* Variables generales con la paleta mejorada */
+:root {
+  --admin-primary: #4f6df5;
+  --admin-primary-light: #7b97ff;
+  --admin-primary-dark: #3955d8;
+  --admin-secondary: #1e293b;
+  --admin-bg: #f8fafc;
+  --admin-light: #f1f5f9;
+  --admin-gray: #94a3b8;
+  --admin-text: #334155;
+  --admin-text-light: #64748b;
+  --admin-border: #e2e8f0;
+  --admin-success: #10b981;
+  --admin-success-light: rgba(16, 185, 129, 0.1);
+  --admin-warning: #f59e0b;
+  --admin-warning-light: rgba(245, 158, 11, 0.1);
+  --admin-danger: #ef4444;
+  --admin-danger-light: rgba(239, 68, 68, 0.1);
+  --admin-info: #3b82f6;
+  --admin-info-light: rgba(59, 130, 246, 0.1);
+  --admin-pending: #a855f7;
+  --admin-pending-light: rgba(168, 85, 247, 0.1);
+}
+
+/* Contenedor principal */
+.admin-content-container {
+  padding: 20px 0;
+  height: 100%;
+}
+
+/* Estilos del encabezado */
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.content-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--admin-text);
+}
+
+.content-header p {
+  margin: 5px 0 0;
+  color: var(--admin-text-light);
+  font-size: 15px;
+}
+
+/* Estilos para botones */
+.primary-btn, .secondary-btn, .danger-btn, .delete-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.primary-btn {
+  background-color: var(--admin-primary);
+  color: white;
+}
+
+.primary-btn:hover {
+  background-color: var(--admin-primary-dark);
+}
+
+.secondary-btn {
+  background-color: var(--admin-light);
+  color: var(--admin-text);
+}
+
+.secondary-btn:hover {
+  background-color: var(--admin-border);
+}
+
+.danger-btn {
+  background-color: var(--admin-danger-light);
+  color: var(--admin-danger);
+}
+
+.danger-btn:hover {
+  background-color: var(--admin-danger);
+  color: white;
+}
+
+.delete-btn {
+  background-color: var(--admin-danger-light);
+  color: var(--admin-danger);
+  margin-left: 10px;
+}
+
+.delete-btn:hover {
+  background-color: var(--admin-danger);
+  color: white;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Estilos para filtros y búsqueda */
+.filter-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  position: relative;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  font-size: 14px;
+  padding-right: 40px;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--admin-primary-light);
+  box-shadow: 0 0 0 2px var(--admin-primary-light);
+}
+
+.search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--admin-text-light);
+  cursor: pointer;
+  padding: 6px;
+}
+
+.search-btn:hover {
+  color: var(--admin-primary);
+}
+
+.filter-options {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-option label {
+  color: var(--admin-text);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.filter-option select, .filter-option input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  background-color: white;
+  font-size: 14px;
+  min-width: 140px;
+}
+
+.filter-option select:focus, .filter-option input:focus {
+  outline: none;
+  border-color: var(--admin-primary-light);
+  box-shadow: 0 0 0 2px var(--admin-primary-light);
+}
+
+.filter-reset {
+  background: none;
+  border: none;
+  color: var(--admin-text-light);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.filter-reset:hover {
+  color: var(--admin-primary);
+  background-color: var(--admin-primary-light);
+}
+
+/* Estilos para la tabla */
+.table-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  overflow: auto;
+}
+
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  color: var(--admin-text-light);
+  gap: 10px;
+  font-size: 16px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-border);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--admin-text);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.data-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  font-size: 14px;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover td {
+  background-color: var(--admin-light);
+}
+
+.no-data {
+  color: var(--admin-text-light);
+  text-align: center;
+  padding: 30px 0;
+  font-style: italic;
+}
+
+/* Estilos para las insignias de estado */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-scheduled {
+  background-color: var(--admin-info-light);
+  color: var(--admin-info);
+}
+
+.status-completed {
+  background-color: var(--admin-success-light);
+  color: var(--admin-success);
+}
+
+.status-cancelled {
+  background-color: var(--admin-danger-light);
+  color: var(--admin-danger);
+}
+
+.status-pending {
+  background-color: var(--admin-pending-light);
+  color: var(--admin-pending);
+}
+
+/* Estilos para los botones de acción en la tabla */
+.actions-cell {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.view-btn {
+  color: var(--admin-info);
+}
+
+.view-btn:hover {
+  background-color: var(--admin-info-light);
+}
+
+.edit-btn {
+  color: var(--admin-primary);
+}
+
+.edit-btn:hover {
+  background-color: var(--admin-primary-light);
+}
+
+.cancel-btn {
+  color: var(--admin-warning);
+}
+
+.cancel-btn:hover {
+  background-color: var(--admin-warning-light);
+}
+
+.action-btn.delete-btn {
+  color: var(--admin-danger);
+  margin-left: 0;
+  background: none;
+}
+
+.action-btn.delete-btn:hover {
+  background-color: var(--admin-danger-light);
+  color: var(--admin-danger);
+}
+
+/* Estilos para la paginación */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.pagination-info {
+  color: var(--admin-text-light);
+  font-size: 14px;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-btn {
+  background: none;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: var(--admin-light);
+  border-color: var(--admin-primary-light);
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.current-page {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+/* Estilos para la vista de detalles */
+.detail-view {
+  animation: fadeIn 0.3s ease;
+}
+
+.detail-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.detail-section h3 {
+  color: var(--admin-text);
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  color: var(--admin-text-light);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: var(--admin-text);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.detail-notes {
+  background-color: var(--admin-light);
+  padding: 16px;
+  border-radius: 8px;
+  color: var(--admin-text);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--admin-border);
+}
+
+/* Estilos para el formulario */
+.form-view {
+  animation: fadeIn 0.3s ease;
+}
+
+.form-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-section h3 {
+  color: var(--admin-text);
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--admin-text);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  background-color: white;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--admin-primary-light);
+  box-shadow: 0 0 0 2px var(--admin-primary-light);
+}
+
+.form-error {
+  color: var(--admin-danger);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.required {
+  color: var(--admin-danger);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--admin-border);
+  gap: 12px;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-box {
+    width: 100%;
+  }
+  
+  .filter-options {
+    width: 100%;
+  }
+  
+  .filter-option {
+    flex: 1;
+    min-width: 140px;
+  }
+  
+  .actions-cell {
+    flex-wrap: wrap;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .header-actions {
+    width: 100%;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .form-actions button {
+    width: 100%;
+  }
+}

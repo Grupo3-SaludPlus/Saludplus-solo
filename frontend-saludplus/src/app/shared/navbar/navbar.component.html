@@ -12,9 +12,102 @@
     <ul class="navbar-nav" [class.show]="menuOpen">
       @for (item of navItems; track item.path) {
         <li class="nav-item">
-          <a class="nav-link" [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+          <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" 
+             [routerLinkActiveOptions]="{exact: item.path === '/'}">{{ item.label }}</a>
         </li>
       }
     </ul>
+
+    <!-- Usuario no autenticado -->
+    <div class="auth-buttons" *ngIf="!currentUser">
+      <a routerLink="/login" class="btn-login">Iniciar Sesión</a>
+      <a routerLink="/register" class="btn-signup">Registrarse</a>
+    </div>
+
+    <!-- Usuario autenticado -->
+    <div class="user-menu" *ngIf="currentUser">
+      <div class="user-menu-trigger" (click)="toggleUserMenu($event)">
+        <div class="user-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ currentUser.name }}</span>
+          <span class="user-role">{{ getRoleDisplayName(currentUser.role) }}</span>
+        </div>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="user-dropdown" *ngIf="showUserMenu">
+        <!-- Perfil y ajustes (común a todos) -->
+        <div class="dropdown-section">
+          <a routerLink="/profile">
+            <i class="fas fa-user-circle"></i> Mi Perfil
+          </a>
+          <a routerLink="/settings">
+            <i class="fas fa-cog"></i> Configuración
+          </a>
+        </div>
+        
+        <!-- Opciones para pacientes -->
+        <div class="dropdown-section" *ngIf="currentUser.role === 'patient'">
+          <h5 class="dropdown-heading">Citas Médicas</h5>
+          <a routerLink="/appointments">
+            <i class="fas fa-calendar-plus"></i> Agendar Cita
+          </a>
+          <a routerLink="/my-appointments">
+            <i class="fas fa-calendar-alt"></i> Mis Citas
+          </a>
+          <a routerLink="/medical-history">
+            <i class="fas fa-clipboard-list"></i> Mi Historial
+          </a>
+          <a routerLink="/prescriptions">
+            <i class="fas fa-prescription"></i> Mis Recetas
+          </a>
+        </div>
+        
+        <!-- Opciones para médicos -->
+        <div class="dropdown-section" *ngIf="currentUser.role === 'doctor'">
+          <h5 class="dropdown-heading">Panel Médico</h5>
+          <a routerLink="/doctor/dashboard">
+            <i class="fas fa-tachometer-alt"></i> Resumen Diario
+          </a>
+          <a routerLink="/doctor/schedule">
+            <i class="fas fa-calendar-week"></i> Mi Agenda
+          </a>
+          <a routerLink="/doctor/patients">
+            <i class="fas fa-users"></i> Mis Pacientes
+          </a>
+          <a routerLink="/doctor/medical-records">
+            <i class="fas fa-notes-medical"></i> Fichas Médicas
+          </a>
+        </div>
+        
+        <!-- Opciones para administradores -->
+        <div class="dropdown-section" *ngIf="currentUser.role === 'admin'">
+          <h5 class="dropdown-heading">Administración</h5>
+          <a routerLink="/admin/dashboard">
+            <i class="fas fa-tachometer-alt"></i> Panel Principal
+          </a>
+          <a routerLink="/admin/users">
+            <i class="fas fa-user-md"></i> Gestionar Médicos
+          </a>
+          <a routerLink="/admin/patients">
+            <i class="fas fa-hospital-user"></i> Gestionar Pacientes
+          </a>
+          <a routerLink="/admin/specialties">
+            <i class="fas fa-stethoscope"></i> Especialidades
+          </a>
+          <a routerLink="/admin/reports">
+            <i class="fas fa-chart-bar"></i> Informes y Estadísticas
+          </a>
+        </div>
+        
+        <!-- Cerrar sesión (común a todos) -->
+        <div class="dropdown-section border-top">
+          <a (click)="logout($event)" class="logout-link">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 </nav>

@@ -1,0 +1,177 @@
+<main>
+  <section class="content">
+    <div class="dashboard-header">
+      <h1 class="dashboard-title">
+        <i class="fas fa-user-circle"></i>
+        Mi Perfil
+      </h1>
+      <p class="dashboard-subtitle">
+        Gestiona tu información personal y tus citas médicas desde aquí.
+      </p>
+    </div>
+
+    <!-- Información del usuario -->
+    <div class="user-info-section">
+      <div class="user-card">
+        <div class="user-avatar">
+          <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="user-details">
+          <h2>{{ currentUser?.name || 'Paciente' }}</h2>
+          <p class="user-email">{{ currentUser?.email || 'Sin email' }}</p>
+          <p class="user-phone">{{ currentUser?.phone || 'Sin teléfono' }}</p>
+          <span class="user-role">Paciente</span>
+        </div>
+        <div class="user-actions">
+          <button class="edit-profile-btn" (click)="editProfile()">
+            <i class="fas fa-edit"></i>
+            Editar Perfil
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ totalAppointments }}</h3>
+          <p>Total de Citas</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon completed">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ completedAppointments }}</h3>
+          <p>Completadas</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ pendingAppointments }}</h3>
+          <p>Pendientes</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon cancelled">
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ cancelledAppointments }}</h3>
+          <p>Canceladas</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid principal -->
+    <div class="dashboard-grid">
+      <!-- Próximas citas -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h2>
+            <i class="fas fa-calendar-alt"></i>
+            Próximas Citas
+          </h2>
+          <a routerLink="/my-appointments" class="view-all-btn">Ver todas</a>
+        </div>
+        
+        <div class="appointments-list" *ngIf="upcomingAppointments.length > 0; else noAppointments">
+          <div 
+            class="appointment-item" 
+            *ngFor="let appointment of upcomingAppointments">
+            <div class="appointment-date">
+              <span class="day">{{ getDateDay(appointment.date) }}</span>
+              <span class="month">{{ getDateMonth(appointment.date) }}</span>
+            </div>
+            <div class="appointment-details">
+              <h4>{{ appointment.specialty }}</h4>
+              <p>{{ appointment.doctor }}</p>
+              <div class="appointment-time">
+                <i class="fas fa-clock"></i>
+                {{ appointment.time }}
+              </div>
+            </div>
+            <div class="appointment-status">
+              <span 
+                class="status-badge" 
+                [style.background-color]="getStatusColor(appointment.status)">
+                {{ getStatusText(appointment.status) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noAppointments>
+          <div class="no-appointments">
+            <i class="fas fa-calendar-plus"></i>
+            <p>No tienes citas programadas</p>
+            <a routerLink="/appointments" class="cta-btn">Agendar Nueva Cita</a>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Accesos rápidos -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h2>
+            <i class="fas fa-bolt"></i>
+            Accesos Rápidos
+          </h2>
+        </div>
+        
+        <div class="quick-actions">
+          <a routerLink="/appointments" class="action-card primary">
+            <div class="action-icon">
+              <i class="fas fa-plus"></i>
+            </div>
+            <div class="action-content">
+              <h3>Agendar Cita</h3>
+              <p>Programa una nueva cita médica</p>
+            </div>
+          </a>
+
+          <a routerLink="/my-appointments" class="action-card">
+            <div class="action-icon">
+              <i class="fas fa-list"></i>
+            </div>
+            <div class="action-content">
+              <h3>Ver Mis Citas</h3>
+              <p>Gestiona tus citas programadas</p>
+            </div>
+          </a>
+
+          <a routerLink="/doctors" class="action-card">
+            <div class="action-icon">
+              <i class="fas fa-user-md"></i>
+            </div>
+            <div class="action-content">
+              <h3>Especialistas</h3>
+              <p>Conoce nuestro equipo médico</p>
+            </div>
+          </a>
+
+          <button class="action-card" (click)="editProfile()">
+            <div class="action-icon">
+              <i class="fas fa-user-cog"></i>
+            </div>
+            <div class="action-content">
+              <h3>Editar Perfil</h3>
+              <p>Actualiza tus datos personales</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

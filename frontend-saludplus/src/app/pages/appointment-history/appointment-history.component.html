@@ -1,0 +1,443 @@
+<main>
+  <section class="content">
+    <!-- Título diferente según el rol -->
+    <h2 class="titulo-seccion" *ngIf="!isDoctor && !isAdmin">Mi Historial de Citas</h2>
+    <h2 class="titulo-seccion" *ngIf="isDoctor">Mis Consultas Médicas</h2>
+    <h2 class="titulo-seccion" *ngIf="isAdmin">Gestión de Citas Médicas</h2>
+    
+    <p class="texto-descriptivo mb-30" *ngIf="!isDoctor && !isAdmin">Consulta y gestiona todas tus citas médicas en un solo lugar</p>
+    <p class="texto-descriptivo mb-30" *ngIf="isDoctor">Administra tus consultas médicas programadas y pacientes</p>
+    <p class="texto-descriptivo mb-30" *ngIf="isAdmin">Panel de administración de todas las citas del sistema</p>
+    
+    <!-- Contenedor de alerta para usuarios no logueados -->
+    <div class="login-required" *ngIf="!currentUser">
+      <div class="login-required-card">
+        <i class="fas fa-lock login-icon"></i>
+        <h3>Inicia sesión para ver tu historial</h3>
+        <p>Necesitas iniciar sesión para acceder a tu historial de citas médicas.</p>
+        <div class="login-actions">
+          <a routerLink="/login" [queryParams]="{returnUrl: '/appointment-history'}" class="primary-btn">
+            Iniciar Sesión
+          </a>
+          <a routerLink="/register" class="secondary-btn">
+            Registrarse
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Contenido principal para usuarios logueados -->
+    <div class="appointment-history-container" *ngIf="currentUser">
+      <!-- Barra de filtros -->
+      <div class="filters-container">
+        <div class="search-box">
+          <input 
+            type="text" 
+            placeholder="Buscar por doctor o especialidad..." 
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="applyFilters()">
+          <button class="search-btn" (click)="applyFilters()">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+        
+        <div class="filters-group">
+          <div class="filter">
+            <label for="status-filter">Estado:</label>
+            <select id="status-filter" [(ngModel)]="statusFilter" (change)="applyFilters()">
+              <option value="all">Todos</option>
+              <option value="scheduled">Programadas</option>
+              <option value="confirmed">Confirmadas</option>
+              <option value="completed">Completadas</option>
+              <option value="cancelled">Canceladas</option>
+              <option value="pending">Pendientes</option>
+            </select>
+          </div>
+          
+          <div class="filter">
+            <label for="date-filter">Fecha:</label>
+            <input 
+              type="date" 
+              id="date-filter" 
+              [(ngModel)]="dateFilter"
+              (change)="applyFilters()">
+          </div>
+          
+          <button class="filter-reset" (click)="resetFilters()">
+            <i class="fas fa-sync-alt"></i>
+            Restablecer
+          </button>
+        </div>
+      </div>
+      
+      <!-- Indicador de carga -->
+      <div class="loading-indicator" *ngIf="isLoading">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <span>Cargando tu historial de citas...</span>
+      </div>
+      
+      <!-- Mensaje cuando no hay citas -->
+      <div class="no-appointments" *ngIf="!isLoading && filteredAppointments.length === 0">
+        <i class="fas fa-calendar-times no-data-icon"></i>
+        <h3>No se encontraron citas</h3>
+        <p *ngIf="statusFilter !== 'all' || dateFilter || searchTerm">No hay citas que coincidan con los filtros seleccionados.</p>
+        <p *ngIf="statusFilter === 'all' && !dateFilter && !searchTerm">
+          <span *ngIf="!isDoctor && !isAdmin">Aún no tienes citas médicas registradas.</span>
+          <span *ngIf="isDoctor">No tienes consultas programadas actualmente.</span>
+          <span *ngIf="isAdmin">No hay citas registradas en el sistema.</span>
+        </p>
+        <a routerLink="/appointments" class="primary-btn" *ngIf="!isDoctor && !isAdmin">
+          <i class="fas fa-plus"></i>
+          Agendar una cita
+        </a>
+      </div>
+      
+      <!-- Tabla de citas -->
+      <div class="appointments-table-container" *ngIf="!isLoading && filteredAppointments.length > 0">
+        <table class="appointments-table">
+          <thead>
+            <tr>
+              <th class="sortable" (click)="changeSort('date')">
+                Fecha/Hora
+                <i class="fas" [ngClass]="sortField === 'date' ? 
+                   (sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
+              </th>
+              <th class="sortable" (click)="changeSort('doctor')">
+                Doctor
+                <i class="fas" [ngClass]="sortField === 'doctor' ? 
+                   (sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
+              </th>
+              <!-- Solo mostrar columna de paciente para médicos y admin -->
+              <th class="sortable" *ngIf="isDoctor || isAdmin" (click)="changeSort('patient')">
+                Paciente
+                <i class="fas" [ngClass]="sortField === 'patient' ? 
+                   (sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
+              </th>
+              <th class="sortable" (click)="changeSort('specialty')">
+                Especialidad
+                <i class="fas" [ngClass]="sortField === 'specialty' ? 
+                   (sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
+              </th>
+              <th class="sortable" (click)="changeSort('status')">
+                Estado
+                <i class="fas" [ngClass]="sortField === 'status' ? 
+                   (sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
+              </th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let appointment of filteredAppointments">
+              <td class="date-cell">
+                <div class="appointment-date">{{ formatDate(appointment.date) }}</div>
+                <div class="appointment-time">{{ appointment.time }}</div>
+              </td>
+              <td>{{ appointment.doctor }}</td>
+              <!-- Solo mostrar paciente para médicos y admin -->
+              <td *ngIf="isDoctor || isAdmin">{{ appointment.patient.name }}</td>
+              <td>{{ appointment.specialty }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(appointment.status)">
+                  {{ getStatusText(appointment.status) }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button class="action-btn view-btn" title="Ver detalles" (click)="viewAppointmentDetails(appointment)">
+                  <i class="fas fa-eye"></i>
+                </button>
+                
+                <!-- Botón para confirmar cita -->
+                <button 
+                  *ngIf="canConfirmAppointment(appointment)"
+                  class="action-btn confirm-btn" 
+                  title="Confirmar cita"
+                  (click)="openConfirmDialog(appointment)">
+                  <i class="fas fa-check"></i>
+                </button>
+                
+                <!-- Botón para reprogramar cita -->
+                <button 
+                  *ngIf="appointment.status === 'scheduled' || appointment.status === 'confirmed'"
+                  class="action-btn reschedule-btn" 
+                  title="Reprogramar cita"
+                  (click)="rescheduleAppointment(appointment)">
+                  <i class="fas fa-calendar-alt"></i>
+                </button>
+                
+                <!-- Botón para cancelar cita -->
+                <button 
+                  *ngIf="canCancelAppointment(appointment)"
+                  class="action-btn cancel-btn" 
+                  title="Cancelar cita" 
+                  (click)="openCancelDialog(appointment)">
+                  <i class="fas fa-ban"></i>
+                </button>
+                
+                <!-- Botón para completar cita (solo médicos y admin) -->
+                <button 
+                  *ngIf="(isDoctor || isAdmin) && (appointment.status === 'scheduled' || appointment.status === 'confirmed')"
+                  class="action-btn complete-btn" 
+                  title="Marcar como completada" 
+                  (click)="completeAppointment(appointment)">
+                  <i class="fas fa-check-double"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Enlace para agendar nueva cita (solo pacientes) -->
+      <div class="new-appointment-cta" *ngIf="!isLoading && filteredAppointments.length > 0 && !isDoctor && !isAdmin">
+        <a routerLink="/appointments" class="secondary-btn">
+          <i class="fas fa-plus"></i>
+          Agendar nueva cita
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Modal de detalles de la cita -->
+  <div class="modal-overlay" *ngIf="isViewingDetails && selectedAppointment" (click)="closeDetails()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Detalles de la Cita</h3>
+        <button class="modal-close" (click)="closeDetails()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="detail-label">Número de cita:</span>
+            <span class="detail-value">#{{ selectedAppointment.id }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Fecha:</span>
+            <span class="detail-value">{{ formatDate(selectedAppointment.date) }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Hora:</span>
+            <span class="detail-value">{{ selectedAppointment.time }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Estado:</span>
+            <span class="detail-value">
+              <span class="status-badge" [ngClass]="getStatusClass(selectedAppointment.status)">
+                {{ getStatusText(selectedAppointment.status) }}
+              </span>
+            </span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Doctor:</span>
+            <span class="detail-value">{{ selectedAppointment.doctor }}</span>
+          </div>
+          
+          <!-- Mostrar paciente solo para médicos y admin -->
+          <div class="detail-item" *ngIf="isDoctor || isAdmin">
+            <span class="detail-label">Paciente:</span>
+            <span class="detail-value">{{ selectedAppointment.patient.name }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Especialidad:</span>
+            <span class="detail-value">{{ selectedAppointment.specialty }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Centro médico:</span>
+            <span class="detail-value">{{ selectedAppointment.medicalCenter || 'No especificado' }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Fecha de creación:</span>
+            <span class="detail-value">{{ formatDate(selectedAppointment.createdAt) }}</span>
+          </div>
+          
+          <!-- Mostrar fecha de confirmación si aplica -->
+          <div class="detail-item" *ngIf="selectedAppointment.confirmationDate">
+            <span class="detail-label">Fecha de confirmación:</span>
+            <span class="detail-value">{{ formatDate(selectedAppointment.confirmationDate) }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-notes" *ngIf="selectedAppointment.notes">
+          <h4>Notas:</h4>
+          <p>{{ selectedAppointment.notes }}</p>
+        </div>
+        
+        <div class="reminder-alert" *ngIf="selectedAppointment.status === 'scheduled' && !isDoctor && !isAdmin">
+          <i class="fas fa-bell"></i>
+          <div>
+            <p class="reminder-title">Recordatorio</p>
+            <p class="reminder-text">Recuerda confirmar tu cita 24-48 horas antes y presentarte 15 minutos antes de tu cita con tu cédula de identidad y credencial del seguro médico.</p>
+          </div>
+        </div>
+        
+        <div class="reminder-alert confirmation-alert" *ngIf="selectedAppointment.status === 'confirmed'">
+          <i class="fas fa-check-circle"></i>
+          <div>
+            <p class="reminder-title">Cita confirmada</p>
+            <p class="reminder-text">Has confirmado tu asistencia para esta cita. Por favor preséntate 15 minutos antes de la hora programada con tus documentos.</p>
+          </div>
+        </div>
+        
+        <!-- Alerta especial para médicos -->
+        <div class="reminder-alert doctor-alert" *ngIf="isDoctor && (selectedAppointment.status === 'scheduled' || selectedAppointment.status === 'confirmed')">
+          <i class="fas fa-user-md"></i>
+          <div>
+            <p class="reminder-title">Consulta programada</p>
+            <p class="reminder-text">Revise la historia clínica del paciente antes de la consulta. Recuerde actualizar el estado una vez completada.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button class="secondary-btn" (click)="closeDetails()">
+            Cerrar
+          </button>
+          
+          <div *ngIf="selectedAppointment.status === 'scheduled' || selectedAppointment.status === 'confirmed'" class="action-buttons">
+            <!-- Botón para cancelar cita -->
+            <button 
+              *ngIf="canCancelAppointment(selectedAppointment)"
+              class="danger-btn" 
+              (click)="openCancelDialog(selectedAppointment); closeDetails()">
+              <i class="fas fa-ban"></i>
+              Cancelar cita
+            </button>
+            
+            <!-- Botón para confirmar cita -->
+            <button 
+              *ngIf="canConfirmAppointment(selectedAppointment)"
+              class="confirm-modal-btn" 
+              (click)="openConfirmDialog(selectedAppointment); closeDetails()">
+              <i class="fas fa-check"></i>
+              Confirmar asistencia
+            </button>
+            
+            <!-- Botón para reprogramar cita -->
+            <button class="primary-btn" (click)="rescheduleAppointment(selectedAppointment)" *ngIf="!isDoctor">
+              <i class="fas fa-calendar-alt"></i>
+              Reprogramar
+            </button>
+            
+            <!-- Botón para completar cita (solo médicos y admin) -->
+            <button 
+              *ngIf="(isDoctor || isAdmin) && (selectedAppointment.status === 'scheduled' || selectedAppointment.status === 'confirmed')"
+              class="complete-modal-btn" 
+              (click)="completeAppointment(selectedAppointment); closeDetails()">
+              <i class="fas fa-check-double"></i>
+              Marcar como completada
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal para cancelación de citas -->
+  <div class="modal-overlay" *ngIf="showCancelDialog && appointmentToCancel" (click)="closeCancelDialog()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Cancelar Cita</h3>
+        <button class="modal-close" (click)="closeCancelDialog()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="cancel-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Estás a punto de cancelar tu cita del día <strong>{{ formatDate(appointmentToCancel.date) }}</strong> 
+            a las <strong>{{ appointmentToCancel.time }}</strong> con 
+            <strong>{{ appointmentToCancel.doctor }}</strong>.</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="cancellation-reason">Motivo de cancelación:</label>
+          <textarea 
+            id="cancellation-reason" 
+            [(ngModel)]="cancellationReason" 
+            rows="3" 
+            placeholder="Por favor, indíquenos el motivo por el cual cancela su cita..."></textarea>
+        </div>
+        
+        <div class="cancel-policy">
+          <p>
+            <strong>Política de cancelación:</strong> Las citas pueden cancelarse sin cargo hasta 24 horas antes de la hora programada.
+          </p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button class="secondary-btn" (click)="closeCancelDialog()">
+            Volver
+          </button>
+          <button 
+            class="danger-btn" 
+            [disabled]="!cancellationReason.trim()" 
+            (click)="cancelAppointment()">
+            Confirmar cancelación
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal para confirmación de citas -->
+  <div class="modal-overlay" *ngIf="showConfirmDialog && appointmentToConfirm" (click)="closeConfirmDialog()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirmar Asistencia</h3>
+        <button class="modal-close" (click)="closeConfirmDialog()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="confirm-message">
+          <i class="fas fa-calendar-check"></i>
+          <div>
+            <p>Estás a punto de confirmar tu asistencia para la cita del día
+            <strong>{{ formatDate(appointmentToConfirm.date) }}</strong>
+            a las <strong>{{ appointmentToConfirm.time }}</strong>
+            con <strong>{{ appointmentToConfirm.doctor }}</strong>.</p>
+            
+            <p class="confirm-note">Al confirmar, te comprometes a asistir a tu cita en la fecha y hora indicadas.</p>
+          </div>
+        </div>
+        
+        <div class="instructions">
+          <h4>Instrucciones importantes:</h4>
+          <ul>
+            <li>Presenta tu cédula de identidad y credencial del seguro médico.</li>
+            <li>Llega 15 minutos antes de la hora programada.</li>
+            <li>Si presentas síntomas respiratorios, usa mascarilla.</li>
+            <li>Trae cualquier estudio previo o información médica relevante.</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button class="secondary-btn" (click)="closeConfirmDialog()">
+            Cancelar
+          </button>
+          <button 
+            class="confirm-modal-btn" 
+            (click)="confirmAppointment()">
+            Confirmar mi asistencia
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

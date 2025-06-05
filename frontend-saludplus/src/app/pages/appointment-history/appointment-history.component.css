@@ -1,0 +1,847 @@
+/* Variables globales de colores utilizando la misma paleta de SaludPlus */
+:root {
+  --primary-color: #008080;
+  --primary-dark: #005353;
+  --primary-light: #00a0a0;
+  --accent-color: #ff6b6b;
+  --accent-dark: #e64d4d;
+  --text-dark: #333;
+  --text-light: #666;
+  --text-lighter: #999;
+  --background-color: #f8f9fa;
+  --card-bg: #ffffff;
+  --border-color: #e2e8f0;
+  --success-color: #10b981;
+  --success-bg: #ecfdf5;
+  --warning-color: #f59e0b;
+  --warning-bg: #fffbeb;
+  --danger-color: #ef4444;
+  --danger-bg: #fef2f2;
+  --info-color: #3b82f6;
+  --info-bg: #eff6ff;
+}
+
+/* Estilos generales de la página */
+main {
+  padding: 20px;
+  background-color: var(--background-color);
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.titulo-seccion {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.texto-descriptivo {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  max-width: 800px;
+}
+
+.mb-30 {
+  margin-bottom: 30px;
+}
+
+/* Estilos para usuarios no logueados */
+.login-required {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.login-required-card {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  padding: 40px;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.login-icon {
+  font-size: 3rem;
+  color: var(--text-lighter);
+  margin-bottom: 20px;
+}
+
+.login-required-card h3 {
+  font-size: 1.5rem;
+  color: var(--text-dark);
+  margin-bottom: 15px;
+}
+
+.login-required-card p {
+  color: var(--text-light);
+  margin-bottom: 25px;
+}
+
+.login-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* Estilos para botones */
+.primary-btn, .secondary-btn, .danger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.primary-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.primary-btn:hover {
+  background-color: var(--primary-dark);
+}
+
+.secondary-btn {
+  background-color: #e2e8f0;
+  color: var(--text-dark);
+}
+
+.secondary-btn:hover {
+  background-color: #d1d5db;
+}
+
+.danger-btn {
+  background-color: var(--danger-bg);
+  color: var(--danger-color);
+}
+
+.danger-btn:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.danger-btn:disabled {
+  background-color: #efefef;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Estilos para el contenedor principal del historial */
+.appointment-history-container {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+/* Estilos para los filtros */
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+
+.search-box {
+  position: relative;
+  min-width: 300px;
+  flex-grow: 1;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 14px;
+}
+
+.search-box input:focus {
+  border-color: var(--primary-light);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 128, 128, 0.1);
+}
+
+.search-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-light);
+  cursor: pointer;
+}
+
+.search-btn:hover {
+  color: var(--primary-color);
+}
+
+.filters-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter label {
+  font-size: 14px;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.filter select, .filter input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  font-size: 14px;
+  background-color: white;
+}
+
+.filter select:focus, .filter input:focus {
+  border-color: var(--primary-light);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 128, 128, 0.1);
+}
+
+.filter-reset {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 6px 10px;
+}
+
+.filter-reset:hover {
+  color: var(--primary-color);
+}
+
+/* Indicador de carga */
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  gap: 15px;
+  color: var(--text-light);
+  font-size: 18px;
+}
+
+.loading-indicator i {
+  font-size: 24px;
+  color: var(--primary-color);
+}
+
+/* Estado de no citas */
+.no-appointments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 0;
+}
+
+.no-data-icon {
+  font-size: 4rem;
+  color: var(--text-lighter);
+  margin-bottom: 20px;
+}
+
+.no-appointments h3 {
+  font-size: 1.5rem;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+
+.no-appointments p {
+  color: var(--text-light);
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+/* Estilos para la tabla de citas */
+.appointments-table-container {
+  overflow-x: auto;
+}
+
+.appointments-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.appointments-table th {
+  background-color: #f8fafc;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-dark);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.appointments-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.appointments-table th.sortable:hover {
+  background-color: #f1f5f9;
+}
+
+.appointments-table th i {
+  margin-left: 5px;
+  color: var(--text-lighter);
+}
+
+.appointments-table th i.fa-sort-up,
+.appointments-table th i.fa-sort-down {
+  color: var(--primary-color);
+}
+
+.appointments-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-dark);
+}
+
+.date-cell {
+  white-space: nowrap;
+}
+
+.appointment-date {
+  font-weight: 500;
+}
+
+.appointment-time {
+  font-size: 0.9em;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-scheduled {
+  background-color: var(--info-bg);
+  color: var(--info-color);
+}
+
+.status-completed {
+  background-color: var(--success-bg);
+  color: var(--success-color);
+}
+
+.status-cancelled {
+  background-color: var(--danger-bg);
+  color: var(--danger-color);
+}
+
+.status-pending {
+  background-color: var(--warning-bg);
+  color: var(--warning-color);
+}
+
+.status-confirmed {
+  background-color: #ebf7f7;
+  color: var(--primary-color);
+}
+
+.actions-cell {
+  white-space: nowrap;
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.action-btn.confirm-btn {
+  color: var(--primary-color);
+}
+
+.action-btn.confirm-btn:hover {
+  background-color: rgba(0, 128, 128, 0.1);
+}
+
+.action-btn.complete-btn {
+  color: var(--success-color);
+}
+
+.action-btn.complete-btn:hover {
+  background-color: var(--success-bg);
+}
+
+.view-btn {
+  color: var(--info-color);
+}
+
+.view-btn:hover {
+  background-color: var(--info-bg);
+}
+
+.reschedule-btn {
+  color: var(--primary-color);
+}
+
+.reschedule-btn:hover {
+  background-color: rgba(0, 128, 128, 0.1);
+}
+
+.cancel-btn {
+  color: var(--danger-color);
+}
+
+.cancel-btn:hover {
+  background-color: var(--danger-bg);
+}
+
+/* Enlace para agendar nueva cita */
+.new-appointment-cta {
+  margin-top: 30px;
+  text-align: center;
+}
+
+/* Estilos para los modales */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease-in-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-light);
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background-color: var(--background-color);
+  color: var(--text-dark);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.detail-value {
+  font-size: 1rem;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.detail-notes {
+  background-color: var(--background-color);
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.detail-notes h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--text-dark);
+  font-size: 1rem;
+}
+
+.detail-notes p {
+  margin: 0;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.reminder-alert {
+  display: flex;
+  align-items: flex-start;
+  background-color: var(--info-bg);
+  color: var(--info-color);
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  gap: 12px;
+}
+
+.reminder-alert i {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.reminder-title {
+  margin: 0 0 5px;
+  font-weight: 600;
+}
+
+.reminder-text {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* Estilos para el diálogo de cancelación */
+.cancel-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  background-color: var(--danger-bg);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.cancel-warning i {
+  color: var(--danger-color);
+  font-size: 20px;
+}
+
+.cancel-warning p {
+  margin: 0;
+  color: var(--text-dark);
+  line-height: 1.5;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.form-group textarea {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px rgba(0, 128, 128, 0.1);
+}
+
+.cancel-policy {
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.cancel-policy p {
+  margin: 0;
+  color: var(--text-light);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .filters-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-box {
+    width: 100%;
+  }
+  
+  .filters-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .filter {
+    flex: 1;
+    min-width: 140px;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+  }
+}
+
+/* Agregar los siguientes estilos para los nuevos elementos */
+
+/* Estilos para el estado "confirmado" */
+.status-confirmed {
+  background-color: #ebf7f7;
+  color: var(--primary-color);
+}
+
+/* Estilos para el botón de confirmar */
+.action-btn.confirm-btn {
+  color: var(--primary-color);
+}
+
+.action-btn.confirm-btn:hover {
+  background-color: rgba(0, 128, 128, 0.1);
+}
+
+/* Estilos para el botón de completar */
+.action-btn.complete-btn {
+  color: var(--success-color);
+}
+
+.action-btn.complete-btn:hover {
+  background-color: var(--success-bg);
+}
+
+/* Estilos para los botones modales de confirmación y completar */
+.confirm-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  gap: 8px;
+  background-color: #ebf7f7;
+  color: var(--primary-color);
+}
+
+.confirm-modal-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.complete-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  gap: 8px;
+  background-color: var(--success-bg);
+  color: var(--success-color);
+}
+
+.complete-modal-btn:hover {
+  background-color: var(--success-color);
+  color: white;
+}
+
+/* Estilos para la alerta de confirmación */
+.confirmation-alert {
+  background-color: #ebf7f7;
+  color: var(--primary-color);
+}
+
+.confirmation-alert i {
+  color: var(--primary-color);
+}
+
+/* Estilos para la alerta de médico */
+.doctor-alert {
+  background-color: #f0f7ff;
+  color: #3b82f6;
+}
+
+.doctor-alert i {
+  color: #3b82f6;
+}
+
+/* Estilos para el modal de confirmación */
+.confirm-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  background-color: #ebf7f7;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.confirm-message i {
+  color: var(--primary-color);
+  font-size: 24px;
+}
+
+.confirm-message p {
+  margin: 0 0 10px;
+  color: var(--text-dark);
+  line-height: 1.5;
+}
+
+.confirm-note {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.instructions {
+  background-color: #f8fafc;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.instructions h4 {
+  margin-top: 0;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.instructions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.instructions li {
+  margin-bottom: 8px;
+  color: var(--text-dark);
+}
+
+.instructions li:last-child {
+  margin-bottom: 0;
+}

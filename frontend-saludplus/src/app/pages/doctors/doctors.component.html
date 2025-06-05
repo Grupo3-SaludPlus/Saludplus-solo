@@ -1,23 +1,92 @@
 <main>
-  <section class="content">
-    <h2 class="titulo-seccion">{{ title }}</h2>
-    <p class="texto-descriptivo mb-30">{{ subtitle }}</p>
-    
-    <div class="doctor-grid">
-      <div class="doctor-card" *ngFor="let doctor of doctors">
-        <div class="doctor-profile">
-          <div class="doctor-avatar">
-            <div class="doctor-initials">{{ doctor.name.charAt(0) }}</div>
+  <section class="doctors-hero">
+    <div class="content">
+      <h1 class="page-title">{{ title }}</h1>
+      <p class="page-subtitle">{{ subtitle }}</p>
+    </div>
+  </section>
+  
+  <section class="doctors-container">
+    <div class="content">
+      <div class="filter-section">
+        <div class="search-bar">
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre o especialidad..." 
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+          >
+          <button class="search-icon">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+        
+        <div class="specialty-filter">
+          <select [(ngModel)]="selectedSpecialty" (change)="onSpecialtyChange()">
+            <option value="">Todas las especialidades</option>
+            @for (specialty of specialties; track specialty) {
+              <option [value]="specialty">{{ specialty }}</option>
+            }
+          </select>
+        </div>
+        
+        <button class="reset-button" (click)="resetFilters()">
+          <i class="fas fa-sync-alt"></i> Limpiar filtros
+        </button>
+      </div>
+      
+      <div class="doctors-count">
+        <p>Mostrando {{ filteredDoctors.length }} médicos</p>
+      </div>
+      
+      <div class="doctors-grid">
+        @for (doctor of filteredDoctors; track doctor.id) {
+          <div class="doctor-card">
+            <div class="doctor-image">
+              <img [src]="doctor.image" [alt]="doctor.name" onerror="this.src='assets/avatar-placeholder.png'">
+            </div>
+            <div class="doctor-info">
+              <h3>{{ doctor.name }}</h3>
+              <p class="doctor-specialty">{{ doctor.specialty }}</p>
+              <div class="doctor-rating">
+                <div class="stars">
+                  @for (star of getStars(doctor?.rating || 0); track $index) {
+                    <i [class]="star === 1 ? 'fas fa-star' : star === 0.5 ? 'fas fa-star-half-alt' : 'far fa-star'"></i>
+                  }
+                </div>
+                <span>{{ doctor?.rating || 'Sin valoración' }}</span>
+              </div>
+              <ul class="doctor-details">
+                <li><i class="fas fa-graduation-cap"></i> {{ doctor.education }}</li>
+                <li><i class="fas fa-history"></i> {{ doctor.experience }}</li>
+                <li><i class="fas fa-calendar-alt"></i> {{ doctor.availability }}</li>
+              </ul>
+              <p class="doctor-bio">{{ doctor.biography }}</p>
+              <div class="doctor-actions">
+                <button 
+                  class="btn btn-primary"
+                  (click)="viewDoctorProfile(doctor.id)">
+                  <i class="fas fa-user"></i>
+                  Ver Perfil
+                </button>
+                <button 
+                  class="btn btn-secondary"
+                  (click)="scheduleAppointment(doctor.id)">
+                  <i class="fas fa-calendar-plus"></i>
+                  Agendar Cita
+                </button>
+              </div>
+            </div>
           </div>
-          <h3>{{ doctor.name }}</h3>
-          <p class="specialty">{{ doctor.specialty }}</p>
-        </div>
-        <div class="doctor-info">
-          <p><strong>Formación:</strong> {{ doctor.education }}</p>
-          <p><strong>Experiencia:</strong> {{ doctor.experience }}</p>
-          <p><strong>Horario:</strong> {{ doctor.availability }}</p>
-        </div>
-        <button class="agendar-btn">Agendar cita</button>
+        }
+        
+        @if (filteredDoctors.length === 0) {
+          <div class="no-results">
+            <i class="fas fa-user-md fa-3x"></i>
+            <h3>No se encontraron médicos</h3>
+            <p>Intenta con otros criterios de búsqueda</p>
+          </div>
+        }
       </div>
     </div>
   </section>
