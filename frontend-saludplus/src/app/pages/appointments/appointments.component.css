@@ -805,9 +805,9 @@ button:active, a.btn:active {
 
 .date-time-container {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
 }
 
 /* Selectores de fecha y hora */
@@ -824,524 +824,431 @@ button:active, a.btn:active {
   color: #008080;
 }
 
-.date-grid, .time-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 12px;
-  margin-bottom: 25px;
+.date-selector, .time-selector {
+  background: #dda87d;
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 24px rgba(38, 166, 154, 0.08);
+  min-width: 260px;
+  flex: 1 1 260px;
 }
 
-.date-card, .time-card {
-  padding: 12px 8px;
-  text-align: center;
+/* ----- CALENDARIO DATEPICKER MODERNO ----- */
+.date-selector {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto;
+  border: 1px solid #eaeaea;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.calendar-month {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #2d3748;
+  letter-spacing: 0.5px;
+}
+
+.calendar-arrow {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
   cursor: pointer;
-  border: 1px solid #e2e8f0;
-  background-color: white;
-  transition: all 0.3s ease;
-  font-size: 14px;
+  color: #4a5568;
+  background-color: #f7fafc;
+  border: 1px solid #edf2f7;
+  transition: all 0.2s ease;
 }
 
-.date-card:hover, .time-card:hover {
-  border-color: #008080;
-  background-color: #f0f9f9;
-}
-
-.date-card.selected, .time-card.selected {
-  border-color: #008080;
-  background-color: #008080;
-  color: white;
-  font-weight: 500;
-  box-shadow: 0 2px 6px rgba(0, 128, 128, 0.25);
-}
-
-.date-selector, .time-selector {
-  background-color: #f8fafc;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-}
-
-h4 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  color: var(--text-dark);
-  font-size: 16px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-input, select, textarea {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  font-size: 14px;
-}
-
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(0, 128, 128, 0.2);
-}
-
-.appointment-summary {
-  background-color: #f0f9f9;
-  padding: 20px;
-  border-radius: 10px;
-  margin-top: 30px;
-  margin-bottom: 30px;
-  border: 1px solid #cce5e5;
-}
-
-.appointment-summary h4 {
+.calendar-arrow:hover {
+  background-color: #edf2f7;
   color: #008080;
-  margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #cce5e5;
-}
-
-.summary-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.summary-label {
-  font-weight: 600;
-  color: #334155;
-}
-
-.summary-value {
-  color: #008080;
-  font-weight: 500;
-}
-
-.step-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 30px;
-}
-
-.back-btn, .next-btn, .submit-btn {
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 120px;
-}
-
-/* Botón atrás */
-.back-btn {
-  background-color: #f1f5f9;
-  color: #334155;
-  border: 1px solid #e2e8f0;
-}
-
-.back-btn:hover {
-  background-color: #e2e8f0;
-}
-
-.back-btn:active {
-  background-color: #cbd5e1 !important;
-  transform: translateY(1px);
-}
-
-/* Estilos para el botón Continuar */
-.next-btn, .submit-btn {
-  background-color: #008080; /* Color verde-azulado que combina bien con temas médicos */
-  color: white;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: none;
-  box-shadow: 0 2px 5px rgba(0, 128, 128, 0.25);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  min-width: 140px;
-}
-
-.next-btn:hover, .submit-btn:hover {
-  background-color: #006666; /* Versión más oscura al pasar el cursor */
-  box-shadow: 0 4px 10px rgba(0, 128, 128, 0.3);
   transform: translateY(-2px);
 }
 
-.next-btn:active, .submit-btn:active {
-  background-color: #006666 !important;
-  color: white !important;
+.calendar-arrow:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 128, 128, 0.3);
 }
 
-.next-btn:disabled, .submit-btn:disabled {
-  background-color: #a0aec0;
-  box-shadow: none;
-  transform: none;
-  cursor: not-allowed;
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 10px;
+  text-align: center;
 }
 
-.next-btn i, .submit-btn i {
-  transition: transform 0.2s ease;
+.calendar-days span {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 10px 0;
+  letter-spacing: 1px;
 }
 
-.next-btn:hover i, .submit-btn:hover i {
-  transform: translateX(4px);
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
 }
 
-/* Opciones seleccionables (doctor, especialidad) */
-.doctor-option, .specialty-card {
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-}
-
-.doctor-option.selected, .specialty-card.selected {
-  border-color: #2563eb;
-  background-color: #eff6ff;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
-}
-
-.doctor-option:active, .specialty-card:active {
-  transform: scale(0.98);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* Fecha y hora */
-.date-card, .time-card {
-  background-color: white;
-  transition: all 0.2s;
-}
-
-.date-card:hover, .time-card:hover {
-  border-color: #2563eb;
-  background-color: #eff6ff;
-}
-
-.date-card.selected, .time-card.selected {
-  background-color: #2563eb;
-  color: white;
-  border-color: #2563eb;
-  font-weight: 500;
-}
-
-.date-card:active, .time-card:active {
-  transform: scale(0.98);
-}
-
-/* Aspecto general de botón activo para toda la aplicación */
-button:active, a.btn:active {
-  transform: translateY(1px);
-}
-
-/* Estilos adicionales para los iconos */
-.step.completed .step-number {
+.date-card {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 40px;
+  width: 40px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  margin: 0 auto;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: transparent;
+  color: #2d3748;
+  position: relative;
+  font-weight: 500;
+  border: 1px solid transparent;
 }
 
-.step.completed .step-number i {
-  font-size: 18px;
+/* Only hide empty cells properly */
+.date-card.outside-month {
+  visibility: hidden;
 }
 
-.specialty-icon i {
-  font-size: 28px;
+/* Remove this rule as it may hide valid dates */
+/*
+.date-card:empty,
+.date-card:not([data-date]) {
+  visibility: hidden;
+}
+*/
+
+.date-card:hover:not(.disabled):not(.selected) {
+  background-color: #f0f9f9;
+  border-color: #cceeee;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 128, 128, 0.1);
 }
 
-.info-card h3 {
+.date-card.selected {
+  background-color: #008080;
+  color: white;
+  font-weight: 600;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 128, 128, 0.2);
+  z-index: 1;
+}
+
+.date-card.selected::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #008080;
+}
+
+.date-card.disabled {
+  color: #cbd5e0;
+  pointer-events: none;
+  background-color: #f9f9f9;
+}
+
+.date-card.today:not(.selected) {
+  border: 2px solid #008080;
+  color: #008080;
+  font-weight: 700;
+}
+
+.date-card.today:not(.selected)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #008080;
+  border-radius: 3px 3px 0 0;
+}
+
+/* Animación al cambiar de mes */
+@keyframes fadeCalendar {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.date-grid {
+  animation: fadeCalendar 0.3s ease-out;
+}
+
+/* Mejora visual para días con citas disponibles */
+.date-card.available::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #008080;
+}
+
+/* Estilos responsive */
+@media (max-width: 576px) {
+  .date-selector {
+    padding: 16px;
+  }
+  
+  .date-card {
+    height: 36px;
+    width: 36px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ----- SELECTOR DE HORA ELEGANTE ----- */
+.time-selector {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto;
+  border: 1px solid #eaeaea;
+}
+
+.time-selector h4 {
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.info-card h3 i {
-  color: var(--primary);
+.time-selector h4 i {
+  color: #008080;
+  font-size: 1rem;
 }
 
-.step-actions button i {
-  transition: transform 0.3s ease;
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
-.next-btn:hover i {
-  transform: translateX(3px);
+/* Estilo para la barra de desplazamiento */
+.time-grid::-webkit-scrollbar {
+  width: 6px;
 }
 
-.back-btn:hover i {
-  transform: translateX(-3px);
-}
-
-.submit-btn i {
-  font-size: 16px;
-}
-
-/* Iconos específicos para especialidades */
-.specialty-icon {
-  height: 60px;
-  width: 60px;
-  background-color: rgba(0, 128, 128, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-  transition: all 0.3s ease;
-}
-
-.specialty-card:hover .specialty-icon {
-  background-color: rgba(0, 128, 128, 0.2);
-  transform: scale(1.1);
-}
-
-.specialty-card.selected .specialty-icon {
-  background-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
-}
-
-.specialty-card.selected .specialty-icon i {
-  color: white;
-}
-
-.doctor-avatar.any-avatar {
-  background-color: #64748b;
-}
-
-.doctor-avatar.any-avatar i {
-  font-size: 22px;
-}
-
-@media (max-width: 768px) {
-  .appointment-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-  
-  .stepper {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .step {
-    flex-direction: row;
-    width: 100%;
-    justify-content: flex-start;
-    gap: 15px;
-  }
-  
-  .step-separator {
-    width: 2px;
-    height: 20px;
-    margin-left: 20px;
-    margin-bottom: 0;
-  }
-  
-  .specialty-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .service-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .booking-header {
-    padding: 16px;
-  }
-  
-  .step-content {
-    padding: 24px 16px;
-  }
-  
-  /* Mejoras para móvil */
-  .calendar-day {
-    min-width: 80px;
-    padding: 10px;
-  }
-  
-  .doctor-card {
-    padding: 16px 12px;
-  }
-  
-  .time-slots {
-    margin-top: 16px;
-    width: 100%;
-  }
-  
-  .appointment-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-
-/* Optimizar el scrolling horizontal en calendarios */
-.calendar-days::-webkit-scrollbar {
-  height: 5px;
-}
-
-.calendar-days::-webkit-scrollbar-track {
+.time-grid::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 10px;
 }
 
-.calendar-days::-webkit-scrollbar-thumb {
-  background: #00a99d;
+.time-grid::-webkit-scrollbar-thumb {
+  background: #d1d5db;
   border-radius: 10px;
 }
 
-/* Accesibilidad y focus */
-.service-card:focus-visible,
-.time-slot:focus-visible,
-.btn-primary:focus-visible {
-  outline: 2px solid #00a99d;
-  outline-offset: 2px;
+.time-grid::-webkit-scrollbar-thumb:hover {
+  background: #008080;
 }
 
-/* Estilos para el campo de motivo de consulta */
-textarea#message {
-  width: 100%;
-  min-height: 80px;
-  max-height: 200px;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 15px;
-  color: #334155;
-  resize: vertical; /* Permite al usuario ajustar la altura */
-  transition: border-color 0.2s ease;
-}
-
-textarea#message:focus {
-  border-color: #008080;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.15);
-}
-
-.user-profile-summary {
-  background-color: #e0f2fe;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 20px;
-  border-left: 4px solid #0369a1;
-}
-
-.info-message {
+.time-card {
   display: flex;
   align-items: center;
-  margin: 0;
-  color: #0369a1;
+  justify-content: center;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f8fafc;
+  color: #4a5568;
+  position: relative;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  user-select: none;
 }
 
-.info-message i {
-  margin-right: 8px;
-  font-size: 16px;
+.time-card:hover {
+  background-color: #f0f9f9;
+  border-color: #cceeee;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 128, 128, 0.1);
 }
 
-/* Estilos para el modal de confirmación */
+.time-card.selected {
+  background-color: #008080;
+  color: white;
+  font-weight: 600;
+  border-color: #008080;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 128, 128, 0.2);
+  z-index: 1;
+}
+
+.time-card.selected::before {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: white;
+  left: 10px;
+}
+
+.time-card:active {
+  transform: translateY(0);
+}
+
+/* Categorización de horarios (mañana, tarde) */
+.time-category {
+  grid-column: 1 / -1;
+  font-size: 0.85rem;
+  color: #718096;
+  font-weight: 600;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  padding-left: 4px;
+}
+
+.time-category:first-child {
+  margin-top: 0;
+}
+
+/* Estilos responsive */
+@media (max-width: 576px) {
+  .time-selector {
+    padding: 16px;
+  }
+  
+  .time-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+  }
+  
+  .time-card {
+    height: 36px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Confirmation modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
+  justify-content: center;
+  z-index: 99999; /* Valor muy alto para estar por encima de todo */
+  backdrop-filter: blur(3px); /* Efecto de desenfoque detrás del modal */
 }
 
 .confirmation-modal {
-  background-color: #1c1c1e;
-  border-radius: 12px;
+  background: white;
   width: 90%;
-  max-width: 500px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  max-width: 450px;
+  border-radius: 12px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
   overflow: hidden;
-  animation: modal-appear 0.3s ease;
+  animation: modalAppear 0.3s ease-out;
+  transform-origin: center;
+}
+
+@keyframes modalAppear {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.95) translateY(10px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
 }
 
 .modal-content {
-  padding: 20px;
+  padding: 30px;
+}
+
+.modal-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #008080;
+  margin-bottom: 15px;
   text-align: center;
 }
 
-.modal-content h2 {
-  font-size: 16px;
-  color: #999;
-  margin-bottom: 15px;
-  font-weight: normal;
-}
-
 .modal-content p {
-  font-size: 18px;
-  color: #fff;
+  font-size: 1.1rem;
+  color: #4a5568;
+  text-align: center;
   margin-bottom: 25px;
+  line-height: 1.5;
 }
 
 .modal-actions {
   display: flex;
   justify-content: center;
-  padding-top: 10px;
 }
 
 .modal-button {
-  padding: 10px 20px;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
+  padding: 12px 28px;
+  font-size: 1.05rem;
+  font-weight: 600;
   border: none;
-  min-width: 100px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .modal-button.primary {
-  background-color: #0ea5e9;
+  background-color: #008080;
   color: white;
 }
 
 .modal-button.primary:hover {
-  background-color: #0284c7;
+  background-color: #006666;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 128, 128, 0.2);
 }
 
-@keyframes modal-appear {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.modal-button.primary:active {
+  transform: translateY(-1px);
 }

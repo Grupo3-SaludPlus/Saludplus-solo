@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -49,13 +49,21 @@ export class AppointmentsComponent implements OnInit {
   // Añadir esta propiedad a la clase
   showConfirmationModal: boolean = false;
 
+  calendarMonth: Date = new Date();
+  calendarDays: { date: Date, label: number | string, available: boolean, isToday: boolean }[] = [];
+
   constructor(
     private doctorsService: DoctorsService,
     private route: ActivatedRoute,
     private router: Router,
     private appointmentsService: SharedAppointmentsService,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService,
+    // Add ChangeDetectorRef
+    private cd: ChangeDetectorRef 
+  ) {
+    // Initialize showConfirmationModal explicitly
+    this.showConfirmationModal = false;
+  }
   
   ngOnInit() {
     // Cargar médicos desde el servicio
@@ -98,6 +106,8 @@ export class AppointmentsComponent implements OnInit {
         this.currentUserName = '';
       }
     });
+
+    this.generateCalendar();
   }
   
   // Método para verificar si hay parámetros de consulta
@@ -208,17 +218,15 @@ export class AppointmentsComponent implements OnInit {
   }
   
   submitAppointment(): void {
-    // Verificar si el usuario está logueado antes de enviar
+    // First checks if user is not logged in and validates fields
     if (!this.isLoggedIn) {
-      // Si no está logueado, verificar que todos los campos obligatorios estén completos
       if (!this.appointmentForm.name || !this.appointmentForm.email || !this.appointmentForm.phone) {
-        // Mostrar mensaje de error
         alert('Por favor completa todos los campos obligatorios');
         return;
       }
     }
     
-    // Obtener el usuario actual
+    // But then requires login anyway!
     const currentUser = this.authService.currentUserValue;
     
     if (!currentUser) {
@@ -265,8 +273,15 @@ export class AppointmentsComponent implements OnInit {
     
     console.log('Cita guardada:', newAppointment);
     
-    // Mostrar el modal de confirmación en lugar del alert
-    this.showConfirmationModal = true;
+    console.log('About to show modal');
+    
+    // Force this to run outside Angular's change detection cycle to ensure it triggers
+    setTimeout(() => {
+      this.showConfirmationModal = true;
+      console.log('Modal should be visible now:', this.showConfirmationModal);
+      // Force change detection
+      this.cd.detectChanges();
+    }, 0);
   }
 
   // Método para seleccionar una especialidad de forma controlada
@@ -302,7 +317,77 @@ export class AppointmentsComponent implements OnInit {
 
   // Añadir este nuevo método para cerrar el modal y navegar
   navigateToMyAppointments(): void {
+    console.log('Navigating to appointments page');
+    // Hide modal first
     this.showConfirmationModal = false;
-    this.router.navigate(['/patient/my-appointments']);
+    this.cd.detectChanges();
+    
+    // Navigate after a short delay
+    setTimeout(() => {
+      this.router.navigate(['/my-appointments']);
+    }, 100);
+  }
+
+  generateCalendar() {
+    const year = this.calendarMonth.getFullYear();
+    const month = this.calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const days: any[] = [];
+    
+    // Días del mes anterior
+    for (let i = 0; i < firstDay.getDay(); i++) {
+      const prevDate = new Date(year, month, -i);
+      days.unshift({
+        date: prevDate,
+        label: prevDate.getDate(),
+        available: false,
+        isToday: false,
+        isCurrentMonth: false
+      });
+    }
+    
+    // Días del mes actual
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const date = new Date(year, month, d);
+      const available = this.availableDates
+        ? this.availableDates.some(av =>
+            new Date(av).toDateString() === date.toDateString()
+          )
+        : true;
+      const isToday = new Date().toDateString() === date.toDateString();
+      days.push({ 
+        date, 
+        label: d, 
+        available, 
+        isToday,
+        isCurrentMonth: true
+      });
+    }
+    
+    // Días del mes siguiente para completar la cuadrícula
+    const daysNeeded = 42 - days.length; // 6 filas x 7 columnas = 42
+    for (let i = 1; i <= daysNeeded; i++) {
+      const nextDate = new Date(year, month + 1, i);
+      days.push({
+        date: nextDate,
+        label: i,
+        available: false,
+        isToday: false,
+        isCurrentMonth: false
+      });
+    }
+    
+    this.calendarDays = days;
+  }
+
+  prevMonth() {
+    this.calendarMonth = new Date(this.calendarMonth.getFullYear(), this.calendarMonth.getMonth() - 1, 1);
+    this.generateCalendar();
+  }
+
+  nextMonth() {
+    this.calendarMonth = new Date(this.calendarMonth.getFullYear(), this.calendarMonth.getMonth() + 1, 1);
+    this.generateCalendar();
   }
 }

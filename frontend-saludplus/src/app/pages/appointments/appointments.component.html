@@ -122,13 +122,32 @@
         
         <div class="date-time-container">
           <div class="date-selector">
-            <h4><i class="far fa-calendar-alt"></i> Selecciona una fecha</h4>
+            <div class="calendar-header">
+              <button class="calendar-arrow" (click)="prevMonth()">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <span class="calendar-month">
+                {{ calendarMonth | date:'MMMM yyyy' }}
+              </span>
+              <button class="calendar-arrow" (click)="nextMonth()">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            <div class="calendar-days">
+              <span *ngFor="let d of ['Su','Mo','Tu','We','Th','Fr','Sa']">{{ d }}</span>
+            </div>
             <div class="date-grid">
-              <div class="date-card" 
-                   *ngFor="let date of availableDates"
-                   [ngClass]="{'selected': selectedDate === date}"
-                   (click)="selectDate(date)">
-                {{ date | date:'dd/MM/yyyy' }}
+              <div *ngFor="let day of calendarDays"
+                   class="date-card"
+                   [ngClass]="{
+                     'selected': selectedDate && day.date && 
+                                (day.date | date:'yyyy-MM-dd') === (selectedDate | date:'yyyy-MM-dd'),
+                     'disabled': !day.available,
+                     'today': day.isToday,
+                     'outside-month': day.label === ''
+                   }"
+                   (click)="day.available && day.date && selectDate(day.date.toISOString())">
+                {{ day.label }}
               </div>
             </div>
           </div>
@@ -136,12 +155,27 @@
           <div class="time-selector" *ngIf="appointmentForm.date">
             <h4><i class="far fa-clock"></i> Selecciona una hora</h4>
             <div class="time-grid">
-              <div class="time-card" 
-                   *ngFor="let hour of availableHours"
-                   [ngClass]="{'selected': appointmentForm.time === hour}"
-                   (click)="selectHour(hour)">
-                {{ hour }}
-              </div>
+              <!-- Horarios de mañana -->
+              <div class="time-category">Mañana</div>
+              <ng-container *ngFor="let hour of availableHours">
+                <div class="time-card" 
+                     *ngIf="hour < '12:00'"
+                     [ngClass]="{'selected': appointmentForm.time === hour}"
+                     (click)="selectHour(hour)">
+                  {{ hour }}
+                </div>
+              </ng-container>
+              
+              <!-- Horarios de tarde -->
+              <div class="time-category">Tarde</div>
+              <ng-container *ngFor="let hour of availableHours">
+                <div class="time-card" 
+                     *ngIf="hour >= '12:00'"
+                     [ngClass]="{'selected': appointmentForm.time === hour}"
+                     (click)="selectHour(hour)">
+                  {{ hour }}
+                </div>
+              </ng-container>
             </div>
           </div>
         </div>
@@ -283,15 +317,15 @@
   </section>
 </main>
 
-<!-- Modal de confirmación -->
+<!-- Modal de confirmación - simplificado para garantizar funcionamiento -->
 <div class="modal-overlay" *ngIf="showConfirmationModal">
   <div class="confirmation-modal">
     <div class="modal-content">
-      <h2>localhost:4200 dice</h2>
-      <p>¡Cita agendada correctamente!</p>
+      <h3 class="modal-title">¡Confirmación de Cita!</h3>
+      <p>Tu cita médica ha sido agendada correctamente</p>
       <div class="modal-actions">
         <button class="modal-button primary" (click)="navigateToMyAppointments()">
-          Aceptar
+          Ver Mis Citas
         </button>
       </div>
     </div>
