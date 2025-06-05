@@ -2166,14 +2166,6 @@
   gap: 20px;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 500;
-  color: #343a40;
-  font-size: 14px;
-}
-
 /* ============== ESTILOS PARA CONFIGURACIÓN HOSPITALARIA ============== */
 .settings-container {
   padding: 0;
@@ -2396,57 +2388,563 @@
   background: #dee2e6;
 }
 
+/* ============== ESTILOS PARA REPORTES MÉDICOS ============== */
+
+/* Contenedor principal de reportes */
+.reports-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Encabezado de reportes */
+.reports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.reports-header h2 {
+  font-size: 24px;
+  margin: 0;
+  font-weight: 600;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reports-header h2 i {
+  color: var(--admin-primary);
+  font-size: 24px;
+}
+
+.reports-description {
+  color: #718096;
+  margin: 5px 0 0 0;
+  font-size: 15px;
+}
+
+.btn-generate-report {
+  background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark));
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.btn-generate-report:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.btn-generate-report:active {
+  transform: translateY(0);
+}
+
+/* Panel de generación de reportes */
+.report-generator-panel {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 10px;
+}
+
+.report-generator-panel h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 20px 0;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.report-generator-panel h3::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 60px;
+  height: 3px;
+  background: var(--admin-primary);
+  border-radius: 2px;
+}
+
+.report-filter-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.filter-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border-radius: 10px;
+  border: none;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  height: 120px;
+}
+
+.filter-btn i {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.filter-btn span {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.filter-btn.patients {
+  color: #3182ce;
+  border-bottom: 3px solid #3182ce;
+}
+
+.filter-btn.financial {
+  color: #38a169;
+  border-bottom: 3px solid #38a169;
+}
+
+.filter-btn.staff {
+  color: #805ad5;
+  border-bottom: 3px solid #805ad5;
+}
+
+.filter-btn.medications {
+  color: #dd6b20;
+  border-bottom: 3px solid #dd6b20;
+}
+
+.filter-btn.equipment {
+  color: #2c5282;
+  border-bottom: 3px solid #2c5282;
+}
+
+.filter-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.filter-btn.active {
+  background: white;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Lista de reportes disponibles */
+.reports-section {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: var(--admin-primary);
+  border-radius: 2px;
+  display: block;
+}
+
+.reports-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.report-card {
+  display: flex;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.report-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.report-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  background: linear-gradient(180deg, #f0f9ff, #e0f2fe);
+  color: #3182ce;
+  font-size: 24px;
+}
+
+.report-card.patient-stats .report-icon {
+  background: linear-gradient(180deg, #ebf8ff, #bee3f8);
+  color: #3182ce;
+}
+
+.report-card.staff .report-icon {
+  background: linear-gradient(180deg, #f0e6ff, #e9d8fd);
+  color: #805ad5;
+}
+
+.report-card.financial .report-icon {
+  background: linear-gradient(180deg, #f0fff4, #c6f6d5);
+  color: #38a169;
+}
+
+.report-card.medications .report-icon {
+  background: linear-gradient(180deg, #fffaf0, #feebc8);
+  color: #dd6b20;
+}
+
+.report-card.equipment .report-icon {
+  background: linear-gradient(180deg, #ebf8ff, #bee3f8);
+  color: #2c5282;
+}
+
+.report-content {
+  flex: 1;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-header {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.report-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  line-height: 1.4;
+}
+
+.report-date {
+  font-size: 12px;
+  color: #718096;
+  display: flex;
+  justify-content: space-between;
+}
+
+.report-type {
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.report-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+.report-metrics .metric {
+  background: #f7fafc;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.metric .label {
+  font-size: 12px;
+  color: #718096;
+  flex-shrink: 0;
+}
+
+.metric .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-left: auto;
+}
+
+.critical-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 101, 101, 0.1);
+  color: #e53e3e;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 5px;
+}
+
+.critical-alert.high {
+  background: rgba(229, 62, 62, 0.15);
+  color: #c53030;
+}
+
+.critical-alert i {
+  font-size: 14px;
+}
+
+.report-actions {
+  border-left: 1px solid #edf2f7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 15px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: #718096;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.action-btn i {
+  font-size: 16px;
+}
+
+.action-btn.download-btn:hover {
+  background: #edf2f7;
+  color: var(--admin-primary);
+}
+
+.action-btn.view-btn:hover {
+  background: #edf2f7;
+  color: #3182ce;
+}
+
+/* Modal para ver reporte detallado */
+.report-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  backdrop-filter: blur(3px);
+}
+
+.report-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-modal-header {
+  background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark));
+  color: white;
+  padding: 25px;
+  border-radius: 12px 12px 0 0;
+  position: relative;
+}
+
+.report-modal-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.report-modal-header .report-date {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.report-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s;
+}
+
+.report-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.report-modal-body {
+  padding: 25px;
+  overflow-y: auto;
+}
+
+.report-modal-footer {
+  padding: 20px 25px;
+  border-top: 1px solid #edf2f7;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+.report-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.report-btn-primary {
+  background: var(--admin-primary);
+  color: white;
+  border: none;
+}
+
+.report-btn-secondary {
+  background: #fff;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+
+.report-btn-primary:hover {
+  background: var(--admin-primary-dark);
+}
+
+.report-btn-secondary:hover {
+  background: #f7fafc;
+}
+
 /* Responsive */
+@media (max-width: 992px) {
+  .reports-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
-  .form-columns {
-    grid-template-columns: 1fr;
+  .reports-header {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 15px;
   }
   
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .appointments-filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .filter-options {
-    flex-direction: column;
-  }
-  
-  .appointment-detail-footer {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .btn-cancel, .btn-save, .btn-reschedule {
+  .btn-generate-report {
     width: 100%;
     justify-content: center;
+  }
+  
+  .report-filter-buttons {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .filter-btn {
+    height: 100px;
+    padding: 15px;
+  }
+  
+  .report-icon {
+    width: 60px;
   }
 }
 
 @media (max-width: 576px) {
-  .staff-table {
-    display: block;
-    overflow-x: auto;
-  }
-  
-  .form-grid {
+  .report-filter-buttons {
     grid-template-columns: 1fr;
   }
   
-  .specialties-grid {
-    grid-template-columns: 1fr 1fr;
+  .report-card {
+    flex-direction: column;
   }
   
-  .security-options {
-    grid-template-columns: 1fr;
+  .report-icon {
+    width: 100%;
+    height: 60px;
+  }
+  
+  .report-actions {
+    flex-direction: row;
+    border-left: none;
+    border-top: 1px solid #edf2f7;
+  }
+  
+  .action-btn {
+    flex-direction: row;
+    justify-content: center;
   }
 }
