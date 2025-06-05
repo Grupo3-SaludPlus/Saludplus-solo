@@ -195,6 +195,15 @@
             </button>
           </div>
 
+          <!-- Agregar un enlace en las citas programadas para unirse a la consulta (cuando esté en progreso) -->
+          <button 
+            *ngIf="appointment.status === 'in-progress'"
+            class="join-btn"
+            (click)="joinAppointment(appointment.id)">
+            <i class="fas fa-video"></i>
+            Unirse a la consulta
+          </button>
+
           <!-- Info adicional para historial -->
           <div class="appointment-footer" *ngIf="activeTab === 'history'">
             <small class="appointment-completed-date">

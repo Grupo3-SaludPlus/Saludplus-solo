@@ -1,112 +1,101 @@
-<nav class="navbar">
+<nav>
   <div class="nav-container">
     <a class="navbar-brand" routerLink="/">
-      <img src="assets/LogoSaludPlus.png" alt="Logo SaludPlus" class="navbar-logo" />
-      <span>SaludPlus</span>
+      <img class="navbar-logo" src="assets/logo.png" alt="SaludPlus Logo">
+      SaludPlus
     </a>
-    
+
     <button class="navbar-toggler" (click)="toggleMenu()">
       <i class="fas fa-bars"></i>
     </button>
-    
+
     <ul class="navbar-nav" [class.show]="menuOpen">
-      @for (item of navItems; track item.path) {
-        <li class="nav-item">
-          <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" 
-             [routerLinkActiveOptions]="{exact: item.path === '/'}">{{ item.label }}</a>
-        </li>
-      }
+      <!-- Usar *ngFor en lugar de @for si tienes problemas -->
+      <li class="nav-item" *ngFor="let item of navItems; trackBy: trackByPath">
+        <a class="nav-link" 
+           [routerLink]="item.path" 
+           routerLinkActive="active"
+           *ngIf="hasAccess(item.roles)">
+          {{ item.label }}
+        </a>
+      </li>
     </ul>
 
-    <!-- Usuario no autenticado -->
-    <div class="auth-buttons" *ngIf="!currentUser">
-      <a routerLink="/login" class="btn-login">Iniciar Sesión</a>
-      <a routerLink="/register" class="btn-signup">Registrarse</a>
-    </div>
-
-    <!-- Usuario autenticado -->
-    <div class="user-menu" *ngIf="currentUser">
+    <!-- Menú de usuario -->
+    <div class="user-menu" *ngIf="isAuthenticated()">
       <div class="user-menu-trigger" (click)="toggleUserMenu($event)">
         <div class="user-avatar">
-          <i class="fas fa-user"></i>
+          <span>{{ getUserInitial() }}</span>
         </div>
         <div class="user-info">
-          <span class="user-name">{{ currentUser.name }}</span>
-          <span class="user-role">{{ getRoleDisplayName(currentUser.role) }}</span>
+          <span class="user-name">{{ currentUser?.name }}</span>
+          <span class="user-role">{{ getRoleDisplayName(currentUser?.role) }}</span>
         </div>
         <i class="fas fa-chevron-down"></i>
       </div>
+      
+      <!-- Dropdown del usuario -->
       <div class="user-dropdown" *ngIf="showUserMenu">
-        <!-- Perfil y ajustes (común a todos) -->
-        <div class="dropdown-section">
-          <a routerLink="/profile">
-            <i class="fas fa-user-circle"></i> Mi Perfil
+        <div class="dropdown-section" *ngIf="currentUser?.role === 'patient'">
+          <h6 class="dropdown-heading">Paciente</h6>
+          <a routerLink="/patient/dashboard">
+            <i class="fas fa-tachometer-alt"></i>
+            Mi Dashboard
           </a>
-          <a routerLink="/settings">
-            <i class="fas fa-cog"></i> Configuración
-          </a>
-        </div>
-        
-        <!-- Opciones para pacientes -->
-        <div class="dropdown-section" *ngIf="currentUser.role === 'patient'">
-          <h5 class="dropdown-heading">Citas Médicas</h5>
           <a routerLink="/appointments">
-            <i class="fas fa-calendar-plus"></i> Agendar Cita
-          </a>
-          <a routerLink="/my-appointments">
-            <i class="fas fa-calendar-alt"></i> Mis Citas
-          </a>
-          <a routerLink="/medical-history">
-            <i class="fas fa-clipboard-list"></i> Mi Historial
-          </a>
-          <a routerLink="/prescriptions">
-            <i class="fas fa-prescription"></i> Mis Recetas
+            <i class="fas fa-calendar"></i>
+            Mis Citas
           </a>
         </div>
         
-        <!-- Opciones para médicos -->
-        <div class="dropdown-section" *ngIf="currentUser.role === 'doctor'">
-          <h5 class="dropdown-heading">Panel Médico</h5>
+        <div class="dropdown-section" *ngIf="currentUser?.role === 'doctor'">
+          <h6 class="dropdown-heading">Médico</h6>
           <a routerLink="/doctor/dashboard">
-            <i class="fas fa-tachometer-alt"></i> Resumen Diario
-          </a>
-          <a routerLink="/doctor/schedule">
-            <i class="fas fa-calendar-week"></i> Mi Agenda
-          </a>
-          <a routerLink="/doctor/patients">
-            <i class="fas fa-users"></i> Mis Pacientes
-          </a>
-          <a routerLink="/doctor/medical-records">
-            <i class="fas fa-notes-medical"></i> Fichas Médicas
+            <i class="fas fa-tachometer-alt"></i>
+            Mi Dashboard
           </a>
         </div>
         
-        <!-- Opciones para administradores -->
-        <div class="dropdown-section" *ngIf="currentUser.role === 'admin'">
-          <h5 class="dropdown-heading">Administración</h5>
+        <div class="dropdown-section" *ngIf="currentUser?.role === 'admin'">
+          <h6 class="dropdown-heading">Administrador</h6>
           <a routerLink="/admin/dashboard">
-            <i class="fas fa-tachometer-alt"></i> Panel Principal
+            <i class="fas fa-tachometer-alt"></i>
+            Dashboard Admin
           </a>
           <a routerLink="/admin/users">
-            <i class="fas fa-user-md"></i> Gestionar Médicos
-          </a>
-          <a routerLink="/admin/patients">
-            <i class="fas fa-hospital-user"></i> Gestionar Pacientes
-          </a>
-          <a routerLink="/admin/specialties">
-            <i class="fas fa-stethoscope"></i> Especialidades
-          </a>
-          <a routerLink="/admin/reports">
-            <i class="fas fa-chart-bar"></i> Informes y Estadísticas
+            <i class="fas fa-users-cog"></i>
+            Gestión de Usuarios
           </a>
         </div>
         
-        <!-- Cerrar sesión (común a todos) -->
+        <!-- ENLACE SIMPLE DE LOGOUT - SIN POPUP -->
         <div class="dropdown-section border-top">
-          <a (click)="logout($event)" class="logout-link">
-            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+          <a (click)="logout()" class="logout-link">
+            <i class="fas fa-sign-out-alt"></i>
+            Cerrar Sesión
           </a>
         </div>
+      </div>
+    </div>
+
+    <!-- Botones de autenticación si no está logueado -->
+    <div class="auth-buttons" *ngIf="!isAuthenticated()">
+      <a class="btn-login" routerLink="/login">Iniciar Sesión</a>
+      <a class="btn-signup" routerLink="/register">Registrarse</a>
+    </div>
+  </div>
+
+  <!-- POPUP SIMPLE DE LOGOUT - MÁS PARECIDO AL ORIGINAL -->
+  <div *ngIf="showLogoutPopup" class="logout-popup-overlay" (click)="cancelLogout()">
+    <div class="logout-popup" (click)="$event.stopPropagation()">
+      <div class="logout-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <h3>Cerrar Sesión</h3>
+      <p>¿Estás seguro que deseas cerrar sesión?</p>
+      <div class="logout-actions">
+        <button class="btn-cancel" (click)="cancelLogout()">Cancelar</button>
+        <button class="btn-confirm" (click)="executeLogout()">Confirmar</button>
       </div>
     </div>
   </div>

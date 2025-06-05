@@ -90,4 +90,37 @@ export class NotificationService {
     const updatedAlerts = this.alerts.value.filter(alert => alert.id !== alertId);
     this.alerts.next(updatedAlerts);
   }
+
+  // Método general para mostrar notificaciones
+  private show(title: string, message: string, type: 'success' | 'error' | 'info' | 'warning'): void {
+    // Puedes implementar esto con una librería de notificaciones como ngx-toastr
+    // Por ahora usamos console.log y alert para demostración
+    console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
+    alert(`${title}\n${message}`);
+  }
+
+  // Alias para mantener retrocompatibilidad con las dos versiones usadas
+  success(title: string, message: string): void {
+    this.show(title, message, 'success');
+  }
+
+  showSuccess(title: string, message: string): void {
+    this.success(title, message);
+  }
+
+  error(title: string, message: string): void {
+    this.show(title, message, 'error');
+  }
+
+  showError(title: string, message: string): void {
+    this.error(title, message);
+  }
+
+  info(title: string, message: string): void {
+    this.show(title, message, 'info');
+  }
+
+  warning(title: string, message: string): void {
+    this.show(title, message, 'warning');
+  }
 }

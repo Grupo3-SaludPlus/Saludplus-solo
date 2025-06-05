@@ -1,216 +1,130 @@
 <main class="doctor-dashboard">
-  <div class="dashboard-header">
-    <div class="content">
-      <h1>Bienvenido, {{ doctor.name }}</h1>
-      <p>Panel de control - {{ doctor.specialty }}</p>
+  <div class="doctor-dashboard-container">
+    <!-- Header de bienvenida -->
+    <div class="welcome-header">
+      <div class="welcome-text">
+        <h1>Bienvenido, Dr. {{ currentUser?.name }}</h1>
+        <p>{{ getCurrentDate() }}</p>
+      </div>
+      
+      <div class="quick-actions">
+        <a routerLink="/doctor/appointments" class="btn-action">
+          <i class="fas fa-calendar-check"></i>
+          Ver Todas las Citas
+        </a>
+        <button class="btn-action emergency">
+          <i class="fas fa-ambulance"></i>
+          Emergencia
+        </button>
+      </div>
     </div>
-  </div>
-  
-  <div class="content dashboard-container">
-    <div class="dashboard-grid">
-      <!-- Columna de estadísticas y calendario -->
-      <div class="dashboard-sidebar">
-        <!-- Estadísticas -->
-        <div class="stats-container">
-          <div class="stats-card">
-            <h3>Citas</h3>
-            <div class="stats-summary">
-              <div class="stat-item">
-                <span class="stat-number">{{ stats.total }}</span>
-                <span class="stat-label">Total</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number">{{ stats.scheduled }}</span>
-                <span class="stat-label">Agendadas</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number">{{ stats.completed }}</span>
-                <span class="stat-label">Completadas</span>
-              </div>
-            </div>
-          </div>
+    
+    <!-- Tarjetas de estadísticas -->
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-calendar-day"></i>
         </div>
-        
-        <!-- Citas de hoy - CORREGIDO -->
-        <div class="today-appointments">
-          <h3>Citas para hoy</h3>
-          
-          @if (todayAppointments.length === 0) {
-            <div class="empty-state">
-              <p>No hay citas programadas para hoy</p>
-            </div>
-          }
-          
-          @if (todayAppointments.length > 0) {
-            <ul class="appointment-list">
-              @for (apt of todayAppointments; track apt.id) {
-                <li class="appointment-item">
-                  <div class="appointment-time">{{ apt.time }}</div>
-                  <div class="appointment-details">
-                    <div class="patient-name">{{ apt.patientName }}</div>
-                    <div class="appointment-type">{{ apt.reason }}</div>
-                  </div>
-                  <div class="appointment-status" [ngClass]="getStatusClass(apt.status)">
-                    {{ getStatusText(apt.status) }}
-                  </div>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-        
-        <!-- Calendario -->
-        <div class="calendar-container">
-          <div class="calendar-header">
-            <button class="calendar-nav" (click)="prevMonth()">
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <h3>
-              {{ currentDate | date:'MMMM yyyy' }}
-            </h3>
-            <button class="calendar-nav" (click)="nextMonth()">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-          
-          <div class="calendar-weekdays">
-            <div>Lu</div>
-            <div>Ma</div>
-            <div>Mi</div>
-            <div>Ju</div>
-            <div>Vi</div>
-            <div>Sa</div>
-            <div>Do</div>
-          </div>
-          
-          <div class="calendar-days">
-            @for (day of calendarDays; track $index) {
-              <div 
-                class="calendar-day" 
-                [class.other-month]="!day.isCurrentMonth"
-                [class.today]="isToday(day.date)"
-                [class.has-appointments]="day.hasAppointments"
-                (click)="day.isCurrentMonth && selectDate(day.date)"
-              >
-                {{ day.day }}
-                @if (day.hasAppointments) {
-                  <span class="appointment-indicator">{{ day.appointments }}</span>
-                }
-              </div>
-            }
-          </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.todayTotal }}</div>
+          <div class="stat-label">Citas Hoy</div>
         </div>
       </div>
       
-      <!-- Columna principal con listado de citas -->
-      <div class="dashboard-main">
-        <div class="appointments-header">
-          <h2>Mis Citas</h2>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.pendingTotal }}</div>
+          <div class="stat-label">Pendientes</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-user-injured"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.monthlyPatients }}</div>
+          <div class="stat-label">Pacientes este mes</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.completedRate }}%</div>
+          <div class="stat-label">Tasa de Completitud</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Contenido principal -->
+    <div class="dashboard-content">
+      <!-- Citas de hoy -->
+      <section class="today-appointments-section">
+        <div class="section-header">
+          <h2>Citas para Hoy</h2>
+          <a routerLink="/doctor/appointments" class="section-link">Ver Todas</a>
+        </div>
+        
+        <div class="today-appointments">
+          <div *ngIf="todayAppointments.length === 0" class="empty-state">
+            <i class="far fa-calendar"></i>
+            <p>No hay citas programadas para hoy</p>
+            <a routerLink="/doctor/appointments" class="btn-empty-action">Ver Calendario</a>
+          </div>
           
-          <div class="filter-section">
-            <div class="search-bar">
-              <input 
-                type="text" 
-                placeholder="Buscar por paciente..." 
-                [(ngModel)]="searchTerm"
-                (input)="onSearchChange()"
-              >
-              <button class="search-icon">
-                <i class="fas fa-search"></i>
-              </button>
+          <div *ngFor="let appointment of todayAppointments" class="appointment-card" [class]="getStatusClass(appointment.status)">
+            <div class="appointment-time">
+              <i class="far fa-clock"></i>
+              <span>{{ appointment.time }}</span>
             </div>
-            
-            <div class="filter-group">
-              <select [(ngModel)]="statusFilter" (change)="onStatusFilterChange()">
-                <option value="">Todos los estados</option>
-                <option value="scheduled">Agendadas</option>
-                <option value="completed">Completadas</option>
-                <option value="cancelled">Canceladas</option>
-              </select>
-              
-              <input 
-                type="date" 
-                [(ngModel)]="dateFilter"
-                (change)="onDateFilterChange()"
-                [value]="dateFilter"
-              >
-              
-              <button class="reset-button" (click)="resetFilters()">
-                <i class="fas fa-sync-alt"></i>
+            <div class="appointment-details">
+              <div class="patient-name">{{ appointment.patientName }}</div>
+              <div class="appointment-type">{{ appointment.reason }}</div>
+            </div>
+            <div class="appointment-actions">
+              <button *ngIf="canStart(appointment)" class="btn-start" (click)="startAppointment(appointment.id)">
+                <i class="fas fa-play"></i> Iniciar
               </button>
+              <button *ngIf="canComplete(appointment)" class="btn-complete" (click)="completeAppointment(appointment.id)">
+                <i class="fas fa-check"></i> Completar
+              </button>
+              <a [routerLink]="['/doctor/appointments']" [queryParams]="{appointmentId: appointment.id}" class="btn-view">
+                <i class="fas fa-eye"></i>
+              </a>
             </div>
           </div>
         </div>
-        
-        <div class="appointments-list">
-          @for (appointment of filteredAppointments; track appointment.id) {
-            <div class="appointment-card">
-              <div class="appointment-header">
-                <div class="appointment-patient">
-                  <h3>{{ appointment.patientName }}</h3>
-                  <p>{{ appointment.patientAge }} años</p>
-                </div>
-                <div class="appointment-status" [ngClass]="getStatusClass(appointment.status)">
-                  {{ getStatusText(appointment.status) }}
-                </div>
-              </div>
-              
-              <div class="appointment-details">
-                <div class="detail-item">
-                  <i class="far fa-calendar-alt"></i>
-                  <span>{{ formatDate(appointment.date) }}</span>
-                </div>
-                <div class="detail-item">
-                  <i class="far fa-clock"></i>
-                  <span>{{ appointment.time }} hrs</span>
-                </div>
-                <div class="detail-item">
-                  <i class="fas fa-notes-medical"></i>
-                  <span>{{ appointment.reason }}</span>
-                </div>
-              </div>
-              
-              @if (appointment.notes) {
-                <div class="appointment-notes">
-                  <h4>Notas de la consulta</h4>
-                  <p>{{ appointment.notes }}</p>
-                </div>
-              }
-              
-              <div class="appointment-actions">
-                @if (appointment.status === 'scheduled') {
-                  <button class="action-btn complete-btn" (click)="completeAppointment(appointment.id)">
-                    <i class="fas fa-check"></i> Completar
-                  </button>
-                  <button class="action-btn notes-btn" (click)="addNotes(appointment.id)">
-                    <i class="fas fa-sticky-note"></i> Agregar notas
-                  </button>
-                  <button class="action-btn cancel-btn" (click)="cancelAppointment(appointment.id)">
-                    <i class="fas fa-times"></i> Cancelar
-                  </button>
-                }
-                @if (appointment.status === 'completed' && !appointment.notes) {
-                  <button class="action-btn notes-btn" (click)="addNotes(appointment.id)">
-                    <i class="fas fa-sticky-note"></i> Agregar notas
-                  </button>
-                }
-                <button class="action-btn view-btn">
-                  <i class="fas fa-eye"></i> Ver historial
-                </button>
-              </div>
-            </div>
-          }
-          
-          @if (filteredAppointments.length === 0) {
-            <div class="no-results">
-              <i class="far fa-calendar-times fa-3x"></i>
-              <h3>No se encontraron citas</h3>
-              <p>No hay citas que coincidan con los filtros aplicados.</p>
-              <button class="reset-button-large" (click)="resetFilters()">Mostrar todas las citas</button>
-            </div>
-          }
+      </section>
+      
+      <!-- Panel derecho: Próximas citas -->
+      <section class="upcoming-appointments-section">
+        <div class="section-header">
+          <h2>Próximas Citas</h2>
         </div>
-      </div>
+        
+        <div class="upcoming-appointments">
+          <div *ngIf="upcomingAppointments.length === 0" class="empty-state small">
+            <i class="far fa-calendar"></i>
+            <p>No hay citas próximas</p>
+          </div>
+          
+          <div *ngFor="let appointment of upcomingAppointments" class="upcoming-appointment-item">
+            <div class="appointment-date">
+              <i class="far fa-calendar"></i>
+              <span>{{ formatDate(appointment.date) }}</span>
+            </div>
+            <div class="appointment-time">{{ appointment.time }}</div>
+            <div class="patient-name">{{ appointment.patientName }}</div>
+            <div class="appointment-type small">{{ appointment.reason | slice:0:30 }}{{ appointment.reason.length > 30 ? '...' : '' }}</div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </main>

@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DoctorsService, Doctor } from '../../services/doctors.service';
+import { SharedAppointmentsService } from '../../services/shared-appointments.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-appointments',
@@ -40,9 +42,19 @@ export class AppointmentsComponent implements OnInit {
     '16:00', '16:30', '17:00', '17:30'
   ];
   
+  // Agregar estas propiedades
+  isLoggedIn = false;
+  currentUserName = '';
+
+  // Añadir esta propiedad a la clase
+  showConfirmationModal: boolean = false;
+
   constructor(
     private doctorsService: DoctorsService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router,
+    private appointmentsService: SharedAppointmentsService,
+    private authService: AuthService
   ) {}
   
   ngOnInit() {
@@ -69,6 +81,22 @@ export class AppointmentsComponent implements OnInit {
       }
       
       return this.formatDate(date);
+    });
+    
+    // Verificar si el usuario está autenticado
+    this.authService.currentUser.subscribe(user => {
+      if (user) {
+        this.isLoggedIn = true;
+        this.currentUserName = user.name;
+        
+        // Pre-llenar los campos del formulario con los datos del usuario
+        this.appointmentForm.name = user.name;
+        this.appointmentForm.email = user.email || '';
+        this.appointmentForm.phone = user.phone || '';
+      } else {
+        this.isLoggedIn = false;
+        this.currentUserName = '';
+      }
     });
   }
   
@@ -143,38 +171,102 @@ export class AppointmentsComponent implements OnInit {
   }
   
   canAdvance(): boolean {
-    switch(this.currentStep) {
-      case 1: 
-        return !!this.appointmentForm.specialty;
-      case 2:
-        return !!this.appointmentForm.doctor;
-      case 3:
-        return !!this.appointmentForm.date && !!this.appointmentForm.time;
-      case 4:
-        return !!this.appointmentForm.name && !!this.appointmentForm.email && !!this.appointmentForm.phone;
-      default:
-        return false;
+    // Validar según el paso actual
+    if (this.currentStep === 1) {
+      // Para el paso 1, solo necesitamos que haya seleccionado una especialidad
+      return !!this.appointmentForm.specialty;
+    } 
+    else if (this.currentStep === 2) {
+      // Para el paso 2, necesitamos que haya seleccionado un doctor
+      return !!this.appointmentForm.doctor;
+    } 
+    else if (this.currentStep === 3) {
+      // Para el paso 3, necesitamos fecha y hora
+      return !!this.appointmentForm.date && !!this.appointmentForm.time;
     }
+    else if (this.currentStep === 4) {
+      if (this.isLoggedIn) {
+        // Si está logueado, solo verificamos que el resumen esté completo
+        return !!this.appointmentForm.specialty && 
+               !!this.appointmentForm.doctor && 
+               !!this.appointmentForm.date && 
+               !!this.appointmentForm.time;
+      } else {
+        // Si no está logueado, necesitamos todos los campos
+        return !!this.appointmentForm.name && 
+               !!this.appointmentForm.email && 
+               !!this.appointmentForm.phone &&
+               !!this.appointmentForm.specialty && 
+               !!this.appointmentForm.doctor && 
+               !!this.appointmentForm.date && 
+               !!this.appointmentForm.time;
+      }
+    }
+    
+    // Por defecto, si el paso no está definido
+    return false;
   }
   
-  submitAppointment() {
-    console.log('Formulario enviado:', this.appointmentForm);
-    // Aquí integrarías con el servicio para guardar la cita
-    alert('¡Tu solicitud ha sido recibida! Te contactaremos pronto para confirmar tu cita.');
+  submitAppointment(): void {
+    // Verificar si el usuario está logueado antes de enviar
+    if (!this.isLoggedIn) {
+      // Si no está logueado, verificar que todos los campos obligatorios estén completos
+      if (!this.appointmentForm.name || !this.appointmentForm.email || !this.appointmentForm.phone) {
+        // Mostrar mensaje de error
+        alert('Por favor completa todos los campos obligatorios');
+        return;
+      }
+    }
     
-    // Resetear formulario y volver al primer paso
-    this.appointmentForm = {
-      name: '',
-      email: '',
-      phone: '',
-      specialty: '',
-      doctor: '',
-      date: '',
-      time: '',
-      message: ''
-    };
+    // Obtener el usuario actual
+    const currentUser = this.authService.currentUserValue;
     
-    this.currentStep = 1;
+    if (!currentUser) {
+      alert('Debe iniciar sesión para agendar una cita');
+      return;
+    }
+    
+    const doctorId = this.availableDoctors.find(
+      d => d.name === this.appointmentForm.doctor
+    )?.id || 0;
+    
+    // Extraer correctamente el ID numérico del paciente
+    let patientId: number;
+    
+    // Si el ID tiene formato "patient-XXX", extraer el número
+    if (typeof currentUser.id === 'string' && currentUser.id.includes('-')) {
+      const parts = currentUser.id.split('-');
+      patientId = parseInt(parts[1], 10);
+    } else {
+      // Si es un ID simple, intentar convertirlo directamente
+      patientId = parseInt(currentUser.id as string, 10);
+    }
+    
+    // Verificar que el patientId sea válido
+    if (isNaN(patientId)) {
+      console.error('ID de paciente inválido:', currentUser.id);
+      alert('Error al procesar el ID de usuario. Por favor, inicie sesión nuevamente.');
+      return;
+    }
+
+    // Crear la cita con el ID correcto
+    const newAppointment = this.appointmentsService.createAppointment({
+      patientId: patientId,
+      patientName: currentUser.name,
+      doctorId: doctorId,
+      doctorName: this.appointmentForm.doctor,
+      specialty: this.appointmentForm.specialty,
+      date: this.appointmentForm.date,
+      time: this.appointmentForm.time,
+      status: 'scheduled',
+      reason: this.appointmentForm.message,
+      location: 'Centro Médico SaludPlus'
+    });
+    
+    console.log('Cita guardada:', newAppointment);
+    
+    // Mostrar el modal de confirmación en lugar del alert
+    this.showConfirmationModal = true;
   }
 
   // Método para seleccionar una especialidad de forma controlada
@@ -206,5 +298,11 @@ export class AppointmentsComponent implements OnInit {
     
     // Añadir siempre fa-user-md como respaldo
     return {...iconMap, 'fa-user-md': true};
+  }
+
+  // Añadir este nuevo método para cerrar el modal y navegar
+  navigateToMyAppointments(): void {
+    this.showConfirmationModal = false;
+    this.router.navigate(['/patient/my-appointments']);
   }
 }

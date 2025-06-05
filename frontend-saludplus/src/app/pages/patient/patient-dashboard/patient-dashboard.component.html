@@ -172,6 +172,149 @@
           </button>
         </div>
       </div>
+
+      <!-- Añadir después de la sección de información del usuario -->
+      <div class="dashboard-card" *ngIf="showProfileForm">
+        <div class="card-header">
+          <h2>
+            <i class="fas fa-user-edit"></i>
+            Editar Perfil Médico
+          </h2>
+        </div>
+        <div class="card-content">
+          <form (ngSubmit)="saveProfile()" #profileForm="ngForm">
+            <div class="form-grid">
+              <!-- Información básica -->
+              <div class="form-group">
+                <label for="name">Nombre completo</label>
+                <input type="text" id="name" name="name" [(ngModel)]="editingUser.name" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" name="email" [(ngModel)]="editingUser.email" required>
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Teléfono</label>
+                <input type="tel" id="phone" name="phone" [(ngModel)]="editingUser.phone">
+              </div>
+
+              <!-- Información médica -->
+              <div class="form-group">
+                <label for="birthdate">Fecha de nacimiento</label>
+                <input type="date" id="birthdate" name="birthdate" [(ngModel)]="editingUser.birthdate">
+              </div>
+
+              <div class="form-group">
+                <label for="gender">Género</label>
+                <select id="gender" name="gender" [(ngModel)]="editingUser.gender">
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="O">Otro</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="bloodType">Tipo de sangre</label>
+                <select id="bloodType" name="bloodType" [(ngModel)]="editingUser.bloodType">
+                  <option value="">Seleccionar...</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+              
+              <div class="form-group full-width">
+                <label for="allergies">Alergias (separadas por comas)</label>
+                <input type="text" id="allergies" name="allergies" [(ngModel)]="allergiesText" placeholder="Ej: Penicilina, Mariscos, Polen">
+              </div>
+
+              <div class="form-group full-width">
+                <label for="chronic">Enfermedades crónicas (separadas por comas)</label>
+                <input type="text" id="chronic" name="chronic" [(ngModel)]="chronicText" placeholder="Ej: Diabetes, Hipertensión">
+              </div>
+
+              <div class="form-group full-width">
+                <label for="emergencyContact">Contacto de emergencia</label>
+                <input type="text" id="emergencyContact" name="emergencyContact" [(ngModel)]="editingUser.emergencyContact" placeholder="Nombre - Teléfono">
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="cancel-btn" (click)="cancelEditProfile()">Cancelar</button>
+              <button type="submit" class="save-btn" [disabled]="!profileForm.form.valid">Guardar cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Añadir sección para mostrar información médica -->
+      <div class="dashboard-card" *ngIf="!showProfileForm">
+        <div class="card-header">
+          <h2>
+            <i class="fas fa-notes-medical"></i>
+            Mi Perfil Médico
+          </h2>
+          <button class="edit-btn" (click)="editProfile()">
+            <i class="fas fa-edit"></i> Editar
+          </button>
+        </div>
+        <div class="card-content">
+          <div class="medical-profile" *ngIf="currentUser">
+            <div class="profile-section">
+              <div class="profile-item">
+                <span class="profile-label">Edad:</span>
+                <span class="profile-value">{{ calculateAge(currentUser.birthdate) || 'No especificada' }}</span>
+              </div>
+              <div class="profile-item">
+                <span class="profile-label">Fecha de nacimiento:</span>
+                <span class="profile-value">
+                  {{ currentUser && currentUser.birthdate ? (currentUser.birthdate | date:'dd/MM/yyyy') : 'No disponible' }}
+                </span>
+              </div>
+              <div class="profile-item">
+                <span class="profile-label">Género:</span>
+                <span class="profile-value">{{ getGenderText(currentUser.gender) }}</span>
+              </div>
+              <div class="profile-item">
+                <span class="profile-label">Tipo de sangre:</span>
+                <span class="profile-value">{{ currentUser.bloodType || 'No especificado' }}</span>
+              </div>
+            </div>
+
+            <div class="profile-section">
+              <h3>Alergias</h3>
+              <div class="tags-container" *ngIf="currentUser?.allergies?.length; else noAllergies">
+                <span class="tag" *ngFor="let allergy of currentUser?.allergies">{{ allergy }}</span>
+              </div>
+              <ng-template #noAllergies>
+                <p class="no-data">No hay alergias registradas</p>
+              </ng-template>
+            </div>
+
+            <div class="profile-section">
+              <h3>Enfermedades crónicas</h3>
+              <div class="tags-container" *ngIf="currentUser?.chronic?.length; else noChronic">
+                <span class="tag" *ngFor="let disease of currentUser?.chronic">{{ disease }}</span>
+              </div>
+              <ng-template #noChronic>
+                <p class="no-data">No hay enfermedades crónicas registradas</p>
+              </ng-template>
+            </div>
+
+            <div class="profile-section">
+              <h3>Contacto de emergencia</h3>
+              <p>{{ currentUser.emergencyContact || 'No especificado' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 </main>

@@ -156,48 +156,60 @@
         </div>
       </div>
       
-      <!-- Paso 4: Información personal -->
+      <!-- Paso 4: Información personal - Modificado para usuarios autenticados -->
       <div class="appointment-form" *ngIf="isCurrentStep(4)">
         <h3>
           <span class="step-number">4</span>
-          Completa tus datos personales
+          {{ isLoggedIn ? 'Confirma tu cita' : 'Completa tus datos personales' }}
         </h3>
         
-        <div class="form-group">
-          <label for="name">Nombre completo*</label>
-          <input 
-            type="text" 
-            id="name" 
-            [(ngModel)]="appointmentForm.name" 
-            name="name" 
-            required
-            placeholder="Ingresa tu nombre completo">
-        </div>
-        
-        <div class="form-row">
+        <!-- Campos ocultos para usuarios autenticados -->
+        <ng-container *ngIf="!isLoggedIn">
           <div class="form-group">
-            <label for="email">Correo electrónico*</label>
+            <label for="name">Nombre completo*</label>
             <input 
-              type="email" 
-              id="email" 
-              [(ngModel)]="appointmentForm.email" 
-              name="email" 
+              type="text" 
+              id="name" 
+              [(ngModel)]="appointmentForm.name" 
+              name="name" 
               required
-              placeholder="ejemplo@correo.com">
+              placeholder="Ingresa tu nombre completo">
           </div>
           
-          <div class="form-group">
-            <label for="phone">Teléfono*</label>
-            <input 
-              type="tel" 
-              id="phone" 
-              [(ngModel)]="appointmentForm.phone" 
-              name="phone" 
-              required
-              placeholder="+56 9 XXXX XXXX">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Correo electrónico*</label>
+              <input 
+                type="email" 
+                id="email" 
+                [(ngModel)]="appointmentForm.email" 
+                name="email" 
+                required
+                placeholder="ejemplo@correo.com">
+            </div>
+            
+            <div class="form-group">
+              <label for="phone">Teléfono*</label>
+              <input 
+                type="tel" 
+                id="phone" 
+                [(ngModel)]="appointmentForm.phone" 
+                name="phone" 
+                required
+                placeholder="+56 9 XXXX XXXX">
+            </div>
           </div>
+        </ng-container>
+        
+        <!-- Información del usuario autenticado (visible solo para mostrar que se usará) -->
+        <div class="user-profile-summary" *ngIf="isLoggedIn">
+          <p class="info-message">
+            <i class="fas fa-info-circle"></i> 
+            Se utilizarán tus datos de perfil para agendar la cita.
+          </p>
         </div>
         
+        <!-- Motivo de consulta (siempre visible) -->
         <div class="form-group">
           <label for="message">
             Motivo de consulta (opcional)
@@ -231,6 +243,11 @@
               <span class="summary-label">Hora:</span>
               <span class="summary-value">{{ appointmentForm.time }}</span>
             </div>
+            <!-- Información del paciente (solo para logueados) -->
+            <div class="summary-item" *ngIf="isLoggedIn">
+              <span class="summary-label">Paciente:</span>
+              <span class="summary-value">{{ currentUserName }}</span>
+            </div>
           </div>
         </div>
         
@@ -243,7 +260,7 @@
           </button>
         </div>
         
-        <p class="form-disclaimer">* Campos requeridos</p>
+        <p class="form-disclaimer" *ngIf="!isLoggedIn">* Campos requeridos</p>
       </div>
       
       <!-- Información adicional (visible en todos los pasos) -->
@@ -265,6 +282,21 @@
     </div>
   </section>
 </main>
+
+<!-- Modal de confirmación -->
+<div class="modal-overlay" *ngIf="showConfirmationModal">
+  <div class="confirmation-modal">
+    <div class="modal-content">
+      <h2>localhost:4200 dice</h2>
+      <p>¡Cita agendada correctamente!</p>
+      <div class="modal-actions">
+        <button class="modal-button primary" (click)="navigateToMyAppointments()">
+          Aceptar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <style>
 .tip {

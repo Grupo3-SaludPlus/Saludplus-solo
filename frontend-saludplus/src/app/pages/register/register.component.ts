@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService, User } from '../../services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -24,6 +26,8 @@ export class RegisterComponent {
     phone: '',
     address: '',
     insurance: '',
+    gender: 'other',
+    bloodType: '',
     termsAccepted: false
   };
 
@@ -36,40 +40,86 @@ export class RegisterComponent {
     'Otra'
   ];
 
+  bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   passwordsMatch = true;
+  formError = '';
+  isSubmitting = false;
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   checkPasswords() {
     this.passwordsMatch = this.registrationForm.password === this.registrationForm.confirmPassword;
   }
 
+  // Método para mapear el género del formulario al valor correcto para la API
+  private mapGender(formGender: string): 'M' | 'F' | 'O' {
+    switch (formGender) {
+      case 'male': return 'M';
+      case 'female': return 'F';
+      default: return 'O';
+    }
+  }
+
   submitForm() {
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+    this.formError = '';
+    
+    // Validaciones básicas
+    if (!this.registrationForm.firstName || !this.registrationForm.lastName) {
+      this.formError = 'Por favor ingrese su nombre y apellido';
+      this.isSubmitting = false;
+      return;
+    }
+    
+    if (!this.registrationForm.email) {
+      this.formError = 'Por favor ingrese su correo electrónico';
+      this.isSubmitting = false;
+      return;
+    }
+    
+    if (!this.registrationForm.password || this.registrationForm.password.length < 6) {
+      this.formError = 'La contraseña debe tener al menos 6 caracteres';
+      this.isSubmitting = false;
+      return;
+    }
+    
     if (!this.passwordsMatch) {
-      alert('Las contraseñas no coinciden');
+      this.formError = 'Las contraseñas no coinciden';
+      this.isSubmitting = false;
       return;
     }
     
     if (!this.registrationForm.termsAccepted) {
-      alert('Debes aceptar los términos y condiciones para continuar');
+      this.formError = 'Debe aceptar los términos y condiciones';
+      this.isSubmitting = false;
       return;
     }
     
-    // En un caso real, aquí enviarías los datos al backend
-    console.log('Registro enviado:', this.registrationForm);
-    alert('¡Registro exitoso! Ya puedes acceder con tu cuenta.');
-    
-    // Limpiar formulario
-    this.registrationForm = {
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      rut: '',
-      birthDate: '',
-      phone: '',
-      address: '',
-      insurance: '',
-      termsAccepted: false
+    // Construir el objeto de usuario
+    const newUser: Partial<User> = {
+      name: `${this.registrationForm.firstName} ${this.registrationForm.lastName}`,
+      email: this.registrationForm.email,
+      phone: this.registrationForm.phone,
+      dateOfBirth: this.registrationForm.birthDate,
+      gender: this.mapGender(this.registrationForm.gender),  // Usar el método para mapear el género
+      bloodType: this.registrationForm.bloodType,
+      insurance: this.registrationForm.insurance
     };
+    
+    // Registrar al usuario
+    const registeredUser = this.authService.registerPatient(newUser, this.registrationForm.password);
+    
+    if (registeredUser) {
+      // Registro exitoso, redirigir al dashboard
+      this.router.navigate(['/patient/dashboard']);
+    } else {
+      // Error en el registro
+      this.formError = 'El correo electrónico ya está registrado';
+      this.isSubmitting = false;
+    }
   }
 }

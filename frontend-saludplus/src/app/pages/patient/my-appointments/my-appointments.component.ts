@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
+import { SharedAppointmentsService, AppointmentBase } from '../../../services/shared-appointments.service';
+import { Subscription } from 'rxjs';
 
 interface AppointmentDetails {
   id: number;
@@ -9,7 +12,7 @@ interface AppointmentDetails {
   doctor: string;
   date: string;
   time: string;
-  status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'pending';
   reason: string;
   location: string;
 }
@@ -21,62 +24,11 @@ interface AppointmentDetails {
   templateUrl: './my-appointments.component.html',
   styleUrl: './my-appointments.component.css'
 })
-export class MyAppointmentsComponent implements OnInit {
+export class MyAppointmentsComponent implements OnInit, OnDestroy {
   activeTab: 'upcoming' | 'history' | 'all' = 'upcoming';
   
   // Todas las citas del paciente
-  allAppointments: AppointmentDetails[] = [
-    {
-      id: 1,
-      specialty: 'Cardiología',
-      doctor: 'Dra. Carla Mendoza',
-      date: '2025-06-15',
-      time: '10:00',
-      status: 'confirmed',
-      reason: 'Control rutinario',
-      location: 'Consulta 301'
-    },
-    {
-      id: 2,
-      specialty: 'Medicina General',
-      doctor: 'Dr. Juan Pérez',
-      date: '2025-06-20',
-      time: '14:30',
-      status: 'pending',
-      reason: 'Chequeo general',
-      location: 'Consulta 102'
-    },
-    {
-      id: 3,
-      specialty: 'Neurología',
-      doctor: 'Dr. Roberto Fuentes',
-      date: '2025-05-20',
-      time: '09:00',
-      status: 'completed',
-      reason: 'Dolor de cabeza recurrente',
-      location: 'Consulta 205'
-    },
-    {
-      id: 4,
-      specialty: 'Dermatología',
-      doctor: 'Dra. María López',
-      date: '2025-05-10',
-      time: '16:00',
-      status: 'completed',
-      reason: 'Revisión de lunar',
-      location: 'Consulta 401'
-    },
-    {
-      id: 5,
-      specialty: 'Traumatología',
-      doctor: 'Dr. Andrés Soto',
-      date: '2025-04-25',
-      time: '11:30',
-      status: 'cancelled',
-      reason: 'Dolor en rodilla',
-      location: 'Consulta 503'
-    }
-  ];
+  allAppointments: AppointmentDetails[] = [];
 
   // Filtros
   filterSpecialty = '';
@@ -88,24 +40,81 @@ export class MyAppointmentsComponent implements OnInit {
   upcomingAppointments: AppointmentDetails[] = [];
   historyAppointments: AppointmentDetails[] = [];
 
+  currentUser: any; // Almacena el usuario actual
+  appointmentSubscription: Subscription | undefined; // Almacena la suscripción a las citas
+  loading: boolean = true; // Nueva propiedad para controlar la carga
+
+  constructor(
+    private authService: AuthService,
+    private appointmentsService: SharedAppointmentsService
+  ) {}
+
   ngOnInit() {
-    this.calculateAppointmentLists();
-    this.applyFilters();
+    // Obtener usuario actual
+    this.currentUser = this.authService.currentUserValue;
+    
+    if (this.currentUser) {
+      // Extraer ID numérico correctamente
+      let userId: number;
+      
+      // Si el ID tiene formato "patient-XXX", extraer el número
+      if (typeof this.currentUser.id === 'string' && this.currentUser.id.includes('-')) {
+        userId = parseInt(this.currentUser.id.split('-')[1], 10);
+      } else {
+        // Si es un ID simple, intentar convertirlo directamente
+        userId = parseInt(this.currentUser.id as string, 10);
+      }
+      
+      console.log('Buscando citas para usuario ID:', userId);
+      
+      // Cargar citas del servicio
+      this.appointmentSubscription = this.appointmentsService
+        .getPatientAppointments(userId)
+        .subscribe(appointments => {
+          console.log('Citas cargadas del servicio:', appointments);
+          
+          // Mapear desde AppointmentBase a AppointmentDetails
+          this.allAppointments = appointments.map((apt: AppointmentBase) => ({
+            id: apt.id,
+            specialty: apt.specialty,
+            doctor: apt.doctorName, 
+            date: apt.date,
+            time: apt.time,
+            status: apt.status as 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'pending',
+            reason: apt.reason || '',
+            location: apt.location || 'Sin asignar'
+          }));
+          
+          console.log('Citas mapeadas:', this.allAppointments);
+          
+          // Procesar las citas
+          this.calculateAppointmentLists();
+          this.applyFilters();
+          this.loading = false;
+        });
+    } else {
+      this.loading = false;
+    }
+    
+    // Depuración: Verificar las citas guardadas en localStorage
+    this.appointmentsService.debugAppointments();
   }
 
   calculateAppointmentLists() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    this.upcomingAppointments = this.allAppointments.filter(apt => {
-      const aptDate = new Date(apt.date);
-      return aptDate >= today && (apt.status === 'confirmed' || apt.status === 'pending');
-    });
-
-    this.historyAppointments = this.allAppointments.filter(apt => {
-      const aptDate = new Date(apt.date);
-      return aptDate < today || apt.status === 'completed' || apt.status === 'cancelled';
-    });
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Filtrar citas próximas (fecha >= hoy)
+    this.upcomingAppointments = this.allAppointments.filter(apt => 
+      apt.date >= today && apt.status !== 'cancelled' && apt.status !== 'completed'
+    );
+    
+    // Filtrar citas históricas (completadas o canceladas, o fecha < hoy)
+    this.historyAppointments = this.allAppointments.filter(apt => 
+      apt.date < today || apt.status === 'cancelled' || apt.status === 'completed'
+    );
+    
+    // Aplicar filtros actuales
+    this.applyFilters();
   }
 
   setActiveTab(tab: 'upcoming' | 'history' | 'all') {
@@ -203,25 +212,19 @@ export class MyAppointmentsComponent implements OnInit {
     return this.historyAppointments.filter(a => a.status === 'cancelled').length;
   }
 
-  canCancel(appointment: AppointmentDetails): boolean {
-    const aptDate = new Date(appointment.date);
-    const today = new Date();
-    const diffDays = Math.ceil((aptDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
-    return diffDays >= 1 && (appointment.status === 'confirmed' || appointment.status === 'pending');
+  // Método para cancelar una cita
+  cancelAppointment(id: number) {
+    if (confirm('¿Está seguro de que desea cancelar esta cita?')) {
+      this.appointmentsService.cancelAppointment(
+        id, 
+        'Cancelada por el paciente'
+      );
+    }
   }
 
-  cancelAppointment(appointmentId: number) {
-    const confirmed = confirm('¿Estás seguro de que deseas cancelar esta cita?');
-    if (confirmed) {
-      const appointment = this.allAppointments.find(apt => apt.id === appointmentId);
-      if (appointment) {
-        appointment.status = 'cancelled';
-        this.calculateAppointmentLists();
-        this.applyFilters();
-        alert('Cita cancelada exitosamente');
-      }
-    }
+  // Verificar si una cita puede ser cancelada
+  canCancel(appointment: AppointmentDetails): boolean {
+    return ['scheduled', 'confirmed', 'pending'].includes(appointment.status);
   }
 
   rescheduleAppointment(appointmentId: number) {
@@ -235,5 +238,18 @@ export class MyAppointmentsComponent implements OnInit {
 
   getUniqueDoctors(): string[] {
     return [...new Set(this.allAppointments.map(apt => apt.doctor))];
+  }
+
+  // Agregar este método a la clase MyAppointmentsComponent
+  joinAppointment(appointmentId: number) {
+    // Implementación para unirse a una consulta virtual
+    alert('Conectando a la consulta virtual... Esta funcionalidad está en desarrollo.');
+    // Aquí se podría redirigir a una sala de videoconferencia o abrir un componente modal
+  }
+
+  ngOnDestroy() {
+    if (this.appointmentSubscription) {
+      this.appointmentSubscription.unsubscribe();
+    }
   }
 }

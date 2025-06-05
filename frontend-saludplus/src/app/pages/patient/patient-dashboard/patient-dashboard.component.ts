@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService, User } from '../../../services/auth.service';
+import { SharedAppointmentsService } from '../../../services/shared-appointments.service';
+import { Subscription } from 'rxjs';
 
 interface Appointment {
   id: number;
@@ -15,11 +18,11 @@ interface Appointment {
 @Component({
   selector: 'app-patient-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './patient-dashboard.component.html',
   styleUrl: './patient-dashboard.component.css'
 })
-export class PatientDashboardComponent implements OnInit {
+export class PatientDashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   
   // Próximas citas (máximo 3)
@@ -43,19 +46,85 @@ export class PatientDashboardComponent implements OnInit {
   ];
 
   // Estadísticas básicas
-  totalAppointments = 15;
-  completedAppointments = 12;
-  pendingAppointments = 2;
-  cancelledAppointments = 1;
-
-  constructor(private authService: AuthService) {}
-
+  totalAppointments: number = 0;
+  completedAppointments: number = 0;
+  pendingAppointments: number = 0;
+  cancelledAppointments: number = 0;
+  
+  // Para desuscribirse al destruir el componente
+  private appointmentSubscription: Subscription | undefined;
+  
+  // Propiedades para editar perfil
+  showProfileForm = false;
+  editingUser: Partial<User> = {};
+  allergiesText = '';
+  chronicText = '';
+  
+  constructor(
+    private authService: AuthService,
+    private appointmentsService: SharedAppointmentsService,
+    private router: Router
+  ) {}
+  
   ngOnInit() {
+    // Asegurar que currentUser existe antes de usarlo
     this.authService.currentUser.subscribe(user => {
-      this.currentUser = user;
+      if (user) {
+        this.currentUser = user;
+        // Realizar otras inicializaciones que dependan del usuario
+      } else {
+        // Redirigir al login si no hay usuario
+        this.router.navigate(['/login']);
+      }
     });
+    
+    // Obtener el usuario actual
+    const currentUser = this.authService.currentUserValue;
+    
+    if (currentUser) {
+      // Extraer ID numérico
+      let userId: number;
+      
+      if (typeof currentUser.id === 'string' && currentUser.id.includes('-')) {
+        userId = parseInt(currentUser.id.split('-')[1], 10);
+      } else {
+        userId = parseInt(currentUser.id as string, 10);
+      }
+      
+      console.log('Dashboard: Obteniendo citas para usuario ID:', userId);
+      
+      // Suscribirse a los cambios de citas para este paciente
+      this.appointmentSubscription = this.appointmentsService
+        .getPatientAppointments(userId)
+        .subscribe(appointments => {
+          console.log('Dashboard: Citas obtenidas:', appointments.length);
+          
+          // Actualizar las estadísticas basadas en las citas reales
+          this.totalAppointments = appointments.length;
+          
+          // Contar por estado
+          this.completedAppointments = appointments.filter(apt => 
+            apt.status === 'completed'
+          ).length;
+          
+          this.pendingAppointments = appointments.filter(apt => 
+            ['scheduled', 'confirmed', 'pending'].includes(apt.status as string)
+          ).length;
+          
+          this.cancelledAppointments = appointments.filter(apt => 
+            apt.status === 'cancelled'
+          ).length;
+        });
+    }
   }
-
+  
+  ngOnDestroy() {
+    // Limpiar suscripciones
+    if (this.appointmentSubscription) {
+      this.appointmentSubscription.unsubscribe();
+    }
+  }
+  
   // MÉTODOS PARA FECHAS
   formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -100,14 +169,90 @@ export class PatientDashboardComponent implements OnInit {
     }
   }
 
-  // MÉTODOS DE ACCIÓN - ESTOS ESTABAN FALTANDO
+  // MÉTODOS DE ACCIÓN - EDITAR PERFIL
   editProfile() {
-    alert('Función de editar perfil en desarrollo');
-    // Aquí puedes abrir un modal o navegar a una página de edición
+    this.showProfileForm = true;
+    this.editingUser = { ...this.currentUser };
+    
+    // Convertir arrays a texto para el formulario
+    this.allergiesText = this.currentUser?.allergies?.join(', ') || '';
+    this.chronicText = this.currentUser?.chronic?.join(', ') || '';
   }
 
-  changePassword() {
-    alert('Función de cambiar contraseña en desarrollo');
-    // Aquí puedes abrir un modal para cambiar contraseña
+  // Cancelar edición de perfil
+  cancelEditProfile() {
+    this.showProfileForm = false;
+    this.editingUser = {};
+    this.allergiesText = '';
+    this.chronicText = '';
+  }
+
+  // Guardar cambios en el perfil
+  saveProfile() {
+    if (!this.editingUser || !this.currentUser) return;
+    
+    // Convertir texto a arrays
+    const allergies = this.allergiesText
+      .split(',')
+      .map(item => item.trim())
+      .filter(item => item !== '');
+      
+    const chronic = this.chronicText
+      .split(',')
+      .map(item => item.trim())
+      .filter(item => item !== '');
+    
+    // Crear objeto con datos actualizados
+    const updatedUser: User = {
+      ...this.currentUser,
+      ...this.editingUser,
+      allergies,
+      chronic
+    };
+    
+    // Actualizar en el servicio
+    this.authService.updateCurrentUser(updatedUser);
+    
+    // Cerrar formulario
+    this.showProfileForm = false;
+    
+    // Mensaje de confirmación
+    alert('Perfil actualizado correctamente');
+  }
+
+  // Calcular edad a partir de la fecha de nacimiento
+  calculateAge(birthdate?: string): number | null {
+    if (!birthdate) return null;
+    
+    try {
+      const today = new Date();
+      const birthDate = new Date(birthdate);
+      
+      if (isNaN(birthDate.getTime())) return null;
+      
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      return age;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // Método para mapear valores de género
+  getGenderText(gender?: string): string {
+    if (!gender) return 'No especificado';
+    
+    const genderMap: Record<string, string> = {
+      'M': 'Masculino',
+      'F': 'Femenino', 
+      'O': 'Otro'
+    };
+    
+    return genderMap[gender] || 'No especificado';
   }
 }

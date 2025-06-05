@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { AuthService, User } from '../../services/auth.service';
-import { NotificationService } from '../../admin/services/notification.service';
+import { Inject } from '@angular/core';
+import { AuthService, User } from '../../../services/auth.service';
+import { NotificationService } from '../../../admin/services/notification.service';
 
 interface Appointment {
   id: number;
@@ -64,9 +65,9 @@ export class AppointmentHistoryComponent implements OnInit {
   
   // Estado de carga
   isLoading: boolean = true;
-
+  
   constructor(
-    private authService: AuthService,
+    private authService: AuthService, // Removed @Inject decorator
     private notificationService: NotificationService
   ) {}
 
@@ -136,13 +137,16 @@ export class AppointmentHistoryComponent implements OnInit {
   
   sortAppointments(appointments: Appointment[]): Appointment[] {
     return appointments.sort((a, b) => {
-      let valA, valB;
+      let valA: any, valB: any;
       
       // Determinar qué valores comparar según el campo de ordenamiento
       switch(this.sortField) {
         case 'date':
-          valA = new Date(`${a.date.toDateString()} ${a.time}`).getTime();
-          valB = new Date(`${b.date.toDateString()} ${b.time}`).getTime();
+          // Corregido para manejar correctamente Date o string
+          const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+          const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+          valA = new Date(`${dateA.toDateString()} ${a.time}`).getTime();
+          valB = new Date(`${dateB.toDateString()} ${b.time}`).getTime();
           break;
         case 'doctor':
           valA = a.doctor;
@@ -161,8 +165,11 @@ export class AppointmentHistoryComponent implements OnInit {
           valB = b.patient.name;
           break;
         default:
-          valA = new Date(`${a.date.toDateString()} ${a.time}`).getTime();
-          valB = new Date(`${b.date.toDateString()} ${b.time}`).getTime();
+          // Default case: ordenar por fecha
+          const defaultDateA = a.date instanceof Date ? a.date : new Date(a.date);
+          const defaultDateB = b.date instanceof Date ? b.date : new Date(b.date);
+          valA = new Date(`${defaultDateA.toDateString()} ${a.time}`).getTime();
+          valB = new Date(`${defaultDateB.toDateString()} ${b.time}`).getTime();
       }
       
       // Aplicar la dirección de ordenamiento
@@ -234,7 +241,7 @@ export class AppointmentHistoryComponent implements OnInit {
       this.appointments[index].status = 'cancelled';
       this.appointments[index].notes = `Motivo de cancelación: ${this.cancellationReason}`;
       
-      this.notificationService.success(
+      this.notificationService.showSuccess(
         'Cita cancelada',
         'Tu cita ha sido cancelada correctamente'
       );
@@ -326,9 +333,9 @@ export class AppointmentHistoryComponent implements OnInit {
     // Si es un paciente, verificar que sea su propia cita
     if (!this.isDoctor && this.currentUser && Number(this.currentUser.id) === appointment.patient.id) {
       // Solo permitir cancelar con al menos 24 horas de anticipación
-      const appointmentDate = new Date(`${appointment.date.toDateString()} ${appointment.time}`);
+      const appointmentDateTime = this.getAppointmentDateTime(appointment);
       const now = new Date();
-      const diffTime = appointmentDate.getTime() - now.getTime();
+      const diffTime = appointmentDateTime.getTime() - now.getTime();
       const diffHours = diffTime / (1000 * 60 * 60);
       
       return diffHours >= 24;
@@ -349,13 +356,24 @@ export class AppointmentHistoryComponent implements OnInit {
     }
     
     // La cita debe estar dentro de las próximas 48 horas para poder confirmarla
-    const appointmentDate = new Date(`${appointment.date.toDateString()} ${appointment.time}`);
+    const appointmentDateTime = this.getAppointmentDateTime(appointment);
     const now = new Date();
-    const diffTime = appointmentDate.getTime() - now.getTime();
+    const diffTime = appointmentDateTime.getTime() - now.getTime();
     const diffHours = diffTime / (1000 * 60 * 60);
     
     // Permitir confirmar citas que sean en menos de 48 horas pero más de 1 hora
     return diffHours <= 48 && diffHours >= 1;
+  }
+  
+  // Método de utilidad para obtener un objeto Date que combine fecha y hora
+  private getAppointmentDateTime(appointment: Appointment): Date {
+    const appointmentDate = appointment.date instanceof Date ? 
+      appointment.date : new Date(appointment.date);
+      
+    const [hours, minutes] = appointment.time.split(':').map(Number);
+    const result = new Date(appointmentDate);
+    result.setHours(hours, minutes, 0, 0);
+    return result;
   }
   
   getStatusText(status: string): string {
@@ -381,6 +399,9 @@ export class AppointmentHistoryComponent implements OnInit {
   }
   
   formatDate(date: Date): string {
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
     return date.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
@@ -394,7 +415,10 @@ export class AppointmentHistoryComponent implements OnInit {
     const userName = this.currentUser?.name || 'Usuario Actual';
     let appointments: Appointment[] = [];
     
-    // Datos base de citas de ejemplo
+    // Datos base de citas de ejemplo - Fechas actualizadas a año actual
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+    
     const allAppointments: Appointment[] = [
       {
         id: 5001,
@@ -402,11 +426,11 @@ export class AppointmentHistoryComponent implements OnInit {
         doctorId: 1,
         doctor: 'Dra. Carla Mendoza',
         specialty: 'Cardiología',
-        date: new Date('2025-06-15'),
+        date: new Date(currentYear, currentMonth + 1, 15), // Un mes después
         time: '10:30',
         status: 'scheduled',
         medicalCenter: 'Centro Médico Norte',
-        createdAt: new Date('2025-05-20')
+        createdAt: new Date(currentYear, currentMonth, 20)
       },
       {
         id: 5002,
@@ -414,12 +438,12 @@ export class AppointmentHistoryComponent implements OnInit {
         doctorId: 2,
         doctor: 'Dr. Roberto Fuentes',
         specialty: 'Neurología',
-        date: new Date('2025-06-05'),
+        date: new Date(currentYear, currentMonth, 5), // Este mes
         time: '11:45',
         status: 'confirmed',
-        confirmationDate: new Date('2025-06-03'),
+        confirmationDate: new Date(currentYear, currentMonth, 3),
         medicalCenter: 'Centro Médico Este',
-        createdAt: new Date('2025-05-18')
+        createdAt: new Date(currentYear, currentMonth, 1)
       },
       {
         id: 4998,
@@ -427,12 +451,12 @@ export class AppointmentHistoryComponent implements OnInit {
         doctorId: 3,
         doctor: 'Dra. Valentina Torres',
         specialty: 'Pediatría',
-        date: new Date('2025-05-25'),
+        date: new Date(currentYear, currentMonth, 25), // Este mes
         time: '09:15',
         status: 'completed',
         notes: 'Control de rutina. Próxima revisión en 6 meses.',
         medicalCenter: 'Centro Médico Sur',
-        createdAt: new Date('2025-05-10')
+        createdAt: new Date(currentYear, currentMonth, 10)
       },
       {
         id: 4990,
@@ -440,12 +464,12 @@ export class AppointmentHistoryComponent implements OnInit {
         doctorId: 4,
         doctor: 'Dr. Andrés Soto',
         specialty: 'Traumatología',
-        date: new Date('2025-05-15'),
+        date: new Date(currentYear, currentMonth, 15), // Este mes
         time: '16:00',
         status: 'cancelled',
         notes: 'Motivo de cancelación: Viaje inesperado',
         medicalCenter: 'Centro Médico Oeste',
-        createdAt: new Date('2025-04-30')
+        createdAt: new Date(currentYear, currentMonth - 1, 30)
       },
       {
         id: 4978,
@@ -453,12 +477,12 @@ export class AppointmentHistoryComponent implements OnInit {
         doctorId: 5,
         doctor: 'Dra. María López',
         specialty: 'Dermatología',
-        date: new Date('2025-05-10'),
+        date: new Date(currentYear, currentMonth, 10), // Este mes
         time: '14:30',
         status: 'completed',
         notes: 'Tratamiento para acné prescrito por 3 meses.',
         medicalCenter: 'Centro Médico Norte',
-        createdAt: new Date('2025-04-25')
+        createdAt: new Date(currentYear, currentMonth - 1, 25)
       },
       {
         id: 4965,
@@ -466,11 +490,11 @@ export class AppointmentHistoryComponent implements OnInit {
         doctorId: 6,
         doctor: 'Dr. Juan Pérez',
         specialty: 'Medicina General',
-        date: new Date('2025-05-03'),
+        date: new Date(currentYear, currentMonth, 3), // Este mes
         time: '10:00',
         status: 'completed',
         medicalCenter: 'Centro Médico Este',
-        createdAt: new Date('2025-04-20')
+        createdAt: new Date(currentYear, currentMonth - 1, 20)
       },
       {
         id: 4952,
@@ -478,11 +502,11 @@ export class AppointmentHistoryComponent implements OnInit {
         doctorId: 1,
         doctor: 'Dra. Carla Mendoza',
         specialty: 'Cardiología',
-        date: new Date('2025-04-20'),
+        date: new Date(currentYear, currentMonth - 1, 20), // Mes pasado
         time: '11:00',
         status: 'completed',
         medicalCenter: 'Centro Médico Oeste',
-        createdAt: new Date('2025-04-05')
+        createdAt: new Date(currentYear, currentMonth - 1, 5)
       },
       {
         id: 5010,
@@ -490,11 +514,11 @@ export class AppointmentHistoryComponent implements OnInit {
         doctorId: 2,
         doctor: 'Dr. Roberto Fuentes',
         specialty: 'Neurología',
-        date: new Date('2025-06-20'),
+        date: new Date(currentYear, currentMonth + 1, 20), // Un mes después
         time: '09:00',
         status: 'scheduled',
         medicalCenter: 'Centro Médico Norte',
-        createdAt: new Date('2025-05-25')
+        createdAt: new Date(currentYear, currentMonth, 25)
       },
       {
         id: 5011,
@@ -510,7 +534,7 @@ export class AppointmentHistoryComponent implements OnInit {
         time: '15:30',
         status: 'scheduled',
         medicalCenter: 'Centro Médico Sur',
-        createdAt: new Date('2025-05-26')
+        createdAt: new Date(currentYear, currentMonth, 26)
       }
     ];
     

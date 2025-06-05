@@ -1,0 +1,65 @@
+<div class="doctor-layout">
+  <nav class="doctor-sidebar">
+    <div class="sidebar-header">
+      <h2>SaludPlus</h2>
+      <span class="doctor-portal">Portal Médico</span>
+    </div>
+    
+    <ul class="nav-menu">
+      <li>
+        <a routerLink="/doctor/dashboard" routerLinkActive="active">
+          <i class="fas fa-home"></i> Dashboard
+        </a>
+      </li>
+      <li>
+        <a routerLink="/doctor/appointments" routerLinkActive="active">
+          <i class="fas fa-calendar-check"></i> Mis Consultas
+        </a>
+      </li>
+      <li>
+        <a routerLink="/doctor/patients" routerLinkActive="active">
+          <i class="fas fa-user-injured"></i> Mis Pacientes
+        </a>
+      </li>
+      <li>
+        <a routerLink="/doctor/records" routerLinkActive="active">
+          <i class="fas fa-file-medical"></i> Historial Clínico
+        </a>
+      </li>
+      <li>
+        <a routerLink="/doctor/profile" routerLinkActive="active">
+          <i class="fas fa-user-md"></i> Mi Perfil
+        </a>
+      </li>
+    </ul>
+    
+    <div class="sidebar-footer">
+      <button class="btn-logout" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+      </button>
+    </div>
+  </nav>
+  
+  <main class="content-area">
+    <header class="doctor-header">
+      <div class="user-welcome">
+        <h2>Bienvenido, Dr. {{doctorName}}</h2>
+        <p>{{doctorSpecialty}} · {{currentDate | date:'EEEE, d MMMM yyyy'}}</p>
+      </div>
+      
+      <div class="header-actions">
+        <button class="btn-notification">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" *ngIf="notificationCount > 0">{{notificationCount}}</span>
+        </button>
+        <button class="btn-user">
+          <div class="user-avatar">{{userInitials}}</div>
+        </button>
+      </div>
+    </header>
+    
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
