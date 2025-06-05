@@ -64,6 +64,8 @@
           <h1>Panel de Control Médico</h1>
           <p>Bienvenido, {{ currentUser?.name || 'Administrador' }} - SaludPlus Centro Médico</p>
         </div>
+
+        <!--modificar-->
         <div class="header-actions">
           <button class="emergency-btn" *ngIf="medicalStats.emergencyAlerts > 0">
             <i class="fas fa-exclamation-triangle"></i>
@@ -73,6 +75,7 @@
             <i class="fas fa-sync-alt"></i>
             Actualizar
           </button>
+          <!--modificar-->
         </div>
       </div>
 
@@ -244,7 +247,7 @@
           <p>Administra los registros médicos de todos los pacientes</p>
         </div>
         <div class="header-actions">
-          <button class="add-btn">
+          <button class="add-patient-btn">
             <i class="fas fa-plus"></i>
             Nuevo Paciente
           </button>
@@ -255,12 +258,14 @@
         </div>
       </div>
 
-      <div class="table-container">
+      <div class="table-container-patients">
         <table class="data-table patients-table">
           <thead>
             <tr>
               <th>Paciente</th>
-              <th>Edad/Género</th>
+              <th>Contacto</th>
+              <th>Edad</th>
+              <th>Género</th>  
               <th>Tipo Sangre</th>
               <th>Condiciones</th>
               <th>Última Visita</th>
@@ -502,22 +507,6 @@
 
     <!-- SECCIÓN REPORTES MÉDICOS -->
     <div *ngIf="activeSection === 'reports'" class="section-content">
-      <div class="content-header">
-        <div>
-          <h1>
-            <i class="fas fa-file-medical-alt"></i>
-            Reportes Médicos
-          </h1>
-          <p>Genera y analiza reportes del sistema hospitalario</p>
-        </div>
-        <div class="header-actions">
-          <button class="add-btn" (click)="generateMedicalReport('patient-stats')">
-            <i class="fas fa-chart-line"></i>
-            Generar Reporte
-          </button>
-        </div>
-      </div>
-
       <div class="reports-container">
         <div class="reports-header">
           <div>
@@ -532,23 +521,31 @@
         <div class="report-generator-panel">
           <h3>Generar Nuevo Reporte Médico</h3>
           <div class="report-filter-buttons">
-            <button class="filter-btn active">
-              <i class="fas fa-user-group"></i> Estadísticas de Pacientes
+            <!-- Botones de filtro sin el duplicado -->
+            <button class="filter-btn patients">
+              <i class="fas fa-user-group"></i>
+              <span>Estadísticas Pacientes</span>
             </button>
-            <button class="filter-btn">
-              <i class="fas fa-chart-pie"></i> Reporte Financiero
+            <button class="filter-btn financial">
+              <i class="fas fa-chart-pie"></i>
+              <span>Reporte Financiero</span>
             </button>
-            <button class="filter-btn">
-              <i class="fas fa-user-doctor"></i> Rendimiento Médico
+            <button class="filter-btn staff">
+              <i class="fas fa-user-doctor"></i>
+              <span>Rendimiento Médico</span>
             </button>
-            <button class="filter-btn">
-              <i class="fas fa-pills"></i> Inventario Medicamentos
+            <button class="filter-btn medications">
+              <i class="fas fa-pills"></i>
+              <span>Inventario Medicamentos</span>
             </button>
-            <button class="filter-btn">
-              <i class="fas fa-toolbox"></i> Estado de Equipos
+            <button class="filter-btn equipment">
+              <i class="fas fa-toolbox"></i>
+              <span>Estado Equipos</span>
             </button>
           </div>
         </div>
+
+        <!-- SECCIÓN REPORTES MÉDICOS -->
 
         <div class="reports-section">
           <h3 class="section-title">Reportes Disponibles</h3>

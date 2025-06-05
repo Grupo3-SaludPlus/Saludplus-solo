@@ -249,25 +249,103 @@
   gap: 15px;
 }
 
+/* Estilo mejorado para el botón Refresh */
 .refresh-btn {
-  background-color: white;
-  border: 1px solid var(--admin-border);
-  color: var(--admin-primary);
-  padding: 8px 16px;
-  border-radius: 8px;
+  background-color: #059669;
+  border: none;
+  color: #ffffff;
+  padding: 10px 18px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  transition: all 0.3s;
+  transition: all 0.25s ease;
+  position: relative;
+  box-shadow: 0 2px 5px rgba(5, 150, 105, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 0; /* Bordes cuadrados */
+}
+
+.refresh-btn i {
+  font-size: 16px;
+  transition: transform 0.3s ease;
 }
 
 .refresh-btn:hover {
-  background-color: var(--admin-primary);
-  color: white;
-  border-color: var(--admin-primary);
+  background-color: #047857;
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.4);
+  transform: translateY(-2px);
+}
+
+.refresh-btn:hover i {
+  transform: rotate(180deg);
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.3);
+}
+
+.emergency-btn {
+  background: linear-gradient(to bottom, #ef4444, #dc2626);
+  color: #ffffff;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border-radius: 0; /* Bordes cuadrados */
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.emergency-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.4s ease;
+  z-index: 1;
+}
+
+.emergency-btn i {
+  position: relative;
+  z-index: 2;
+}
+
+.emergency-btn span {
+  position: relative;
+  z-index: 2;
+}
+
+.emergency-btn:hover {
+  background: linear-gradient(to bottom, #dc2626, #b91c1c);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5);
+  transform: translateY(-2px);
+}
+
+.emergency-btn:hover::before {
+  left: 100%;
+}
+
+.emergency-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.4);
 }
 
 /* Estilos mejorados de las tarjetas de estadísticas */
@@ -453,6 +531,12 @@
 .appointment-table tbody tr:hover {
   background-color: rgba(59, 130, 246, 0.05);
   transform: translateX(3px);
+}
+
+.table-container-patients {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .patient-info {
@@ -777,10 +861,7 @@
     width: 100%;
   }
   
-  .refresh-btn {
-    flex: 1;
-    justify-content: center;
-  }
+  
   
   .appointment-table {
     display: block;
@@ -1155,18 +1236,19 @@
 }
 
 .report-card {
-  background-color: white;
-  border-radius: 14px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  background-color: rgb(226, 226, 226);
+  border: 1.5px solid var(--admin-border); /* Borde más marcado */
+  border-radius: 8px; /* Más suavidad en esquinas */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10); /* Sombra más visible */
   padding: 22px;
-  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  border-top: 3px solid var(--admin-primary);
+  margin-bottom: 20px; /* Espacio entre tarjetas */
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .report-card:hover {
-  transform: translateY(-5px);
+  gap: 20px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -1192,7 +1274,7 @@
 .report-type-financial { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
 .report-type-staff-performance { background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
 .report-type-medication-inventory { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.report-type-equipment-status { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.report-type-equipment-status { background-color: rgba(204, 15, 15, 0.1); color: #ef4444; }
 
 .report-title {
   flex-grow: 1;
@@ -1327,6 +1409,67 @@
 
 .report-filter-btn:hover:not(.active) {
   background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Estilos para botones de reportes médicos */
+.report-filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.filter-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background-color: #d3e1f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-btn i {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.filter-btn span {
+  font-size: 9px;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+/* También actualizar el otro botón */
+.btn-generate-report {
+  padding: 8px 16px;
+  border-radius: 12px;
+  background-color: var(--admin-primary, #a38a52);
+  color: white;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-generate-report i {
+  font-size: 16px;
+}
+
+.btn-generate-report:hover {
+  background-color: var(--admin-primary-dark, #ef6736);
 }
 
 /* Estilos para la Configuración Hospitalaria */
@@ -1698,6 +1841,59 @@ select.form-control {
   color: var(--admin-primary);
 }
 
+.add-patient-btn {
+  background-color: #047857;
+  color: rgb(240, 240, 240);
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.12);
+}
+
+.add-patient-btn i {
+  font-size: 16px;
+}
+
+.add-patient-btn:hover {
+  background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.18);
+}
+
+
+.import-btn {
+  background-color: #047857;
+  color: rgb(240, 240, 240);
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 6px rgba(79, 109, 245, 0.12);
+}
+
+.import-btn i {
+  font-size: 16px;
+}
+
+.import-btn:hover {
+  background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(79, 109, 245, 0.18);
+}
+
 .btn-add-doctor {
   background-color: var(--admin-primary);
   color: white;
@@ -1895,7 +2091,9 @@ select.form-control {
 }
 
 .btn-save:hover:not([disabled]) {
-  background-color: var(--admin-primary-dark);
+  background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-save[disabled] {
@@ -1936,7 +2134,6 @@ select.form-control {
   gap: 8px;
   transition: all 0.2s ease;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-new-doctor:hover {
@@ -2067,4 +2264,44 @@ select.form-control {
 .no-data-message p {
   font-size: 14px;
   margin-bottom: 20px;
+}
+
+/* Botón principal para generar reporte */
+.generate-report-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background-color: var(--admin-primary, #4f6df5);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 3px 8px rgba(79, 109, 245, 0.2);
+  color: white;
+  margin-right: 15px;
+}
+
+.generate-report-btn i {
+  font-size: 20px;
+  margin-bottom: 4px;
+  color: white;
+}
+
+.generate-report-btn span {
+  font-size: 9px;
+  text-align: center;
+  font-weight: 500;
+  color: white;
+  line-height: 1.1;
+}
+
+.generate-report-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 12px rgba(79, 109, 245, 0.3);
+  background-color: var(--admin-primary-dark, #3955d8);
 }
