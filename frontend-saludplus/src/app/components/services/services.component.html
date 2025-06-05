@@ -1,11 +1,84 @@
-<section class="content">
-  <h2 style="text-align:center; margin-bottom: 30px;">{{ title }}</h2>
-  <div class="cards">
-    @for (service of services; track service.title) {
-      <div class="card">
-        <h3>{{ service.title }}</h3>
-        <p>{{ service.description }}</p>
+<section class="services">
+  <div class="content">
+    <h2 class="titulo-seccion">Nuestros Servicios</h2>
+    <p class="texto-descriptivo mb-30">Ofrecemos una amplia gama de servicios médicos con los más altos estándares de calidad para el cuidado integral de tu salud.</p>
+    
+    <div class="services-grid">
+      <!-- Servicio 1 -->
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-heartbeat"></i>
+        </div>
+        <div class="service-content">
+          <h3>Cardiología</h3>
+          <p>Diagnóstico y tratamiento de enfermedades cardiovasculares con equipos de última generación.</p>
+          <a href="#" class="service-link">Ver más <i class="fas fa-arrow-right"></i></a>
+        </div>
       </div>
-    }
+      
+      <!-- Servicio 2 -->
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-brain"></i>
+        </div>
+        <div class="service-content">
+          <h3>Neurología</h3>
+          <p>Atención especializada para trastornos del sistema nervioso central y periférico.</p>
+          <a href="#" class="service-link">Ver más <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+      
+      <!-- Servicio 3 -->
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-child"></i>
+        </div>
+        <div class="service-content">
+          <h3>Pediatría</h3>
+          <p>Cuidados médicos para niños y adolescentes en un ambiente cálido y acogedor.</p>
+          <a href="#" class="service-link">Ver más <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+      
+      <!-- Servicio 4 -->
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-bone"></i>
+        </div>
+        <div class="service-content">
+          <h3>Traumatología</h3>
+          <p>Especialistas en el tratamiento de lesiones y afecciones del sistema musculoesquelético.</p>
+          <a href="#" class="service-link">Ver más <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+      
+      <!-- Servicio 5 -->
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-x-ray"></i>
+        </div>
+        <div class="service-content">
+          <h3>Imágenes Diagnósticas</h3>
+          <p>Radiografías, ecografías, tomografías y resonancias con la tecnología más avanzada.</p>
+          <a href="#" class="service-link">Ver más <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+      
+      <!-- Servicio 6 -->
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-user-md"></i>
+        </div>
+        <div class="service-content">
+          <h3>Medicina General</h3>
+          <p>Atención primaria para diagnóstico y tratamiento de enfermedades comunes.</p>
+          <a href="#" class="service-link">Ver más <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="services-cta">
+      <a routerLink="/appointments" class="cta-button">Agenda tu cita ahora</a>
+    </div>
   </div>
 </section>

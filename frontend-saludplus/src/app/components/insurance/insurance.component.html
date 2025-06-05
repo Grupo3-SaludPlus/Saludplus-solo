@@ -1,11 +1,63 @@
-<section class="content convenios">
-  <h2 class="titulo-seccion mb-30">{{ title }}</h2>
-  <div class="convenios-grid">
-    @for (insurance of insurances; track insurance.name) {
-      <div class="convenio">
-        <div class="logo-ficticio">{{ insurance.name }}</div>
-        <p>{{ insurance.description }}</p>
+<section class="insurance">
+  <div class="content">
+    <h2 class="titulo-seccion">Convenios y Seguros</h2>
+    <p class="texto-descriptivo mb-30">Trabajamos con las principales aseguradoras y fondos de salud para brindarte la mejor atención médica.</p>
+    
+    <div class="insurance-container">
+      <div class="insurance-logos">
+        <div class="logo-grid">
+          <div class="insurance-logo">
+            <img src="assets/images/insurance-logos/fonasa.png" alt="Fonasa">
+          </div>
+          <div class="insurance-logo">
+            <img src="assets/images/insurance-logos/banmedica.png" alt="Banmédica">
+          </div>
+          <div class="insurance-logo">
+            <img src="assets/images/insurance-logos/colmena.png" alt="Colmena">
+          </div>
+          <div class="insurance-logo">
+            <img src="assets/images/insurance-logos/vidatres.png" alt="Vida Tres">
+          </div>
+          <div class="insurance-logo">
+            <img src="assets/images/insurance-logos/consalud.png" alt="Consalud">
+          </div>
+          <div class="insurance-logo">
+            <img src="assets/images/insurance-logos/cruzblanca.png" alt="Cruz Blanca">
+          </div>
+        </div>
       </div>
-    }
+      
+      <div class="insurance-info">
+        <div class="insurance-card">
+          <div class="card-header">
+            <div class="card-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="card-title">¿Cómo funciona?</h3>
+          </div>
+          <p class="card-text">Dependiendo de tu plan de salud, podrás acceder a diferentes beneficios y coberturas. Nuestro equipo te asesorará sobre el mejor uso de tu seguro para maximizar tus beneficios.</p>
+        </div>
+        
+        <div class="insurance-card">
+          <div class="card-header">
+            <div class="card-icon">
+              <i class="fas fa-file-medical"></i>
+            </div>
+            <h3 class="card-title">Documentos necesarios</h3>
+          </div>
+          <ul class="card-list">
+            <li>Cédula de identidad</li>
+            <li>Credencial del seguro o isapre</li>
+            <li>Órdenes médicas (si aplica)</li>
+            <li>Historial médico relevante</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="insurance-contact">
+      <p>¿No encuentras tu aseguradora? Contáctanos para verificar cobertura.</p>
+      <a href="#" class="contact-btn">Consultar cobertura</a>
+    </div>
   </div>
 </section>

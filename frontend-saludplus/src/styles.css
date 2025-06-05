@@ -96,3 +96,105 @@ section.content {
   max-width: 1200px;
   margin: auto;
 }
+
+:root {
+  /* Paleta de colores verde cerceta */
+  --primary-color: #008080; /* Verde cerceta/teal principal */
+  --primary-dark: #006666; /* Verde cerceta oscuro para hover */
+  --primary-light: #33adad; /* Verde cerceta claro */
+  --primary-very-light: #e0f2f2; /* Verde cerceta muy claro para fondos */
+  --accent-color: #00a99d; /* Verde cerceta con tono más vibrante */
+  --text-on-primary: #ffffff; /* Texto sobre fondos verde cerceta */
+  --text-dark: #333333; /* Texto oscuro general */
+  --text-light: #666666; /* Texto gris claro */
+  --background-light: #f8fbfa; /* Fondo claro con toque verdoso */
+  --border-color: #d9eeec; /* Bordes con tono cerceta claro */
+}
+
+/* Estilos globales para textos consistentes */
+body {
+  font-family: 'Poppins', 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  margin-top: 0;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.titulo-seccion {
+  text-align: center;
+  font-size: 2.2rem;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.titulo-seccion::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background-color: var(--primary-color);
+}
+
+.texto-descriptivo {
+  text-align: center;
+  color: var(--text-light);
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.1rem;
+}
+
+.mb-30 {
+  margin-bottom: 30px;
+}
+
+/* Botón de estilo global */
+.btn {
+  display: inline-block;
+  padding: 12px 25px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+  background-color: white;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--primary-very-light);
+  transform: translateY(-3px);
+}

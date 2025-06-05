@@ -1,0 +1,75 @@
+.doctor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+  margin-top: 30px;
+}
+
+.doctor-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.doctor-profile {
+  padding: 20px;
+  text-align: center;
+  background: var(--background-light);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.doctor-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 15px;
+}
+
+.doctor-initials {
+  font-size: 32px;
+  color: white;
+  font-weight: bold;
+}
+
+.doctor-profile h3 {
+  margin: 0;
+  color: var(--text-dark);
+}
+
+.specialty {
+  color: var(--primary-color);
+  font-weight: bold;
+  margin: 5px 0 0;
+}
+
+.doctor-info {
+  padding: 20px;
+  flex-grow: 1;
+}
+
+.doctor-info p {
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.agendar-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px;
+  width: 100%;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.agendar-btn:hover {
+  background-color: var(--primary-dark);
+}
