@@ -273,6 +273,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   alertCount = 0;
   private alertsSubscription: Subscription | undefined;
 
+  // Nuevo atributo para el ID del paciente expandido
+  expandedPatientId: number | null = null;
+
+  // Propiedad para controlar la vista de personal médico
+  staffViewMode: 'table' | 'cards' = 'table';
+  
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -586,5 +592,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     } else {
       this.notificationService.handleAlertAction(event.alertId, event.action);
     }
+  }
+
+  // Método para expandir/colapsar el perfil de un paciente
+  togglePatientProfile(patientId: number): void {
+    this.expandedPatientId = this.expandedPatientId === patientId ? null : patientId;
   }
 }

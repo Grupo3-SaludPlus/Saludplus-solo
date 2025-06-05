@@ -242,9 +242,9 @@
         <div>
           <h1>
             <i class="fas fa-user-injured"></i>
-            Gestión de Pacientes
+            Perfiles de Pacientes
           </h1>
-          <p>Administra los registros médicos de todos los pacientes</p>
+          <p>Visualiza y administra los registros médicos completos</p>
         </div>
         <div class="header-actions">
           <button class="add-patient-btn">
@@ -258,76 +258,318 @@
         </div>
       </div>
 
-      <div class="table-container-patients">
-        <table class="data-table patients-table">
-          <thead>
-            <tr>
-              <th>Paciente</th>
-              <th>Contacto</th>
-              <th>Edad</th>
-              <th>Género</th>  
-              <th>Tipo Sangre</th>
-              <th>Condiciones</th>
-              <th>Última Visita</th>
-              <th>Total Visitas</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let patient of patientRecords">
-              <td>
-                <div class="patient-info">
-                  <div class="patient-avatar">
+      <!-- Filtros y búsqueda -->
+      <div class="patient-filters">
+        <div class="search-container">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Buscar pacientes..." class="search-input">
+        </div>
+        <div class="filter-options">
+          <select class="filter-select">
+            <option value="all">Todos los estados</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+            <option value="critical">Críticos</option>
+          </select>
+          <button class="filter-btn">
+            <i class="fas fa-filter"></i> Más filtros
+          </button>
+        </div>
+      </div>
+
+      <!-- Vista de tarjetas de pacientes -->
+      <div class="patients-grid">
+        <div *ngFor="let patient of patientRecords" class="patient-card" 
+             [class.status-active]="patient.status === 'active'"
+             [class.status-inactive]="patient.status === 'inactive'"
+             [class.status-critical]="patient.status === 'critical'"
+             (click)="togglePatientProfile(patient.id)">
+          <div class="card-status-indicator" [class]="getStatusClass(patient.status)"></div>
+          <div class="patient-card-header">
+            <div class="patient-avatar large">
+              {{ getPatientInitials(patient.name) }}
+            </div>
+            <div class="patient-status-badge" [class]="getStatusClass(patient.status)">
+              {{ getStatusText(patient.status) }}
+            </div>
+          </div>
+          <div class="patient-card-body">
+            <h3 class="patient-name">{{ patient.name }}</h3>
+            <div class="patient-basic-info">
+              <p><i class="fas fa-user"></i> {{ patient.age }} años - {{ patient.gender === 'M' ? 'Masculino' : 'Femenino' }}</p>
+              <p><i class="fas fa-phone"></i> {{ patient.phone }}</p>
+            </div>
+            <div class="patient-medical-highlights">
+              <div class="blood-type-indicator">
+                <span class="blood-label">Tipo</span>
+                <span class="blood-value">{{ patient.bloodType }}</span>
+              </div>
+              <div class="health-indicators">
+                <span *ngIf="patient.chronic.length > 0" class="indicator chronic">
+                  <i class="fas fa-heartbeat"></i> {{ patient.chronic.length }}
+                </span>
+                <span *ngIf="patient.allergies.length > 0" class="indicator allergies">
+                  <i class="fas fa-exclamation-triangle"></i> {{ patient.allergies.length }}
+                </span>
+              </div>
+            </div>
+            <div class="patient-visit-info">
+              <div class="last-visit">
+                <span class="visit-label">Última visita:</span>
+                <span class="visit-date">{{ formatDate(patient.lastVisit) }}</span>
+              </div>
+              <div class="visit-count">
+                <span class="visit-label">Total visitas:</span>
+                <span class="visit-value">{{ patient.totalVisits }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="patient-card-footer">
+            <button class="card-action-btn view-btn">
+              <i class="fas fa-eye"></i> Ver perfil
+            </button>
+            <button class="card-action-btn edit-btn">
+              <i class="fas fa-edit"></i> Editar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de perfil detallado del paciente -->
+    <div class="profile-modal-overlay" *ngIf="expandedPatientId !== null" (click)="togglePatientProfile(expandedPatientId)">
+      <div class="profile-modal-content" (click)="$event.stopPropagation()">
+        <button class="close-profile-btn" (click)="togglePatientProfile(expandedPatientId)">
+          <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="patient-profile-detail" *ngIf="expandedPatientId !== null">
+          <!-- Perfil completo del paciente seleccionado -->
+          <ng-container *ngFor="let patient of patientRecords">
+            <div *ngIf="patient.id === expandedPatientId" class="patient-profile">
+              <!-- Encabezado del perfil -->
+              <div class="profile-header">
+                <div class="profile-avatar-section">
+                  <div class="profile-avatar large">
                     {{ getPatientInitials(patient.name) }}
                   </div>
-                  <div>
-                    <span class="patient-name">{{ patient.name }}</span>
-                    <small class="patient-contact">{{ patient.phone }}</small>
+                  <span class="status-badge large" [class]="getStatusClass(patient.status)">
+                    {{ getStatusText(patient.status) }}
+                  </span>
+                </div>
+                
+                <div class="profile-basic-info">
+                  <h2 class="profile-name">{{ patient.name }}</h2>
+                  <div class="profile-identifiers">
+                    <span class="profile-id">ID: {{ patient.id }}</span>
+                    <span class="profile-age-gender">{{ patient.age }} años - {{ patient.gender === 'M' ? 'Masculino' : 'Femenino' }}</span>
+                  </div>
+                  <div class="contact-info">
+                    <p><i class="fas fa-phone"></i> {{ patient.phone }}</p>
+                    <p><i class="fas fa-envelope"></i> {{ patient.email }}</p>
                   </div>
                 </div>
-              </td>
-              <td>
-                <span class="age-gender">{{ patient.age }} años - {{ patient.gender }}</span>
-              </td>
-              <td>
-                <span class="blood-type">{{ patient.bloodType }}</span>
-              </td>
-              <td>
-                <div class="conditions">
-                  <span *ngFor="let condition of patient.chronic" class="condition-tag">
-                    {{ condition }}
-                  </span>
-                  <span *ngIf="patient.allergies.length > 0" class="allergy-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    {{ patient.allergies.length }} alergia(s)
-                  </span>
+                
+                <div class="profile-actions vertical">
+                  <button class="profile-action-btn primary">
+                    <i class="fas fa-calendar-plus"></i> Nueva cita
+                  </button>
+                  <button class="profile-action-btn secondary">
+                    <i class="fas fa-file-medical-alt"></i> Informe
+                  </button>
+                  <button class="profile-action-btn secondary">
+                    <i class="fas fa-print"></i> Imprimir
+                  </button>
                 </div>
-              </td>
-              <td>{{ formatDate(patient.lastVisit) }}</td>
-              <td>{{ patient.totalVisits }}</td>
-              <td>
-                <span class="status-badge" [class]="getStatusClass(patient.status)">
-                  {{ getStatusText(patient.status) }}
-                </span>
-              </td>
-              <td class="action-cell">
-                <button class="action-btn" (click)="viewPatientHistory(patient.id)" title="Historial Médico">
-                  <i class="fas fa-file-medical"></i>
+              </div>
+              
+              <!-- Cuerpo del perfil con pestañas -->
+              <div class="profile-tabs">
+                <button class="tab-btn active">
+                  <i class="fas fa-info-circle"></i> Información General
                 </button>
-                <button class="action-btn" title="Editar Paciente">
-                  <i class="fas fa-edit"></i>
+                <button class="tab-btn">
+                  <i class="fas fa-file-medical"></i> Historial Médico
                 </button>
-                <select class="status-select mini" [value]="patient.status" 
-                        (change)="updatePatientStatus(patient.id, $any($event.target).value)">
-                  <option value="active">Activo</option>
-                  <option value="inactive">Inactivo</option>
-                  <option value="critical">Crítico</option>
-                </select>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <button class="tab-btn">
+                  <i class="fas fa-pills"></i> Medicamentos
+                </button>
+                <button class="tab-btn">
+                  <i class="fas fa-calendar-day"></i> Citas
+                </button>
+                <button class="tab-btn">
+                  <i class="fas fa-chart-line"></i> Resultados
+                </button>
+              </div>
+              
+              <div class="profile-content">
+                <!-- Contenido del perfil en tarjetas -->
+                <div class="profile-cards-container">
+                  <!-- Información médica -->
+                  <div class="profile-card large">
+                    <div class="card-header">
+                      <h4><i class="fas fa-heartbeat"></i> Información Médica Principal</h4>
+                    </div>
+                    <div class="card-body">
+                      <div class="medical-summary">
+                        <div class="medical-highlight-box blood">
+                          <div class="highlight-icon">
+                            <i class="fas fa-tint"></i>
+                          </div>
+                          <div class="highlight-data">
+                            <span class="highlight-label">Sangre</span>
+                            <span class="highlight-value">{{ patient.bloodType }}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="medical-highlight-box allergies">
+                          <div class="highlight-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                          </div>
+                          <div class="highlight-data">
+                            <span class="highlight-label">Alergias</span>
+                            <span class="highlight-value">{{ patient.allergies.length }}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="medical-highlight-box chronic">
+                          <div class="highlight-icon">
+                            <i class="fas fa-notes-medical"></i>
+                          </div>
+                          <div class="highlight-data">
+                            <span class="highlight-label">Crónicas</span>
+                            <span class="highlight-value">{{ patient.chronic.length }}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="medical-highlight-box visits">
+                          <div class="highlight-icon">
+                            <i class="fas fa-hospital"></i>
+                          </div>
+                          <div class="highlight-data">
+                            <span class="highlight-label">Visitas</span>
+                            <span class="highlight-value">{{ patient.totalVisits }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Alergias -->
+                      <div class="medical-detail-section">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Alergias</h5>
+                        <div class="tags-container">
+                          <span *ngFor="let allergy of patient.allergies" class="tag allergy">{{ allergy }}</span>
+                          <span *ngIf="patient.allergies.length === 0" class="no-data-tag">Sin alergias registradas</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Condiciones crónicas -->
+                      <div class="medical-detail-section">
+                        <h5><i class="fas fa-notes-medical"></i> Condiciones Crónicas</h5>
+                        <div class="tags-container">
+                          <span *ngFor="let condition of patient.chronic" class="tag chronic">{{ condition }}</span>
+                          <span *ngIf="patient.chronic.length === 0" class="no-data-tag">Sin condiciones crónicas</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Información personal -->
+                  <div class="profile-card">
+                    <div class="card-header">
+                      <h4><i class="fas fa-user"></i> Información Personal</h4>
+                    </div>
+                    <div class="card-body">
+                      <div class="info-row">
+                        <span class="label">Edad:</span>
+                        <span class="value">{{ patient.age }} años</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="label">Género:</span>
+                        <span class="value">{{ patient.gender === 'M' ? 'Masculino' : 'Femenino' }}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="label">Email:</span>
+                        <span class="value">{{ patient.email }}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="label">Teléfono:</span>
+                        <span class="value">{{ patient.phone }}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="label">Contacto de emergencia:</span>
+                        <span class="value">{{ patient.emergencyContact }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Historial de visitas -->
+                  <div class="profile-card">
+                    <div class="card-header">
+                      <h4><i class="fas fa-calendar-check"></i> Historial de Visitas</h4>
+                    </div>
+                    <div class="card-body">
+                      <div class="info-row highlight">
+                        <span class="label">Última visita:</span>
+                        <span class="value">{{ formatDate(patient.lastVisit) }}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="label">Total de visitas:</span>
+                        <span class="value">{{ patient.totalVisits }}</span>
+                      </div>
+                      <div class="visit-timeline">
+                        <div class="timeline-item">
+                          <div class="timeline-dot"></div>
+                          <div class="timeline-content">
+                            <div class="timeline-date">{{ formatDate(patient.lastVisit) }}</div>
+                            <div class="timeline-title">Consulta de control</div>
+                            <div class="timeline-doctor">Dr. Juan Pérez - Medicina General</div>
+                          </div>
+                        </div>
+                        <div class="timeline-item">
+                          <div class="timeline-dot"></div>
+                          <div class="timeline-content">
+                            <div class="timeline-date">{{ formatDate('2023-12-15') }}</div>
+                            <div class="timeline-title">Exámenes de rutina</div>
+                            <div class="timeline-doctor">Dra. Ana García - Laboratorio</div>
+                          </div>
+                        </div>
+                      </div>
+                      <button class="btn-view-history full-width">
+                        <i class="fas fa-file-medical"></i> Ver historial completo
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Medicamentos y tratamientos -->
+                  <div class="profile-card">
+                    <div class="card-header">
+                      <h4><i class="fas fa-pills"></i> Medicamentos y Tratamientos</h4>
+                    </div>
+                    <div class="card-body">
+                      <div class="medications-list">
+                        <!-- Lista de medicamentos simulada -->
+                        <div *ngIf="patient.status === 'critical'" class="medication-item active">
+                          <div class="med-icon">
+                            <i class="fas fa-capsules"></i>
+                          </div>
+                          <div class="med-info">
+                            <div class="med-name">Enalapril 10mg</div>
+                            <div class="med-dosage">1 comprimido cada 12 horas</div>
+                          </div>
+                          <div class="med-duration">Continuo</div>
+                        </div>
+                        <p *ngIf="patient.status !== 'critical'" class="no-data">No hay medicamentos activos registrados para este paciente.</p>
+                      </div>
+                      <button class="btn-add-medication full-width">
+                        <i class="fas fa-plus"></i> Agregar medicamento
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
       </div>
     </div>
 
