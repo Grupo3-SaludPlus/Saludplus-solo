@@ -218,68 +218,91 @@ export class AppointmentsComponent implements OnInit {
   }
   
   submitAppointment(): void {
-    // First checks if user is not logged in and validates fields
+    // Validar campos según si está logueado o no
     if (!this.isLoggedIn) {
+      // Si no está logueado, verificar campos obligatorios
       if (!this.appointmentForm.name || !this.appointmentForm.email || !this.appointmentForm.phone) {
         alert('Por favor completa todos los campos obligatorios');
         return;
       }
-    }
-    
-    // But then requires login anyway!
-    const currentUser = this.authService.currentUserValue;
-    
-    if (!currentUser) {
-      alert('Debe iniciar sesión para agendar una cita');
-      return;
-    }
-    
-    const doctorId = this.availableDoctors.find(
-      d => d.name === this.appointmentForm.doctor
-    )?.id || 0;
-    
-    // Extraer correctamente el ID numérico del paciente
-    let patientId: number;
-    
-    // Si el ID tiene formato "patient-XXX", extraer el número
-    if (typeof currentUser.id === 'string' && currentUser.id.includes('-')) {
-      const parts = currentUser.id.split('-');
-      patientId = parseInt(parts[1], 10);
-    } else {
-      // Si es un ID simple, intentar convertirlo directamente
-      patientId = parseInt(currentUser.id as string, 10);
-    }
-    
-    // Verificar que el patientId sea válido
-    if (isNaN(patientId)) {
-      console.error('ID de paciente inválido:', currentUser.id);
-      alert('Error al procesar el ID de usuario. Por favor, inicie sesión nuevamente.');
-      return;
-    }
+      
+      // Procesar cita para usuario no logueado
+      const doctorId = this.availableDoctors.find(
+        d => d.name === this.appointmentForm.doctor
+      )?.id || 0;
+      
+      // Usar ID genérico para usuarios no autenticados
+      const newAppointment = this.appointmentsService.createAppointment({
+        patientId: 9999, // ID provisional para usuarios no logueados
+        patientName: this.appointmentForm.name,
+        doctorId: doctorId,
+        doctorName: this.appointmentForm.doctor,
+        specialty: this.appointmentForm.specialty,
+        date: this.appointmentForm.date,
+        time: this.appointmentForm.time,
+        status: 'scheduled',
+        reason: this.appointmentForm.message || '',
+        location: 'Centro Médico SaludPlus'
+        // El servicio agregará automáticamente el guestId
+      });
+      
+      console.log('Cita guardada (usuario no logueado):', newAppointment);
+    } 
+    else {
+      // El código existente para usuarios logueados
+      const currentUser = this.authService.currentUserValue;
+      
+      if (!currentUser) {
+        console.error('Error: Usuario aparece como logueado pero no hay datos de usuario');
+        alert('Error al procesar su información. Por favor, vuelva a iniciar sesión');
+        return;
+      }
+      
+      const doctorId = this.availableDoctors.find(
+        d => d.name === this.appointmentForm.doctor
+      )?.id || 0;
+      
+      // Extraer correctamente el ID numérico del paciente
+      let patientId: number;
+      
+      // Si el ID tiene formato "patient-XXX", extraer el número
+      if (typeof currentUser.id === 'string' && currentUser.id.includes('-')) {
+        const parts = currentUser.id.split('-');
+        patientId = parseInt(parts[1], 10);
+      } else {
+        // Si es un ID simple, intentar convertirlo directamente
+        patientId = parseInt(currentUser.id as string, 10);
+      }
+      
+      // Verificar que el patientId sea válido
+      if (isNaN(patientId)) {
+        console.error('ID de paciente inválido:', currentUser.id);
+        alert('Error al procesar el ID de usuario. Por favor, inicie sesión nuevamente.');
+        return;
+      }
 
-    // Crear la cita con el ID correcto
-    const newAppointment = this.appointmentsService.createAppointment({
-      patientId: patientId,
-      patientName: currentUser.name,
-      doctorId: doctorId,
-      doctorName: this.appointmentForm.doctor,
-      specialty: this.appointmentForm.specialty,
-      date: this.appointmentForm.date,
-      time: this.appointmentForm.time,
-      status: 'scheduled',
-      reason: this.appointmentForm.message,
-      location: 'Centro Médico SaludPlus'
-    });
+      // Crear la cita con el ID correcto
+      const newAppointment = this.appointmentsService.createAppointment({
+        patientId: patientId,
+        patientName: currentUser.name,
+        doctorId: doctorId,
+        doctorName: this.appointmentForm.doctor,
+        specialty: this.appointmentForm.specialty,
+        date: this.appointmentForm.date,
+        time: this.appointmentForm.time,
+        status: 'scheduled',
+        reason: this.appointmentForm.message || '',
+        location: 'Centro Médico SaludPlus'
+      });
+      
+      console.log('Cita guardada (usuario logueado):', newAppointment);
+    }
     
-    console.log('Cita guardada:', newAppointment);
-    
+    // Mostrar modal de confirmación (para ambos casos)
     console.log('About to show modal');
-    
-    // Force this to run outside Angular's change detection cycle to ensure it triggers
     setTimeout(() => {
       this.showConfirmationModal = true;
       console.log('Modal should be visible now:', this.showConfirmationModal);
-      // Force change detection
       this.cd.detectChanges();
     }, 0);
   }

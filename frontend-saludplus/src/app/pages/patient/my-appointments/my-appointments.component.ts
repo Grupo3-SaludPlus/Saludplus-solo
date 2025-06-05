@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { SharedAppointmentsService, AppointmentBase } from '../../../services/shared-appointments.service';
 import { Subscription } from 'rxjs';
+import { isPlatformBrowser } from '@angular/common';
+import { PLATFORM_ID } from '@angular/core';
 
 interface AppointmentDetails {
   id: number;
@@ -43,18 +45,30 @@ export class MyAppointmentsComponent implements OnInit, OnDestroy {
   currentUser: any; // Almacena el usuario actual
   appointmentSubscription: Subscription | undefined; // Almacena la suscripción a las citas
   loading: boolean = true; // Nueva propiedad para controlar la carga
+  noAppointmentsMessage: string = ''; // Mensaje para mostrar cuando no hay citas
 
   constructor(
     private authService: AuthService,
-    private appointmentsService: SharedAppointmentsService
+    private appointmentsService: SharedAppointmentsService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit() {
     // Obtener usuario actual
     this.currentUser = this.authService.currentUserValue;
     
+    // Comprobar si estamos en el navegador antes de usar localStorage o llamar a métodos que lo usan
+    if (isPlatformBrowser(this.platformId)) {
+      // Ahora es seguro llamar a debugAppointments() y otros métodos que usan localStorage
+      this.loadAppointments();
+      this.appointmentsService.debugAppointments();
+    }
+  }
+
+  // Método separado para cargar las citas
+  private loadAppointments(): void {
     if (this.currentUser) {
-      // Extraer ID numérico correctamente
+      // Código existente para usuarios autenticados...
       let userId: number;
       
       // Si el ID tiene formato "patient-XXX", extraer el número
@@ -71,33 +85,45 @@ export class MyAppointmentsComponent implements OnInit, OnDestroy {
       this.appointmentSubscription = this.appointmentsService
         .getPatientAppointments(userId)
         .subscribe(appointments => {
-          console.log('Citas cargadas del servicio:', appointments);
-          
-          // Mapear desde AppointmentBase a AppointmentDetails
-          this.allAppointments = appointments.map((apt: AppointmentBase) => ({
-            id: apt.id,
-            specialty: apt.specialty,
-            doctor: apt.doctorName, 
-            date: apt.date,
-            time: apt.time,
-            status: apt.status as 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'pending',
-            reason: apt.reason || '',
-            location: apt.location || 'Sin asignar'
-          }));
-          
-          console.log('Citas mapeadas:', this.allAppointments);
-          
-          // Procesar las citas
-          this.calculateAppointmentLists();
-          this.applyFilters();
-          this.loading = false;
+          // Código existente...
+          this.processAppointments(appointments);
         });
     } else {
-      this.loading = false;
+      // Usuario no autenticado - mostrar citas de invitado
+      this.appointmentSubscription = this.appointmentsService
+        .getGuestAppointments()
+        .subscribe(appointments => {
+          console.log('Citas de invitado cargadas:', appointments);
+          if (appointments.length === 0) {
+            // Mensaje cuando no hay citas
+            this.noAppointmentsMessage = 'No se encontraron citas. Para ver sus citas, primero debe agendar una.';
+          } else {
+            this.processAppointments(appointments);
+          }
+        });
     }
+  }
+  
+  // Método auxiliar para procesar citas
+  private processAppointments(appointments: AppointmentBase[]) {
+    // Mapear desde AppointmentBase a AppointmentDetails
+    this.allAppointments = appointments.map((apt: AppointmentBase) => ({
+      id: apt.id,
+      specialty: apt.specialty,
+      doctor: apt.doctorName, 
+      date: apt.date,
+      time: apt.time,
+      status: apt.status as 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'pending',
+      reason: apt.reason || '',
+      location: apt.location || 'Sin asignar'
+    }));
     
-    // Depuración: Verificar las citas guardadas en localStorage
-    this.appointmentsService.debugAppointments();
+    console.log('Citas mapeadas:', this.allAppointments);
+    
+    // Procesar las citas
+    this.calculateAppointmentLists();
+    this.applyFilters();
+    this.loading = false;
   }
 
   calculateAppointmentLists() {

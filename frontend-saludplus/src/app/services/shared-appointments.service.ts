@@ -1,5 +1,5 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators'; // Añadir esta importación
 import { isPlatformBrowser } from '@angular/common';
 
@@ -19,6 +19,8 @@ export interface AppointmentBase {
   createdAt: Date;
   // Añadir la propiedad priority como opcional
   priority?: 'low' | 'medium' | 'high' | 'urgent';
+  // Propiedad para identificar citas de invitados
+  guestId?: string;
 }
 
 @Injectable({
@@ -26,6 +28,7 @@ export interface AppointmentBase {
 })
 export class SharedAppointmentsService {
   private STORAGE_KEY = 'saludplus_appointments';
+  private GUEST_ID_KEY = 'saludplus_guest_id';
   private appointmentsSubject = new BehaviorSubject<AppointmentBase[]>([]);
   private appointmentsLoaded = false;
   private isBrowser: boolean;
@@ -98,38 +101,41 @@ export class SharedAppointmentsService {
     return filtered.asObservable();
   }
   
+  // Obtener citas de invitados
+  getGuestAppointments(): Observable<AppointmentBase[]> {
+    const guestId = this.getGuestId();
+    return of(this.appointmentsSubject.value.filter(app => 
+      // Verificar que la propiedad exista antes de compararla
+      app.guestId !== undefined && app.guestId === guestId
+    ));
+  }
+  
   // Crear nueva cita
   createAppointment(appointment: Partial<AppointmentBase>): AppointmentBase {
-    const appointments = this.appointmentsSubject.value || [];
-    
-    // Generar un ID único para la nueva cita
-    const maxId = appointments.reduce((max, apt) => Math.max(max, apt.id), 0);
-    
-    // Crear la nueva cita
     const newAppointment: AppointmentBase = {
-      id: maxId + 1,
-      patientId: appointment.patientId!,
-      patientName: appointment.patientName!,
-      doctorId: appointment.doctorId!,
-      doctorName: appointment.doctorName!,
-      specialty: appointment.specialty!,
-      date: appointment.date!,
-      time: appointment.time!,
+      id: this.getNextId(),
+      patientId: appointment.patientId || 9999,
+      patientName: appointment.patientName || 'Anónimo',
+      doctorId: appointment.doctorId || 0,
+      doctorName: appointment.doctorName || '',
+      specialty: appointment.specialty || '',
+      date: appointment.date || '',
+      time: appointment.time || '',
       status: appointment.status || 'scheduled',
       reason: appointment.reason || '',
-      location: appointment.location || '',
-      createdAt: new Date()
+      location: appointment.location || 'Centro Médico SaludPlus',
+      notes: appointment.notes || '',
+      createdAt: new Date(),
+      // Asignar el guestId de forma explícita para satisfacer a TypeScript
+      ...(appointment.patientId === 9999 ? { guestId: this.getGuestId() } : {})
     };
-    
-    // Añadir la cita al array
-    appointments.push(newAppointment);
-    
-    // Actualizar el BehaviorSubject y guardar en localStorage
-    this.appointmentsSubject.next(appointments);
-    this.saveToStorage(appointments);
+
+    const updatedAppointments = [...this.appointmentsSubject.value, newAppointment];
+    this.appointmentsSubject.next(updatedAppointments);
+    this.saveToStorage(updatedAppointments);
     
     console.log('Cita creada:', newAppointment);
-    console.log('Total citas:', appointments.length);
+    console.log('Total citas:', updatedAppointments.length);
     
     return newAppointment;
   }
@@ -275,8 +281,31 @@ export class SharedAppointmentsService {
     console.log('Total de citas guardadas:', appointments.length);
     console.log('Citas:', appointments);
     
-    // Verificar localStorage directamente
-    const storedData = localStorage.getItem(this.STORAGE_KEY);
-    console.log('Datos en localStorage:', storedData ? JSON.parse(storedData) : 'No hay datos');
+    // Verificar localStorage solo si estamos en el navegador
+    if (this.isBrowser) {
+      const storedData = localStorage.getItem(this.STORAGE_KEY);
+      console.log('Datos en localStorage:', storedData ? JSON.parse(storedData) : 'No hay datos');
+    } else {
+      console.log('Ejecutando en servidor - localStorage no disponible');
+    }
+  }
+
+  // Agregar este método para obtener o crear un ID de invitado
+  private getGuestId(): string {
+    if (this.isBrowser) {
+      let guestId = localStorage.getItem(this.GUEST_ID_KEY);
+      if (!guestId) {
+        guestId = 'guest-' + new Date().getTime() + '-' + Math.random().toString(36).substring(2, 9);
+        localStorage.setItem(this.GUEST_ID_KEY, guestId);
+      }
+      return guestId;
+    }
+    return 'guest-unknown';
+  }
+
+  // Método para obtener el siguiente ID disponible (máximo + 1)
+  private getNextId(): number {
+    const appointments = this.appointmentsSubject.value;
+    return appointments.length > 0 ? Math.max(...appointments.map(a => a.id)) + 1 : 1;
   }
 }
