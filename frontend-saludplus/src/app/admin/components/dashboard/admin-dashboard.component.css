@@ -1329,7 +1329,7 @@
 .patient-card-footer {
   padding: 15px 20px;
   background: #f8f9fa;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid #e2e8f0;
   display: flex;
   gap: 10px;
 }
@@ -1771,11 +1771,6 @@
   background-color: var(--admin-primary-dark);
 }
 
-.btn-save:disabled {
-  background-color: #adb5bd;
-  cursor: not-allowed;
-}
-
 /* ============== ESTILOS PARA GESTIÓN DE CITAS MÉDICAS ============== */
 .appointments-filters {
   display: flex;
@@ -1806,7 +1801,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background-color: white;
+  background-color: rgb(234, 245, 232);
   border-radius: 8px;
 }
 
@@ -1841,7 +1836,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--admin-primary);
+  background: rgb(98, 128, 204);
   color: white;
   display: flex;
   align-items: center;
@@ -1887,23 +1882,27 @@
 }
 
 .priority-badge.priority-low {
-  background-color: #e3f2fd;
+  background-color: rgba(73, 169, 237, 0.2);
   color: #0d47a1;
+  box-shadow: 0 2px 4px rgba(73, 169, 237, 0.3);
 }
 
 .priority-badge.priority-medium {
-  background-color: #e0f7fa;
+  background-color: rgba(224, 247, 250, 0.2);
   color: #006064;
+  box-shadow: 0 2px 4px rgba(224, 247, 250, 0.3);
 }
 
 .priority-badge.priority-high {
-  background-color: #fff3e0;
+  background-color: rgba(255, 243, 224, 0.2);
   color: #e65100;
+  box-shadow: 0 2px 4px rgba(255, 243, 224, 0.3);
 }
 
 .priority-badge.priority-urgent {
-  background-color: #ffebee;
+  background-color: rgba(255, 235, 238, 0.2);
   color: #b71c1c;
+  box-shadow: 0 2px 4px rgba(255, 235, 238, 0.3);
 }
 
 .status-select {
@@ -1977,13 +1976,13 @@
 }
 
 .appointment-modal-content {
-  background-color: white;
+  background-color: #ffffff;
   border-radius: 10px;
-  width: 90%;
-  max-width: 700px;
-  max-height: 90vh;
+  width: 90%; /* Adjusted width for better responsiveness */
+  max-width: 800px; /* Reduced max-width for better fit */
+  max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   position: relative;
 }
 
@@ -1991,7 +1990,7 @@
   position: absolute;
   top: 15px;
   right: 15px;
-  background: #f1f1f1;
+  background: #f8f9fa;
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -2005,48 +2004,48 @@
 }
 
 .close-modal-btn:hover {
-  background: #e0e0e0;
+  background: #e9ecef;
 }
 
 .appointment-detail-header {
-  padding: 25px 30px;
-  background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark));
-  color: white;
+  padding: 20px 25px;
+  background: linear-gradient(135deg, var(--admin-primary-light), var(--admin-primary));
+  color: rgb(0, 0, 0);
   border-radius: 10px 10px 0 0;
   position: relative;
 }
 
 .appointment-detail-header h3 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .appointment-id {
   position: absolute;
-  right: 60px;
-  top: 25px;
+  right: 20px;
+  top: 20px;
   background: rgba(255, 255, 255, 0.2);
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 20px;
   font-size: 12px;
 }
 
 .appointment-detail-body {
-  padding: 25px 30px;
+  padding: 20px 25px;
 }
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjusted for better responsiveness */
+  gap: 15px;
 }
 
 .detail-card {
-  background-color: #f8f9fa;
-  padding: 20px;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
+  background-color: #f9fafb;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .detail-card.full-width {
@@ -2054,11 +2053,11 @@
 }
 
 .detail-card h4 {
-  margin: 0 0 20px 0;
+  margin: 0 0 15px 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: var(--admin-primary);
+  gap: 8px;
+  color: #2563eb;
   font-size: 16px;
   font-weight: 500;
 }
@@ -2073,15 +2072,15 @@
 }
 
 .detail-item .label {
-  width: 100px;
+  width: 120px;
   font-weight: 500;
-  color: #495057;
+  color: #64748b;
   font-size: 13px;
 }
 
 .detail-item .value {
   flex: 1;
-  color: #212529;
+  color: #334155;
   font-size: 14px;
 }
 
@@ -2091,20 +2090,21 @@
 }
 
 .appointment-notes {
-  width: 100%;
+  width: calc(100% - 40px); /* Espacio en los laterales */
   padding: 12px;
-  border: 1px solid #ced4da;
-  border-radius: 5px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
   font-size: 14px;
-  margin-top: 8px;
+  margin: 8px 20px; /* Espaciado en los laterales */
+  background-color: #ffffff;
 }
 
 .appointment-detail-footer {
   display: flex;
   justify-content: space-between;
-  padding: 20px 30px;
-  background-color: #f8f9fa;
-  border-top: 1px solid #e9ecef;
+  padding: 15px 25px;
+  background-color: #7bbaf8;
+  border-top: 1px solid #e2e8f0;
   border-radius: 0 0 10px 10px;
 }
 
@@ -2114,9 +2114,9 @@
 }
 
 .btn-cancel, .btn-reschedule, .btn-save {
-  padding: 10px 20px;
+  padding: 10px 18px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -2127,35 +2127,35 @@
 }
 
 .btn-cancel {
-  background-color: #e9ecef;
-  color: #495057;
+  background-color: #f1f5f9;
+  color: #64748b;
 }
 
 .btn-reschedule {
-  background-color: #e0f7fa;
-  color: #006064;
+  background-color: #385d8d;
+  color: #1d4ed8;
 }
 
 .btn-save {
-  background-color: var(--admin-primary);
+  background-color: #059669;
   color: white;
 }
 
 .btn-cancel:hover {
-  background-color: #dee2e6;
+  background-color: #e2e8f0;
 }
 
 .btn-reschedule:hover {
-  background-color: #b2ebf2;
+  background-color: #bfdbfe;
 }
 
 .btn-save:hover {
-  background-color: var(--admin-primary-dark);
+  background-color: #047857;
 }
 
 .appointment-form {
-  padding: 0;
-  display: flex;
+  padding: 0 20px;
+  display: static;
   flex-direction: column;
   gap: 15px;
 }
@@ -2163,7 +2163,8 @@
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+  gap: 15px;
+  
 }
 
 /* ============== ESTILOS PARA CONFIGURACIÓN HOSPITALARIA ============== */
@@ -2204,7 +2205,7 @@
 
 .card-header h3 {
   margin: 0;
-  color: white;
+  color: rgb(0, 0, 0);
   font-size: 18px;
   font-weight: 500;
   display: flex;
@@ -2747,7 +2748,6 @@
   padding: 10px;
   border-radius: 6px;
   transition: all 0.2s;
-  width: 100%;
 }
 
 .action-btn i {
@@ -2787,6 +2787,7 @@
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+ 
   display: flex;
   flex-direction: column;
   animation: modalFadeIn 0.3s ease;
@@ -2890,61 +2891,166 @@
   background: #f7fafc;
 }
 
-/* Responsive */
-@media (max-width: 992px) {
-  .reports-list {
-    grid-template-columns: 1fr;
+/* ============== MODAL DE CIERRE DE SESIÓN MEJORADO ============== */
+.logout-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  backdrop-filter: blur(4px);
+}
+
+.logout-popup {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 480px;
+  overflow: hidden;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 768px) {
-  .reports-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-  
-  .btn-generate-report {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .report-filter-buttons {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .filter-btn {
-    height: 100px;
-    padding: 15px;
-  }
-  
-  .report-icon {
-    width: 60px;
-  }
+.popup-header {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: white;
+  padding: 20px 25px;
+  position: relative;
 }
 
+.popup-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.popup-body {
+  padding: 25px;
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.6;
+  background-color: white;
+}
+
+.popup-body p {
+  margin: 0 0 15px 0;
+}
+
+.warning-text {
+  background-color: rgba(251, 146, 60, 0.1);
+  border-left: 3px solid #fb923c;
+  padding: 12px 15px;
+  margin: 15px 0;
+  color: #9a3412;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.admin-info-popup {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.admin-role {
+  font-weight: 500;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.admin-workplace {
+  color: #64748b;
+  font-size: 14px;
+  margin-top: 3px;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  padding: 20px 25px;
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-cancel-logout, .btn-confirm-logout {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-cancel-logout {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.btn-cancel-logout:hover {
+  background-color: #e2e8f0;
+}
+
+.btn-confirm-logout {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-confirm-logout:hover {
+  background-color: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(220, 38, 38, 0.2);
+}
+
+.btn-confirm-logout:active {
+  transform: translateY(0);
+}
+
+/* Asegurar que el overlay tiene mayor z-index que otros elementos */
+div.popup-overlay {
+  z-index: 2000 !important;
+}
+
+/* Clases específicas del DOM para el popup de cierre de sesión */
+.popup-content {
+  background: white !important;
+}
+
+div.popup-header, div.popup-body, div.popup-actions {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive para el modal */
 @media (max-width: 576px) {
-  .report-filter-buttons {
-    grid-template-columns: 1fr;
+  .popup-actions {
+    flex-direction: column-reverse;
   }
   
-  .report-card {
-    flex-direction: column;
-  }
-  
-  .report-icon {
+  .btn-cancel-logout, .btn-confirm-logout {
     width: 100%;
-    height: 60px;
-  }
-  
-  .report-actions {
-    flex-direction: row;
-    border-left: none;
-    border-top: 1px solid #edf2f7;
-  }
-  
-  .action-btn {
-    flex-direction: row;
     justify-content: center;
   }
 }

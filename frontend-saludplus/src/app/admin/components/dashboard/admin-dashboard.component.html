@@ -1181,29 +1181,31 @@
 </div>
 
 <!-- POPUP DE LOGOUT -->
-<div *ngIf="showLogoutPopup" class="popup-overlay" (click)="closePopupOnBackdrop($event)">
-  <div class="popup-content logout-popup">
+<!-- Modal de cierre de sesión -->
+<div *ngIf="showLogoutPopup" class="logout-popup-overlay" (click)="closePopupOnBackdrop($event)">
+  <div class="logout-popup">
     <div class="popup-header">
-      <i class="fas fa-hospital"></i>
       <h3>Cerrar Sesión - Sistema Médico</h3>
     </div>
     <div class="popup-body">
-      <p><strong>¿Confirma el cierre de sesión del sistema hospitalario?</strong></p>
-      <p>Se cerrará el acceso al panel administrativo médico. Asegúrese de que no hay emergencias pendientes.</p>
-      <div class="admin-info-logout">
-        <strong>{{ currentUser?.name || 'Administrador' }}</strong><br>
-        <small>Director Médico - SaludPlus Centro Médico</small>
+      <p>¿Confirma el cierre de sesión del sistema hospitalario?</p>
+      
+      <div class="warning-text">
+        <p>Se cerrará el acceso al panel administrativo médico. Asegúrese de que no hay emergencias pendientes.</p>
       </div>
-      <div class="popup-actions">
-        <button class="btn btn-secondary" (click)="cancelLogout()">
-          <i class="fas fa-times"></i>
-          Cancelar
-        </button>
-        <button class="btn btn-danger" (click)="executeLogout()">
-          <i class="fas fa-sign-out-alt"></i>
-          Cerrar Sesión
-        </button>
+      
+      <div class="admin-info-popup">
+        <div class="admin-role">Administrador Principal</div>
+        <div class="admin-workplace">Director Médico - SaludPlus Centro Médico</div>
       </div>
+    </div>
+    <div class="popup-actions">
+      <button class="btn-cancel-logout" (click)="cancelLogout()">
+        <i class="fas fa-times"></i> Cancelar
+      </button>
+      <button class="btn-confirm-logout" (click)="executeLogout()">
+        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+      </button>
     </div>
   </div>
 </div>
