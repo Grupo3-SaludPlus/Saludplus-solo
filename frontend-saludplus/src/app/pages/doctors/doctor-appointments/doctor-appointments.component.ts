@@ -90,7 +90,11 @@ export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
   loadTodayAppointments() {
     const today = new Date().toISOString().split('T')[0];
     this.todayAppointments = this.appointments
-      .filter(a => a.date === today)
+      .filter(a =>
+        a.date === today &&
+        a.doctorId === this.currentUser?.id &&
+        (a.status === 'scheduled' || a.status === 'confirmed')
+      )
       .sort((a, b) => a.time.localeCompare(b.time));
   }
   

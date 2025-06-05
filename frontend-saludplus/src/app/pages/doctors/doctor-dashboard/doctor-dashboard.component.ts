@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AuthService, User } from '../../../services/auth.service';
-import { AppointmentsService, MedicalAppointment } from '../../../services/appointments.service';
+import { SharedAppointmentsService } from '../../../services/shared-appointments.service';
+import { AuthService } from '../../../services/auth.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -13,8 +13,9 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./doctor-dashboard.component.css']
 })
 export class DoctorDashboardComponent implements OnInit, OnDestroy {
-  currentUser: User | null = null;
-  todayAppointments: MedicalAppointment[] = [];
+  currentUser: any;
+  todayAppointments: any[] = [];
+  upcomingAppointments: any[] = [];
   stats = {
     todayTotal: 0,
     pendingTotal: 0,
@@ -22,139 +23,153 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     completedRate: 0
   };
   
-  recentActivity = [];
-  upcomingAppointments: MedicalAppointment[] = [];
-  private appointmentSubscription: Subscription | undefined;
+  private userSubscription?: Subscription;
+  private appointmentsSubscription?: Subscription;
   
   constructor(
     private authService: AuthService,
-    private appointmentsService: AppointmentsService
+    private appointmentsService: SharedAppointmentsService
   ) {}
   
   ngOnInit() {
-    this.authService.currentUser.subscribe(user => {
+    this.userSubscription = this.authService.currentUser.subscribe(user => {
       this.currentUser = user;
       if (user) {
-        this.loadDashboardData();
+        this.loadAppointments();
       }
     });
   }
   
-  ngOnDestroy() {
-    if (this.appointmentSubscription) {
-      this.appointmentSubscription.unsubscribe();
-    }
-  }
-  
-  loadDashboardData() {
-    this.appointmentSubscription = this.appointmentsService.getAllAppointments()
+  loadAppointments() {
+    this.appointmentsSubscription = this.appointmentsService.getAllAppointments()
       .subscribe(appointments => {
         if (this.currentUser?.id) {
           const doctorId = Number(this.currentUser.id);
-          const doctorAppointments = appointments.filter(a => a.doctorId === doctorId);
+          const allDoctorAppointments = appointments.filter(a => a.doctorId === doctorId);
           
           // Citas de hoy
           const today = new Date().toISOString().split('T')[0];
-          this.todayAppointments = doctorAppointments.filter(apt => apt.date === today)
+          this.todayAppointments = allDoctorAppointments
+            .filter(a => a.date === today)
             .sort((a, b) => a.time.localeCompare(b.time));
           
-          // Próximas citas (futuras, ordenadas por fecha)
-          this.upcomingAppointments = doctorAppointments.filter(apt => apt.date >= today && apt.status === 'scheduled')
-            .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
-            .slice(0, 5); // Solo mostrar las próximas 5
+          // Próximas citas (futuras, incluyendo hoy)
+          this.upcomingAppointments = allDoctorAppointments
+            .filter(a => 
+              (a.date > today || (a.date === today && this.isTimeInFuture(a.time))) &&
+              (a.status === 'scheduled' || a.status === 'confirmed')
+            )
+            .sort((a, b) => {
+              if (a.date !== b.date) {
+                return a.date.localeCompare(b.date);
+              }
+              return a.time.localeCompare(b.time);
+            })
+            .slice(0, 5); // Limitar a 5 citas próximas
           
-          // Estadísticas
-          this.calculateStats(doctorAppointments, today);
+          console.log('Citas próximas cargadas:', this.upcomingAppointments.length);
+          
+          // Calcular estadísticas
+          this.calculateStats(allDoctorAppointments);
         }
       });
   }
   
-  calculateStats(appointments: MedicalAppointment[], today: string) {
-    // Citas de hoy
-    this.stats.todayTotal = appointments.filter(apt => apt.date === today).length;
-    
-    // Citas pendientes (agendadas o en progreso)
-    this.stats.pendingTotal = appointments.filter(apt => 
-      apt.status === 'scheduled' || apt.status === 'in-progress').length;
-      
-    // Pacientes este mes
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    const patientIdsThisMonth = new Set();
-    
-    appointments.forEach(apt => {
-      const aptDate = new Date(apt.date);
-      if (aptDate.getMonth() === currentMonth && aptDate.getFullYear() === currentYear) {
-        patientIdsThisMonth.add(apt.patientId);
-      }
-    });
-    
-    this.stats.monthlyPatients = patientIdsThisMonth.size;
-    
-    // Tasa de completitud (citas completadas vs canceladas)
-    const completed = appointments.filter(apt => apt.status === 'completed').length;
-    const total = appointments.length;
-    this.stats.completedRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+  isTimeInFuture(time: string): boolean {
+    const now = new Date();
+    const [hours, minutes] = time.split(':').map(Number);
+    return (now.getHours() < hours) || (now.getHours() === hours && now.getMinutes() < minutes);
   }
   
-  formatDate(dateString: string): string {
-    if (!dateString) return '';
+  calculateStats(appointments: any[]) {
+    const today = new Date().toISOString().split('T')[0];
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
     
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
+    // Citas de hoy
+    this.stats.todayTotal = appointments.filter(a => a.date === today).length;
+    
+    // Citas pendientes (scheduled/confirmed)
+    this.stats.pendingTotal = appointments.filter(a => 
+      (a.status === 'scheduled' || a.status === 'confirmed') && 
+      (a.date >= today)
+    ).length;
+    
+    // Pacientes únicos este mes
+    const monthlyAppointments = appointments.filter(a => {
+      const appointmentDate = new Date(a.date);
+      return appointmentDate.getMonth() === currentMonth && 
+             appointmentDate.getFullYear() === currentYear;
     });
+    
+    const uniquePatients = new Set(monthlyAppointments.map(a => a.patientId));
+    this.stats.monthlyPatients = uniquePatients.size;
+    
+    // Tasa de completitud (citas completadas vs total)
+    const completedAppointments = appointments.filter(a => a.status === 'completed').length;
+    const totalPastAppointments = appointments.filter(a => 
+      a.date < today || (a.date === today && !this.isTimeInFuture(a.time))
+    ).length;
+    
+    this.stats.completedRate = totalPastAppointments > 0 
+      ? Math.round((completedAppointments / totalPastAppointments) * 100) 
+      : 100;
   }
-
+  
   getCurrentDate(): string {
-    const today = new Date();
     const options: Intl.DateTimeFormatOptions = { 
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
     };
-    
-    // Formatea la fecha en español con primera letra en mayúscula
-    let formattedDate = today.toLocaleDateString('es-ES', options);
-    formattedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-    
-    return formattedDate; // Por ejemplo: "Martes, 4 de junio de 2024"
+    return new Date().toLocaleDateString('es-ES', options);
   }
-
-  // Verificar si una cita puede iniciarse (solo si está agendada)
-  canStart(appointment: MedicalAppointment): boolean {
-    return appointment.status === 'scheduled';
+  
+  getStatusText(status: string): string {
+    const statusMap: {[key: string]: string} = {
+      'scheduled': 'Agendada',
+      'confirmed': 'Confirmada',
+      'in_progress': 'En Progreso',
+      'completed': 'Completada',
+      'cancelled': 'Cancelada',
+      'no_show': 'No Asistió'
+    };
+    return statusMap[status] || status;
   }
-
-  // Verificar si una cita puede completarse (solo si está en progreso)
-  canComplete(appointment: MedicalAppointment): boolean {
-    return appointment.status === 'in-progress';
-  }
-
-  // Verificar si una cita puede cancelarse
-  canCancel(appointment: MedicalAppointment): boolean {
-    return appointment.status === 'scheduled' || appointment.status === 'in-progress';
-  }
-
-  // Iniciar una consulta médica
-  startAppointment(appointmentId: number): void {
-    this.appointmentsService.updateAppointmentStatus(appointmentId, 'in-progress');
-    // Actualizar la vista
-    this.loadDashboardData();
-  }
-
-  // Completar una consulta médica
-  completeAppointment(appointmentId: number): void {
-    this.appointmentsService.updateAppointmentStatus(appointmentId, 'completed');
-    // Actualizar la vista
-    this.loadDashboardData();
-  }
-
-  // Método auxiliar para obtener la clase CSS según el estado
+  
   getStatusClass(status: string): string {
-    return `status-${status}`;
+    return `status-${status.replace('_', '-')}`;
+  }
+  
+  canStart(appointment: any): boolean {
+    return appointment.status === 'confirmed';
+  }
+  
+  canComplete(appointment: any): boolean {
+    return appointment.status === 'in_progress';
+  }
+  
+  startAppointment(id: number) {
+    const updatedAppointment = this.appointmentsService.updateAppointment({ id, status: 'scheduled' });
+    if (updatedAppointment) {
+      this.loadAppointments();
+    }
+  }
+  
+  completeAppointment(id: number) {
+    const updatedAppointment = this.appointmentsService.updateAppointment({ id, status: 'completed' });
+    if (updatedAppointment) {
+      this.loadAppointments();
+    }
+  }
+  
+  ngOnDestroy() {
+    if (this.userSubscription) {
+      this.userSubscription.unsubscribe();
+    }
+    if (this.appointmentsSubscription) {
+      this.appointmentsSubscription.unsubscribe();
+    }
   }
 }
