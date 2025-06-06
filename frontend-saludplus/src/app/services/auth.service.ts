@@ -1,19 +1,17 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { DoctorsService, Doctor } from './doctors.service';
 
-// Reemplazar completamente la interfaz User existente con esta versión completa:
+// Actualizar la interfaz User para incluir todas las propiedades utilizadas
 export interface User {
   id: string | number;
   name: string;
   email: string;
   password?: string;
-  role: 'patient' | 'doctor' | 'admin' | string;
+  role?: 'patient' | 'doctor' | 'admin';
   phone?: string;
-  
-  // Campos médicos adicionales
   age?: number;
   birthdate?: string;
   gender?: 'M' | 'F' | 'O';
@@ -29,10 +27,10 @@ export interface User {
   department?: string;
   license?: string;
   profileImage?: string;
+  loggedIn?: boolean; // Agregado
   
   // Campos para sistema
   createdAt?: Date | string;
-  loggedIn?: boolean;
   token?: string;
   permissions?: string[];
   
@@ -66,7 +64,7 @@ export class AuthService {
   }
 
   // Obtener todos los usuarios
-  private getAllUsers(): User[] {
+  private getUsers(): User[] {
     if (!this.isBrowser) return [];
     const usersJson = localStorage.getItem(this.usersKey);
     return usersJson ? JSON.parse(usersJson) : [];
@@ -194,7 +192,7 @@ export class AuthService {
 
   // Login para pacientes
   loginPatient(email: string, password: string): boolean {
-    const users = this.getAllUsers();
+    const users = this.getUsers(); // Actualizado
     const patient = users.find(user => 
       user.role === 'patient' && user.email === email
     );
@@ -251,8 +249,8 @@ export class AuthService {
 
   // Login para admin
   loginAdmin(email: string, password: string): boolean {
-    const users = this.getAllUsers();
-    const admin = users.find(user => 
+    const users = this.getUsers();
+    const admin = users.find((user: User) => 
       user.role === 'admin' && user.email === email
     );
     
@@ -265,7 +263,7 @@ export class AuthService {
       
       this.currentUserSubject.next(loggedInUser);
       
-      const updatedUsers = users.map(u => 
+      const updatedUsers = users.map((u: User) => 
         u.id === admin.id ? { ...u, loggedIn: true } : u
       );
       this.saveUsers(updatedUsers);
@@ -277,10 +275,10 @@ export class AuthService {
 
   // Registro de nuevos pacientes
   registerPatient(newUser: Partial<User>, password: string): User | null {
-    const users = this.getAllUsers();
+    const users = this.getUsers();
     
     // Verificar si el email ya existe
-    if (users.some(u => u.email === newUser.email)) {
+    if (users.some((u: User) => u.email === newUser.email)) {
       return null;
     }
     
@@ -335,8 +333,8 @@ export class AuthService {
   updateUserProfile(updates: Partial<User>): User | null {
     if (!this.currentUserValue || !this.isBrowser) return null;
     
-    const users = this.getAllUsers();
-    const userIndex = users.findIndex(u => u.id === this.currentUserValue!.id);
+    const users = this.getUsers();
+    const userIndex = users.findIndex((u: User) => u.id === this.currentUserValue!.id);
     
     if (userIndex === -1) {
       return null;
@@ -362,7 +360,7 @@ export class AuthService {
       return [];
     }
     
-    return this.getAllUsers();
+    return this.getUsers(); // Actualizado
   }
 
   // Eliminar usuario (solo admin)
@@ -372,8 +370,8 @@ export class AuthService {
       return false;
     }
     
-    const users = this.getAllUsers();
-    const updatedUsers = users.filter(u => u.id !== userId);
+    const users = this.getUsers();
+    const updatedUsers = users.filter((u: User) => u.id !== userId);
     
     if (updatedUsers.length === users.length) {
       return false; // No se encontró el usuario
@@ -385,7 +383,10 @@ export class AuthService {
 
   // Método de depuración - solo en desarrollo
   logAllUsers(): void {
-    console.log('Todos los usuarios:', this.getAllUsers());
+    this.getAllUsers().subscribe((users: User[]) => {
+      console.log('Todos los usuarios:', users);
+      
+    });
   }
 
   /**
@@ -402,7 +403,7 @@ export class AuthService {
 
   // Añadir este método público que internamente llama al privado
   public getRegisteredUsers(): User[] {
-    return this.getAllUsers();
+    return this.getUsers(); // Actualizado
   }
 
   // Añadir este método a la clase AuthService
@@ -411,21 +412,77 @@ export class AuthService {
     this.currentUserSubject.next(updatedUser);
     
     // Actualizar en localStorage
-    if (typeof window !== 'undefined') {
+    if (this.isBrowser) {
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     }
     
     // También actualizar en la lista de usuarios almacenados
-    const users = this.getAllUsers();
-    const index = users.findIndex(u => u.id === updatedUser.id);
+    const users = this.getUsers();
+    const index = users.findIndex((u: User) => u.id === updatedUser.id);
     
     if (index !== -1) {
       users[index] = updatedUser;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('users', JSON.stringify(users));
+      if (this.isBrowser) {
+        localStorage.setItem(this.usersKey, JSON.stringify(users));
       }
     }
     
     console.log('Usuario actualizado:', updatedUser);
+  }
+
+  // Agregar este método a la clase AuthService
+
+  /**
+   * Obtiene todos los usuarios registrados en el sistema
+   * (solo disponible para administradores)
+   */
+  getAllUsers(): Observable<User[]> {
+    // Verificar si el usuario actual es admin
+    const currentUser = this.currentUserValue;
+    if (!currentUser || currentUser.role !== 'admin') {
+      console.warn('Acceso no autorizado a lista de usuarios');
+      return of([]);
+    }
+    
+    // Si está en el navegador, obtener usuarios del localStorage
+    if (this.isBrowser) {
+      const users = this.getUsers(); // Usar el método privado actualizado
+      return of(users);
+    }
+    
+    return of([]);
+  }
+
+  getAllRegisteredUsers(): User[] {
+    const users = localStorage.getItem('saludplus_users');
+    return users ? JSON.parse(users) : [];
+  }
+
+  getPatients(): User[] {
+    return this.getRegisteredUsers().filter((u: User) => u.role === 'patient');
+  }
+
+  savePatient() {
+    // Si estás actualizando un paciente existente
+    if (this.currentUserValue && this.currentUserValue.role === 'patient') {
+      // Actualiza el perfil del usuario actual
+      this.updateUserProfile(this.currentUserValue);
+    } else {
+      // Registra un nuevo paciente con una contraseña predeterminada 
+      // (debería cambiarse después del primer inicio de sesión)
+      const password = '123456'; // Considera generar una contraseña aleatoria en producción
+      this.registerPatient({
+        email: this.currentUserValue?.email || '',
+        name: this.currentUserValue?.name || '',
+        role: 'patient',
+        // Añade otras propiedades necesarias
+      }, password);
+    }
+    
+    // Puedes emitir un evento o usar otro método para notificar que se guardó
+    console.log('Paciente guardado correctamente');
+    
+    // Usar el router para navegar después de guardar si es necesario
+    // this.router.navigate(['/patients']);
   }
 }

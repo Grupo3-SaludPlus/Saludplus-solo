@@ -1,7 +1,7 @@
 /* Variables modernas basadas en verde #00A86B con mayor contraste */
 :root {
-  --primary: #00A86B;
-  --primary-dark: #007554;
+  --primary: #00bc77;
+  --primary-dark: #10936e;
   --primary-light: #26D097;
   --secondary: #64748b;
   --accent: #00E6B8;
@@ -10,9 +10,9 @@
   --danger: #ef4444;
   
   /* Backgrounds con mayor diferenciación */
-  --bg-primary: #0B1F17;
-  --bg-secondary: #1E3A2E;
-  --bg-tertiary: #2E5F4A;
+  --bg-primary: #1e6046;
+  --bg-secondary: #45886b;
+  --bg-tertiary: #43896b;
   --bg-light: #F8FDF9;
   --bg-card: #E8F5F0;
   
@@ -26,7 +26,7 @@
   --gray-600: #10B981;
   --gray-700: #059669;
   --gray-800: #047857;
-  --gray-900: #065F46;
+  --gray-900: #0e9d75;
 }
 
 .doctor-layout {
@@ -38,7 +38,7 @@
 /* Sidebar con colores más definidos */
 .doctor-sidebar {
   width: 260px;
-  background: linear-gradient(180deg, #1E3A2E 0%, #0B1F17 100%);
+  background: linear-gradient(180deg, #3a8967 0%, #16553c 100%);
   color: #F8FDF9;
   display: flex;
   flex-direction: column;
