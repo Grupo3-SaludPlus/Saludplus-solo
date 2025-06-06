@@ -50,7 +50,7 @@ export class NavbarComponent {
   hasAccess(roles: string[]): boolean {
     if (!roles) return true;
     if (!this.currentUser) return false;
-    return roles.includes(this.currentUser.role);
+    return roles.includes(this.currentUser.role as string);
   }
 
   getUserInitial(): string {

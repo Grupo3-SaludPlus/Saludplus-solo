@@ -1,32 +1,40 @@
+/* Variables de color actualizadas - sin blanco */
 :root {
-  --primary: #2563eb;
-  --primary-light: #dbeafe;
-  --primary-dark: #1e40af;
+  --primary: #00A86B;
+  --primary-dark: #007554;
+  --primary-light: #26D097;
+  --secondary: #64748b;
+  --accent: #00E6B8;
   --success: #10b981;
-  --success-light: #d1fae5;
   --warning: #f59e0b;
-  --warning-light: #fef3c7;
   --danger: #ef4444;
-  --danger-light: #fee2e2;
-  --info: #3b82f6;
-  --info-light: #e0f2fe;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
+  
+  /* Backgrounds con mayor diferenciación */
+  --bg-primary: #0B1F17;
+  --bg-secondary: #1E3A2E;
+  --bg-tertiary: #2E5F4A;
+  --bg-light: #F8FDF9;
+  --bg-card: #E8F5F0;
+  
+  /* Grises con más contraste */
+  --gray-50: #F8FDF9;
+  --gray-100: #E8F5F0;
+  --gray-200: #D1F7E5;
+  --gray-300: #A7F3D0;
+  --gray-400: #6EE7B7;
+  --gray-500: #34D399;
+  --gray-600: #10B981;
+  --gray-700: #059669;
+  --gray-800: #047857;
+  --gray-900: #065F46;
 }
-
 /* Contenedor principal */
 .doctor-appointments-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  background: var(--bg-primary);
+  min-height: 100vh;
 }
 
 /* Header y estadísticas */
@@ -58,19 +66,26 @@
   font-size: 14px;
 }
 
+/* Cards y estadísticas */
 .stats-cards {
   display: flex;
-  gap: 15px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .stat-card {
-  background-color: white;
-  border-radius: 10px;
-  padding: 15px;
-  min-width: 100px;
-  text-align: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  border-top: 3px solid var(--gray-300);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--info) 100%);
+  color: var(--bg-primary);
+  padding: 20px;
+  border-radius: 12px;
+  flex: 1;
+  min-width: 200px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
 }
 
 .stat-card.scheduled {
@@ -218,35 +233,62 @@
   gap: 8px;
 }
 
+/* Botones mejorados */
 .btn-start, .btn-complete {
-  background-color: var(--primary);
-  color: white;
+  background: linear-gradient(135deg, var(--info) 0%, var(--primary) 100%);
+  color: var(--bg-primary);
   border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 8px 16px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 5px;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-start {
-  background-color: var(--info);
+  background: linear-gradient(135deg, var(--info) 0%, var(--info-dark) 100%);
 }
 
 .btn-start:hover {
-  background-color: #2563eb;
+  background: linear-gradient(135deg, var(--info-dark) 0%, var(--primary) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(6, 182, 212, 0.3);
 }
 
 .btn-complete {
-  background-color: var(--success);
+  background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
 }
 
 .btn-complete:hover {
-  background-color: #059669;
+  background: linear-gradient(135deg, var(--success-dark) 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-cancel, .cancel-btn {
+  background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+  color: var(--bg-primary);
+}
+
+.btn-cancel:hover, .cancel-btn:hover {
+  background: linear-gradient(135deg, var(--danger-dark) 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.view-btn {
+  background: linear-gradient(135deg, var(--gray-600) 0%, var(--gray-700) 100%);
+  color: var(--bg-primary);
+}
+
+.view-btn:hover {
+  background: linear-gradient(135deg, var(--gray-700) 0%, var(--gray-800) 100%);
+  transform: translateY(-1px);
 }
 
 /* Controles de filtro */
@@ -631,10 +673,11 @@
 
 /* Vista de lista */
 .list-view {
-  background-color: white;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--gray-300);
 }
 
 .appointments-table-container {
@@ -655,124 +698,22 @@
 
 .appointments-table th {
   font-weight: 600;
+  color: var(--gray-800);
+  background: var(--gray-200);
+  padding: 16px;
+}
+
+.appointments-table td {
   color: var(--gray-700);
-  background-color: var(--gray-50);
+  background: var(--bg-secondary);
 }
 
-.appointments-table tr:hover {
-  background-color: var(--gray-50);
+.appointments-table tr:nth-child(even) td {
+  background: var(--gray-100);
 }
 
-.patient-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.patient-avatar {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background-color: var(--primary-light);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.patient-name {
-  font-weight: 500;
-  color: var(--gray-900);
-}
-
-.patient-age {
-  font-size: 13px;
-  color: var(--gray-500);
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.status-scheduled {
-  background-color: var(--info-light);
-  color: var(--info);
-}
-
-.status-in-progress {
-  background-color: var(--warning-light);
-  color: var(--warning);
-}
-
-.status-completed {
-  background-color: var(--success-light);
-  color: var(--success);
-}
-
-.status-cancelled {
-  background-color: var(--gray-200);
-  color: var(--gray-600);
-}
-
-.status-emergency {
-  background-color: #f3e8ff; /* Purple for emergency */
-  color: #9333ea;
-}
-
-.priority-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.priority-low {
-  background-color: var(--gray-100);
-  color: var(--gray-700);
-}
-
-.priority-medium {
-  background-color: var(--info-light);
-  color: var(--info);
-}
-
-.priority-high {
-  background-color: var(--warning-light);
-  color: var(--warning);
-}
-
-.priority-urgent {
-  background-color: var(--danger-light);
-  color: var(--danger);
-}
-
-.appointment-actions {
-  display: flex;
-  gap: 5px;
-  justify-content: center;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 30px;
-  color: var(--gray-500);
-}
-
-.empty-state i {
-  font-size: 30px;
-  margin-bottom: 10px;
-  color: var(--gray-400);
-}
-
-.table-empty-state {
-  margin: 30px 0;
+.appointments-table tr:hover td {
+  background: var(--gray-200);
 }
 
 /* Modal de detalles de cita */

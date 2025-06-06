@@ -51,21 +51,11 @@ export const routes: Routes = [
   {
     path: 'doctor',
     component: DoctorLayoutComponent,
-    canActivate: [AuthGuard],
     children: [
       {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full'
-      },
-      {
         path: 'dashboard',
-        component: DoctorDashboardComponent
+        loadComponent: () => import('./pages/doctors/doctor-dashboard/doctor-dashboard.component').then(m => m.DoctorDashboardComponent)
       },
-      {
-        path: 'appointments',
-        component: DoctorAppointmentsComponent
-      }
     ]
   },
   
@@ -93,5 +83,10 @@ export const routes: Routes = [
       { path: 'users', component: UsersManagementComponent }
       // Otras rutas de administrador
     ]
+  },
+  
+  {
+    path: '**',
+    redirectTo: '/home'
   }
 ];

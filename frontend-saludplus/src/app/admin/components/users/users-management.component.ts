@@ -44,7 +44,7 @@ import { AuthService, User } from '../../../services/auth.service';
               <span class="badge" [class.patient]="user.role === 'patient'"
                     [class.doctor]="user.role === 'doctor'"
                     [class.admin]="user.role === 'admin'">
-                {{ getUserRoleText(user.role) }}
+                {{ getUserRoleText(user.role || '') }}
               </span>
             </td>
             <td>{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
