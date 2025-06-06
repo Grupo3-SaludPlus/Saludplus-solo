@@ -1,60 +1,58 @@
-# FrontendRedSalud2
+# SaludPlus - Sistema de Gestión Médica
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.12.
+Sistema web para la gestión de citas médicas, pacientes y doctores desarrollado con Angular.
 
-## Development server
+## 🚀 Ejecución con Docker
 
-To start a local development server, run:
+### Prerrequisitos
+- Docker Desktop instalado
+- Conexión a internet (para clonar el repositorio)
 
+### Pasos para ejecutar
+
+1. **Clonar este repositorio o descargar el Dockerfile**
 ```bash
-ng serve
+git clone https://github.com/Grupo3-SaludPlus/Saludplus-solo.git
+cd Saludplus-solo/frontend-saludplus
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+2. **Construir la imagen Docker**
 ```bash
-ng generate component component-name
+docker build -t saludplus .
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
+3. **Ejecutar el contenedor**
 ```bash
-ng generate --help
+docker run -p 4200:4200 saludplus
 ```
 
-## Building
+4. **Acceder a la aplicación**
+Abrir el navegador en: `http://localhost:4200`
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+### Comandos adicionales
 
 ```bash
-ng test
+# Ejecutar en segundo plano
+docker run -d -p 4200:4200 --name saludplus-app saludplus
+
+# Ver logs de la aplicación
+docker logs saludplus-app
+
+# Parar el contenedor
+docker stop saludplus-app
+
+# Eliminar el contenedor
+docker rm saludplus-app
+
+# Ver contenedores corriendo
+docker ps
 ```
+## 📝 Notas
 
-## Running end-to-end tests
+- La primera ejecución puede tardar varios minutos mientras se descargan dependencias
+- La aplicación se ejecuta en modo desarrollo con hot reload
+- Puerto por defecto: 4200
 
-For end-to-end (e2e) testing, run:
+## 👥 Equipo de Desarrollo
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
-# Saludplus-solo
+Grupo 3 - SaludPlus (Christian Vivanco :D )

@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener } from '@angular/core';
 import { AuthService, User } from '../../services/auth.service';
 import { Router } from '@angular/router';
-import { NgIf, NgForOf } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
@@ -9,7 +9,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
   standalone: true,
-  imports: [NgIf, NgForOf, RouterLink, RouterLinkActive]
+  imports: [NgIf, RouterLink, RouterLinkActive]
 })
 export class NavbarComponent {
   menuOpen = false;
@@ -65,10 +65,6 @@ export class NavbarComponent {
       case 'patient': return 'Paciente';
       default: return '';
     }
-  }
-
-  trackByPath(index: number, item: any) {
-    return item.path;
   }
 
   cancelLogout() {
