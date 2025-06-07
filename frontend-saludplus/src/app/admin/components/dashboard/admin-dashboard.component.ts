@@ -231,9 +231,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   appointmentForm: Partial<MedicalAppointment> = {};
 
   // Añadir estas propiedades a la clase
+  patientSearchTerm: string = '';
+  patientStatusFilter: string = 'all';
+  filteredPatientRecords: PatientRecord[] = [];
   selectedPatient: PatientRecord | null = null;
-  isEditingPatient = false;
-  editPatientForm: any = {};
+  isEditingPatient: boolean = false;
+  editPatientForm: any = null;
 
   // Getter para filtrar citas según criterios
   get filteredAppointments(): MedicalAppointment[] {
@@ -319,6 +322,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       });
 
     this.loadRealPatientCount();
+
+    // Cargar pacientes
+    this.loadPatients();
   }
 
   ngOnDestroy(): void {
@@ -545,7 +551,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   
   // Métodos de utilidad
   getPatientInitials(name: string): string {
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    if (!name) return '--';
+    
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return names[0].substring(0, 2).toUpperCase();
   }
 
   getStatusClass(status: string | undefined): string {
@@ -585,8 +597,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   formatDate(dateString: string): string {
+    if (!dateString) return 'N/A';
+    
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES');
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   }
 
   refreshMedicalData() {
@@ -908,5 +926,160 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   removeChronic(index: number): void {
     this.editPatientForm.chronic.splice(index, 1);
+  }
+
+  // Método para cargar pacientes (añadir a ngOnInit)
+  loadPatients(): void {
+    // Mock data
+    this.patientRecords = [
+      {
+        id: 'p1',
+        name: 'Juan Pérez',
+        age: 45,
+        gender: 'M',
+        phone: '+56912345678',
+        email: 'juan@ejemplo.com',
+        bloodType: 'O+',
+        insurance: 'Fonasa',
+        emergencyContact: '+56987654321',
+        allergies: ['Penicilina', 'Polen'],
+        chronic: ['Hipertensión'],
+        status: 'active',
+        lastVisit: '2025-05-10',
+        totalVisits: 8
+      },
+      {
+        id: 'p2',
+        name: 'María González',
+        age: 32,
+        gender: 'F',
+        phone: '+56923456789',
+        email: 'maria@ejemplo.com',
+        bloodType: 'A+',
+        insurance: 'Isapre',
+        emergencyContact: '+56998765432',
+        allergies: ['Látex'],
+        chronic: ['Diabetes'],
+        status: 'active',
+        lastVisit: '2025-05-15',
+        totalVisits: 5
+      },
+      {
+        id: 'p3',
+        name: 'Carlos Rodríguez',
+        age: 60,
+        gender: 'M',
+        phone: '+56934567890',
+        email: 'carlos@ejemplo.com',
+        bloodType: 'B-',
+        insurance: 'Fonasa',
+        emergencyContact: '+56976543210',
+        allergies: [],
+        chronic: ['Artritis', 'Hipertensión'],
+        status: 'inactive',
+        lastVisit: '2025-04-20',
+        totalVisits: 12
+      }
+    ];
+    
+    this.filteredPatientRecords = [...this.patientRecords];
+  }
+
+  // Métodos para gestión de pacientes
+  searchPatients(): void {
+    if (!this.patientRecords) {
+      this.filteredPatientRecords = [];
+      return;
+    }
+
+    this.filteredPatientRecords = this.patientRecords.filter(patient => {
+      // Filtrar por término de búsqueda
+      const searchMatch = !this.patientSearchTerm ? true :
+        patient.name.toLowerCase().includes(this.patientSearchTerm.toLowerCase()) ||
+        (patient.id?.toString() || '').includes(this.patientSearchTerm);
+
+      // Filtrar por estado
+      const statusMatch = this.patientStatusFilter === 'all' ? true :
+        patient.status === this.patientStatusFilter;
+
+      return searchMatch && statusMatch;
+    });
+  }
+
+
+
+
+  savePatientProfile(): void {
+    if (!this.selectedPatient || !this.editPatientForm) return;
+    
+    const index = this.patientRecords.findIndex(p => p.id === this.selectedPatient!.id);
+    if (index !== -1) {
+      this.patientRecords[index] = { ...this.editPatientForm } as PatientRecord;
+      this.selectedPatient = this.patientRecords[index];
+      this.filteredPatientRecords = [...this.patientRecords]; // Actualizar lista filtrada
+      this.isEditingPatient = false;
+    }
+  }
+
+  // Añadir este método a la clase AdminDashboardComponent:
+
+  loadPatientRecords(): void {
+    // En una aplicación real, aquí cargarías datos desde un servicio
+    this.patientRecords = [
+      {
+        id: 'p1',
+        name: 'Juan Pérez',
+        age: 45,
+        gender: 'M',
+        phone: '+56912345678',
+        email: 'juan@ejemplo.com',
+        bloodType: 'O+',
+        insurance: 'Fonasa',
+        emergencyContact: '+56987654321',
+        allergies: ['Penicilina', 'Polen'],
+        chronic: ['Hipertensión'],
+        status: 'active',
+        lastVisit: '2025-05-10',
+        totalVisits: 8
+      },
+      {
+        id: 'p2',
+        name: 'María González',
+        age: 32,
+        gender: 'F',
+        phone: '+56923456789',
+        email: 'maria@ejemplo.com',
+        bloodType: 'A+',
+        insurance: 'Isapre',
+        emergencyContact: '+56998765432',
+        allergies: ['Látex'],
+        chronic: ['Diabetes'],
+        status: 'active',
+        lastVisit: '2025-05-15',
+        totalVisits: 5
+      },
+      {
+        id: 'p3',
+        name: 'Carlos Rodríguez',
+        age: 60,
+        gender: 'M',
+        phone: '+56934567890',
+        email: 'carlos@ejemplo.com',
+        bloodType: 'B-',
+        insurance: 'Fonasa',
+        emergencyContact: '+56976543210',
+        allergies: [],
+        chronic: ['Artritis', 'Hipertensión'],
+        status: 'inactive',
+        lastVisit: '2025-04-20',
+        totalVisits: 12
+      }
+    ];
+    
+    // Inicializar los registros filtrados con todos los registros
+    this.filteredPatientRecords = [...this.patientRecords];
+    
+    // Añadir notificación de éxito si tienes un servicio de notificaciones
+    this.showNotification('success', 'Registros de pacientes actualizados');
   }
 }
