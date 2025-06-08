@@ -54,11 +54,28 @@
             {{ getStatusText(appointment.status) }}
           </div>
           <div class="quick-actions">
-            <button *ngIf="canStart(appointment)" class="btn-start" (click)="startAppointment(appointment); $event.stopPropagation()">
+            <button *ngIf="canConfirm(appointment)" 
+                    class="btn-action confirm-btn" 
+                    (click)="confirmAppointment(appointment); $event.stopPropagation()">
+              <i class="fas fa-check-circle"></i> Confirmar
+            </button>
+            
+            <button *ngIf="canStart(appointment)" 
+                    class="btn-action start-btn" 
+                    (click)="startAppointment(appointment); $event.stopPropagation()">
               <i class="fas fa-play"></i> Iniciar
             </button>
-            <button *ngIf="canComplete(appointment)" class="btn-complete" (click)="completeAppointment(appointment); $event.stopPropagation()">
-              <i class="fas fa-check"></i> Completar
+            
+            <button *ngIf="canReschedule(appointment)" 
+                    class="btn-action reschedule-btn" 
+                    (click)="rescheduleAppointment(appointment); $event.stopPropagation()">
+              <i class="fas fa-calendar-alt"></i> Reagendar
+            </button>
+            
+            <button *ngIf="canCancel(appointment)" 
+                    class="btn-action cancel-btn" 
+                    (click)="cancelAppointment(appointment); $event.stopPropagation()">
+              <i class="fas fa-times"></i> Cancelar
             </button>
           </div>
         </div>
@@ -355,6 +372,18 @@
         <button class="btn-close" (click)="closeAppointmentModal()">Cerrar</button>
         
         <div class="action-buttons">
+          <button *ngIf="canConfirm(selectedAppointment)" 
+                  class="btn-confirm-appointment" 
+                  (click)="confirmAppointment(selectedAppointment)">
+            <i class="fas fa-check-circle"></i> Confirmar Cita
+          </button>
+          
+          <button *ngIf="canReschedule(selectedAppointment)" 
+                  class="btn-reschedule-appointment" 
+                  (click)="rescheduleAppointment(selectedAppointment)">
+            <i class="fas fa-calendar-alt"></i> Reagendar
+          </button>
+          
           <button *ngIf="canCancel(selectedAppointment)" 
                   class="btn-cancel-appointment" 
                   (click)="cancelAppointment(selectedAppointment)">
@@ -377,6 +406,39 @@
             <i class="fas fa-save"></i> Guardar Notas
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal para reagendar citas -->
+  <div *ngIf="showRescheduleModal && selectedAppointment" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Reagendar Cita</h3>
+        <button class="close-btn" (click)="showRescheduleModal = false">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <p>Seleccione una nueva fecha y hora para la cita con <strong>{{selectedAppointment.patientName}}</strong></p>
+        
+        <div class="form-group">
+          <label>Nueva fecha:</label>
+          <input type="date" [(ngModel)]="newAppointmentDate" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Nueva hora:</label>
+          <input type="time" [(ngModel)]="newAppointmentTime" class="form-control" required>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showRescheduleModal = false">Cancelar</button>
+        <button class="btn-primary" 
+                [disabled]="!newAppointmentDate || !newAppointmentTime" 
+                (click)="saveRescheduledAppointment()">
+          Guardar cambios
+        </button>
       </div>
     </div>
   </div>

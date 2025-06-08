@@ -13,13 +13,15 @@ export interface MedicalAppointment {
   date: string;
   time: string;
   endTime?: string;
-  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'emergency';
+  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'emergency' | 'rescheduled';
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   reason: string;
   room?: string;
   location?: string;
   notes?: string;
   createdAt: Date;
+  previousDate?: string; // Para guardar la fecha original cuando se reagenda
+  previousTime?: string; // Para guardar la hora original cuando se reagenda
 }
 
 @Injectable({

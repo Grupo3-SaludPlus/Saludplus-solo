@@ -36,11 +36,7 @@ export const routes: Routes = [
   
   // RUTAS ADMIN SEPARADAS - SIN LAYOUT
   { path: 'admin/dashboard', component: AdminDashboardComponent, canActivate: [AuthGuard] },
-  {
-    path: 'doctor/appointments',
-    component: DoctorAppointmentsComponent,
-    canActivate: [AuthGuard]
-  },
+  
   {
     path: 'admin/users',
     component: UsersManagementComponent,
@@ -56,6 +52,10 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./pages/doctors/doctor-dashboard/doctor-dashboard.component').then(m => m.DoctorDashboardComponent)
       },
+      {
+        path: 'appointments',
+        loadComponent: () => import('./pages/doctors/doctor-appointments/doctor-appointments.component').then(m => m.DoctorAppointmentsComponent)
+      }
     ]
   },
   

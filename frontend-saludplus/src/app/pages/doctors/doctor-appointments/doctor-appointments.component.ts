@@ -42,6 +42,14 @@ export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
     inProgress: 0
   };
   
+  // Propiedades para el reagendamiento
+  showRescheduleModal = false;
+  newAppointmentDate: string = '';
+  newAppointmentTime: string = '';
+
+  // Agregar propiedad para almacenar temporalmente las notas
+  tempNotes: string = '';
+
   private appointmentSubscription: Subscription | undefined;
   
   constructor(
@@ -75,15 +83,73 @@ export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
   loadAppointments() {
     this.appointmentSubscription = this.appointmentsService.getAllAppointments()
       .subscribe(appointments => {
-        // Filtrar por el ID del médico actual
         if (this.currentUser?.id) {
-          this.appointments = appointments.filter(a => a.doctorId === Number(this.currentUser?.id));
+          const doctorId = this.currentUser.id;
+          
+          // Mejorar la comparación para manejar diferentes formatos de ID
+          this.appointments = appointments.filter(a => {
+            // Convertir a string para comparación si es necesario
+            const appointmentDoctorId = String(a.doctorId);
+            const currentDoctorId = String(doctorId);
+            
+            return appointmentDoctorId === currentDoctorId || 
+                   appointmentDoctorId === currentDoctorId.replace('doctor-', '');
+          });
+          
+          console.log('Citas cargadas para doctor:', this.appointments);
+          
+          // Si no hay citas, crear algunas de prueba (solo para desarrollo)
+          if (this.appointments.length === 0) {
+            this.createTestAppointments();
+          }
+          
           this.calculateStats();
           this.loadTodayAppointments();
           this.applyFilters();
           this.updateCalendarData();
         }
       });
+  }
+  
+  // Método para crear citas de prueba
+  createTestAppointments() {
+    const testAppointments = [
+      {
+        patientId: 1,
+        patientName: "Juan Pérez",
+        doctorId: this.currentUser?.id || 1,
+        doctorName: "Dr. " + (this.currentUser?.name || "Test"),
+        specialty: "Medicina general",
+        date: new Date().toISOString().split('T')[0],
+        time: "10:00",
+        status: "scheduled" as "scheduled", // Tipado correcto
+        reason: "Control rutinario",
+        room: "101",
+        notes: "",
+        priority: "medium" as "low" | "medium" | "high" | "urgent"
+      },
+      {
+        patientId: 2,
+        patientName: "María González",
+        doctorId: this.currentUser?.id || 1,
+        doctorName: "Dr. " + (this.currentUser?.name || "Test"),
+        specialty: "Medicina general",
+        date: new Date().toISOString().split('T')[0],
+        time: "11:30",
+        status: "confirmed" as "confirmed", // Tipado correcto
+        reason: "Dolor de cabeza",
+        room: "102",
+        notes: "",
+        priority: "high" as "low" | "medium" | "high" | "urgent"
+      }
+    ];
+    
+    testAppointments.forEach(appt => {
+      this.appointmentsService.createAppointment(appt);
+    });
+    
+    // Recargar después de crear las citas
+    setTimeout(() => this.loadAppointments(), 500);
   }
   
   // Cargar citas de hoy
@@ -347,15 +413,118 @@ export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
     }
   }
   
-  // Guardar notas de la cita
+  // Método para mostrar notificaciones
+  showNotification(message: string, type: 'success' | 'error' | 'info' = 'success') {
+    // Implementación simple con console.log
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    // Si tienes un servicio de notificaciones, úsalo así:
+    // this.notificationService.show(message, type);
+    
+    // Alternativa: muestra una notificación nativa del navegador
+    if (Notification.permission === 'granted') {
+      new Notification('SaludPlus', {
+        body: message,
+        icon: '/assets/images/logo.png'
+      });
+    }
+  }
+
+  // Reagendar una cita
+  rescheduleAppointment(appointment: MedicalAppointment) {
+    this.selectedAppointment = appointment;
+    
+    // Establecer los valores iniciales para la fecha y hora
+    this.newAppointmentDate = new Date().toISOString().split('T')[0]; // Fecha actual como valor inicial
+    this.newAppointmentTime = '10:00'; // Hora predeterminada
+    
+    this.showRescheduleModal = true;
+  }
+  
+  // Guardar cita reagendada
+  saveRescheduledAppointment() {
+    if (this.selectedAppointment && this.newAppointmentDate && this.newAppointmentTime) {
+      const updatedAppointment = {
+        id: this.selectedAppointment.id,
+        date: this.newAppointmentDate,
+        time: this.newAppointmentTime,
+        status: "rescheduled" as "rescheduled" // Tipado correcto
+      };
+      
+      this.appointmentsService.updateAppointment(updatedAppointment);
+      
+      // Actualizar UI
+      this.showRescheduleModal = false;
+      this.showNotification('Cita reagendada correctamente');
+      
+      // Limpiar los campos
+      this.newAppointmentDate = '';
+      this.newAppointmentTime = '';
+    }
+  }
+  
+  // Confirmar una cita
+  confirmAppointment(appointment: MedicalAppointment) {
+    if (appointment && appointment.id) {
+      const updatedAppointment = {
+        id: appointment.id,
+        status: 'confirmed' as 'confirmed'
+      };
+      
+      this.appointmentsService.updateAppointment(updatedAppointment);
+      
+      // Si estamos viendo este appointment, actualizar la UI
+      if (this.selectedAppointment && this.selectedAppointment.id === appointment.id) {
+        this.selectedAppointment.status = 'confirmed';
+      }
+      
+      this.showNotification('Cita confirmada correctamente');
+      
+      // Recargar datos para actualizar las estadísticas
+      setTimeout(() => this.calculateStats(), 500);
+    }
+  }
+  
+  // Método para guardar las notas actualizadas
   saveNotes() {
-    if (this.selectedAppointment) {
-      this.appointmentsService.updateAppointment({
+    if (this.selectedAppointment && this.selectedAppointment.id) {
+      // Crear objeto con las actualizaciones
+      const updatedAppointment = {
         id: this.selectedAppointment.id,
         notes: this.selectedAppointment.notes
-      });
+      };
       
-      alert('Notas guardadas correctamente');
+      // Guardar los cambios
+      this.appointmentsService.updateAppointment(updatedAppointment);
+      
+      // Mostrar confirmación
+      this.showNotification('Notas guardadas correctamente');
+      
+      // Actualizar en la lista local
+      const index = this.appointments.findIndex(a => a.id === this.selectedAppointment?.id);
+      if (index >= 0) {
+        this.appointments[index].notes = this.selectedAppointment.notes;
+        
+        // Actualizar listas filtradas
+        this.applyFilters();
+        this.loadTodayAppointments();
+      }
+    }
+  }
+  
+  // Método para iniciar la edición de notas
+  editNotes() {
+    if (this.selectedAppointment) {
+      // Guardar notas actuales por si se cancela la edición
+      this.tempNotes = this.selectedAppointment.notes || '';
+    }
+  }
+  
+  // Método para cancelar la edición de notas
+  cancelEditNotes() {
+    if (this.selectedAppointment) {
+      // Restaurar notas anteriores
+      this.selectedAppointment.notes = this.tempNotes;
     }
   }
   
@@ -364,7 +533,7 @@ export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
     return appointment.status === 'scheduled' || appointment.status === 'confirmed';
   }
   
-  // Verificar si una cita puede completarse (solo si está en progreso)
+  // Verificar si una cita puede completarse (solo si está in progreso)
   canComplete(appointment: MedicalAppointment): boolean {
     return appointment.status === 'in-progress';
   }
@@ -373,6 +542,18 @@ export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
   canCancel(appointment: MedicalAppointment): boolean {
     return appointment.status === 'scheduled' || appointment.status === 'confirmed' || 
            appointment.status === 'in-progress';
+  }
+  
+  // Verificar si una cita puede ser confirmada (solo pendientes o programadas)
+  canConfirm(appointment: MedicalAppointment | null): boolean {
+    if (!appointment) return false;
+    return appointment.status === 'scheduled';
+  }
+  
+  // Verificar si una cita puede ser reagendada
+  canReschedule(appointment: MedicalAppointment | null): boolean {
+    if (!appointment) return false;
+    return ['scheduled', 'confirmed'].includes(appointment.status);
   }
   
   // Formatear fecha
@@ -407,12 +588,6 @@ export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
     }
   }
   
-  // Obtener clase de estado
-  getStatusClass(status: string | undefined): string {
-    if (!status) return 'status-scheduled';
-    return `status-${status}`;
-  }
-  
   // Obtener texto de estado
   getStatusText(status: string | undefined): string {
     if (!status) return 'Agendada';
@@ -423,8 +598,25 @@ export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
       case 'in-progress': return 'En curso';
       case 'completed': return 'Completada';
       case 'cancelled': return 'Cancelada';
+      case 'rescheduled': return 'Reagendada';
       case 'emergency': return 'Emergencia';
       default: return status;
+    }
+  }
+  
+  // Obtener clase CSS para el estado
+  getStatusClass(status: string | undefined): string {
+    if (!status) return 'status-scheduled';
+    
+    switch(status) {
+      case 'scheduled': return 'status-scheduled';
+      case 'confirmed': return 'status-confirmed';
+      case 'in-progress': return 'status-in-progress';
+      case 'completed': return 'status-completed';
+      case 'cancelled': return 'status-cancelled';
+      case 'rescheduled': return 'status-rescheduled';
+      case 'emergency': return 'status-emergency';
+      default: return `status-${status}`;
     }
   }
 }

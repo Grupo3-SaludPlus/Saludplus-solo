@@ -10,33 +10,36 @@ export interface User {
   name: string;
   email: string;
   password?: string;
-  role?: 'patient' | 'doctor' | 'admin';
-  phone?: string;
-  age?: number;
-  birthdate?: string;
-  gender?: 'M' | 'F' | 'O';
-  bloodType?: string;
-  allergies?: string[];
-  chronic?: string[];
-  emergencyContact?: string;
-  medicalNotes?: string;
-  lastCheckup?: string;
+  role: 'patient' | 'doctor' | 'admin';
+  loggedIn?: boolean;
   
-  // Campos para doctores
-  specialty?: string;
-  department?: string;
-  license?: string;
-  profileImage?: string;
-  loggedIn?: boolean; // Agregado
-  
-  // Campos para sistema
+  // Campos del sistema
   createdAt?: Date | string;
   token?: string;
   permissions?: string[];
   
   // Campos para paciente
   dateOfBirth?: string;
+  birthdate?: string; // Alias para dateOfBirth
   insurance?: string;
+  phone?: string;
+  gender?: 'M' | 'F' | 'O' | string;
+  bloodType?: string;
+  allergies?: string[];
+  chronic?: string[];
+  emergencyContact?: string;
+  status?: string;
+  
+  // Campos para doctor
+  specialty?: string;
+  license?: string;
+  profileImage?: string;
+  
+  // Campos para admin
+  department?: string;
+  
+  // Campos adicionales
+  age?: number;
 }
 
 @Injectable({
