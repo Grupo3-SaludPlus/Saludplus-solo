@@ -300,31 +300,42 @@
   <!-- Modal de detalles de cita -->
   <div *ngIf="showAppointmentModal && selectedAppointment" class="appointment-modal-overlay">
     <div class="appointment-modal-content" (click)="$event.stopPropagation()">
-      <button class="close-modal-btn" (click)="closeAppointmentModal()">
-        <i class="fas fa-times"></i>
-      </button>
-      
-      <div class="appointment-detail-header" [class]="getStatusClass(selectedAppointment.status)">
-        <div class="date-info">
-          <div class="detail-date">{{ formatDate(selectedAppointment.date) }}</div>
-          <div class="detail-time">{{ selectedAppointment.time }} {{ selectedAppointment.endTime ? '- ' + selectedAppointment.endTime : '' }}</div>
-        </div>
-        <div class="status-badge large">{{ getStatusText(selectedAppointment.status) }}</div>
+      <!-- Header visual -->
+      <div class="appointment-modal-header">
+        <h2>
+          <i class="fas fa-calendar-check"></i>
+          Detalles de la Cita
+        </h2>
+        <button class="appointment-modal-close" (click)="closeAppointmentModal()">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
-      
-      <div class="appointment-detail-content">
-        <div class="patient-section">
-          <h3><i class="fas fa-user"></i> Datos del Paciente</h3>
-          <div class="detail-grid">
-            <div class="detail-item">
-              <div class="detail-label">Nombre:</div>
-              <div class="detail-value">{{ selectedAppointment.patientName }}</div>
+
+      <!-- Cuerpo visual -->
+      <div class="appointment-modal-body">
+        <div class="modal-appointment-info">
+          <div class="modal-patient-details">
+            <div class="detail-patient-name">
+              {{ selectedAppointment.patientName }}
             </div>
-            <div class="detail-item">
+            <div class="detail-specialty">
+              {{ selectedAppointment.specialty || 'Sin especialidad' }}
+            </div>
+          </div>
+          <div class="modal-time-details">
+            <div class="detail-date">{{ formatDate(selectedAppointment.date) }}</div>
+            <div class="detail-time">{{ selectedAppointment.time }} {{ selectedAppointment.endTime ? '- ' + selectedAppointment.endTime : '' }}</div>
+          </div>
+        </div>
+
+        <div class="appointment-details-sections">
+          <div class="detail-section">
+            <div class="detail-section-title">Datos del Paciente</div>
+            <div class="detail-row">
               <div class="detail-label">Edad:</div>
               <div class="detail-value">{{ selectedAppointment.patientAge ? selectedAppointment.patientAge + ' años' : 'No especificada' }}</div>
             </div>
-            <div class="detail-item full-width">
+            <div class="detail-row">
               <div class="detail-label">Prioridad:</div>
               <div class="detail-value">
                 <span class="priority-badge" [class]="getPriorityClass(selectedAppointment.priority || 'medium')">
@@ -333,77 +344,52 @@
               </div>
             </div>
           </div>
-        </div>
-        
-        <div class="appointment-section">
-          <h3><i class="fas fa-clipboard-list"></i> Detalles de la Consulta</h3>
-          <div class="detail-grid">
-            <div class="detail-item full-width">
+          <div class="detail-section">
+            <div class="detail-section-title">Detalles de la Consulta</div>
+            <div class="detail-row">
               <div class="detail-label">Motivo:</div>
               <div class="detail-value">{{ selectedAppointment.reason }}</div>
             </div>
-            <div class="detail-item">
+            <div class="detail-row">
               <div class="detail-label">Consultorio:</div>
               <div class="detail-value">{{ selectedAppointment.room || 'Sin asignar' }}</div>
             </div>
           </div>
         </div>
-        
-        <div class="notes-section">
-          <h3><i class="fas fa-notes-medical"></i> Notas Médicas</h3>
+
+        <div class="appointment-notes-section">
+          <div class="appointment-notes-header">
+            <div class="appointment-notes-title">
+              Notas Médicas
+            </div>
+          </div>
           <textarea 
             [(ngModel)]="selectedAppointment.notes" 
             placeholder="Agregue aquí sus notas médicas sobre la consulta..."
             [disabled]="selectedAppointment.status === 'cancelled'"
-            rows="4"
-            class="notes-textarea">
+            class="appointment-notes-textarea">
           </textarea>
         </div>
-      </div>
-      
-      <div class="patient-records" *ngIf="selectedAppointment">
-        <button class="btn-view-patient">
-          <i class="fas fa-folder-open"></i>
-          Ver historial del paciente
-        </button>
-      </div>
-      
-      <div class="appointment-detail-footer">
-        <button class="btn-close" (click)="closeAppointmentModal()">Cerrar</button>
-        
-        <div class="action-buttons">
-          <button *ngIf="canConfirm(selectedAppointment)" 
-                  class="btn-confirm-appointment" 
-                  (click)="confirmAppointment(selectedAppointment)">
-            <i class="fas fa-check-circle"></i> Confirmar Cita
+
+        <div class="modal-actions">
+          <button class="btn-modal btn-secondary" (click)="closeAppointmentModal()">Cerrar</button>
+          <button class="btn-modal btn-primary" (click)="saveNotes()" [disabled]="selectedAppointment.status === 'cancelled'">
+            <i class="fas fa-save"></i> Guardar Notas
           </button>
-          
-          <button *ngIf="canReschedule(selectedAppointment)" 
-                  class="btn-reschedule-appointment" 
-                  (click)="rescheduleAppointment(selectedAppointment)">
+          <button *ngIf="canConfirm(selectedAppointment)" class="btn-modal btn-success" (click)="confirmAppointment(selectedAppointment)">
+            <i class="fas fa-check-circle"></i> Confirmar
+          </button>
+          <button *ngIf="canReschedule(selectedAppointment)" class="btn-modal btn-warning" (click)="rescheduleAppointment(selectedAppointment)">
             <i class="fas fa-calendar-alt"></i> Reagendar
           </button>
-          
-          <button *ngIf="canCancel(selectedAppointment)" 
-                  class="btn-cancel-appointment" 
-                  (click)="cancelAppointment(selectedAppointment)">
-            <i class="fas fa-times"></i> Cancelar Cita
+          <button *ngIf="canCancel(selectedAppointment)" class="btn-modal btn-danger" (click)="cancelAppointment(selectedAppointment)">
+            <i class="fas fa-times"></i> Cancelar
           </button>
-          <button *ngIf="canStart(selectedAppointment)" 
-                  class="btn-start-appointment" 
-                  (click)="startAppointment(selectedAppointment)">
-            <i class="fas fa-play"></i> Iniciar Consulta
+          <button *ngIf="canStart(selectedAppointment)" class="btn-modal btn-primary" (click)="startAppointment(selectedAppointment)">
+            <i class="fas fa-play"></i> Iniciar
           </button>
-          <button *ngIf="canComplete(selectedAppointment)" 
-                  class="btn-complete-appointment" 
-                  (click)="completeAppointment(selectedAppointment)">
-            <i class="fas fa-check"></i> Finalizar Consulta
-          </button>
-          <button 
-            class="btn-save-notes" 
-            (click)="saveNotes()"
-            [disabled]="selectedAppointment.status === 'cancelled'">
-            <i class="fas fa-save"></i> Guardar Notas
+          <button *ngIf="canComplete(selectedAppointment)" class="btn-modal btn-success" (click)="completeAppointment(selectedAppointment)">
+            <i class="fas fa-check"></i> Finalizar
           </button>
         </div>
       </div>
