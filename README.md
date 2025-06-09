@@ -22,11 +22,24 @@ cd Saludplus-solo/frontend-saludplus
 ```bash
 docker build -t saludplus .
 ```
+o probar este
+
+```bash
+docker build -t saludplus-frontend .
+```
+
+
 
 4. **Ejecutar el contenedor**
 ```bash
 docker run -p 4200:4200 saludplus
 ```
+
+```bash
+docker run -p 4200:4200 saludplus-frontend .
+```
+
+
 
 5. **Acceder a la aplicación**
 Abre tu navegador en: [http://localhost:4200](http://localhost:4200)
