@@ -34,6 +34,7 @@ docker build -t saludplus-frontend .
 ```bash
 docker run -p 4200:4200 saludplus
 ```
+O probar este
 
 ```bash
 docker run -p 4200:4200 saludplus-frontend .
