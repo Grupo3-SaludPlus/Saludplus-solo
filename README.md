@@ -74,3 +74,21 @@ docker ps
 ## 👥 Equipo de Desarrollo
 
 Grupo 3 - SaludPlus (Christian Vivanco :D )
+
+
+##Ingresar a la página
+-puedes registrarte para simular ser un paciente 
+-puedes acceder a la sesion institucional 
+
+```bash
+carla.menfoza@saludplus.com
+cualquier contraseña 
+```
+
+-acceder como admin
+
+```bash
+admin@saludplus.com
+cualquier contraseña
+```
+
