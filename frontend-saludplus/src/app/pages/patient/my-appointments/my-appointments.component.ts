@@ -42,14 +42,18 @@ export class MyAppointmentsComponent implements OnInit, OnDestroy {
   upcomingAppointments: AppointmentDetails[] = [];
   historyAppointments: AppointmentDetails[] = [];
 
-  currentUser: any; // Almacena el usuario actual
+  currentUser: any; // Almacena el usuario currentUserValue
   appointmentSubscription: Subscription | undefined; // Almacena la suscripción a las citas
   loading: boolean = true; // Nueva propiedad para controlar la carga
   noAppointmentsMessage: string = ''; // Mensaje para mostrar cuando no hay citas
 
+  // Nueva propiedad para la cita seleccionada
+  selectedAppointmentId: number | null = null;
+  showRescheduleModal: boolean = false;
+
   constructor(
-    private authService: AuthService,
-    private appointmentsService: SharedAppointmentsService,
+    @Inject(AuthService) private authService: AuthService,
+    @Inject(SharedAppointmentsService) private appointmentsService: SharedAppointmentsService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -254,8 +258,8 @@ export class MyAppointmentsComponent implements OnInit, OnDestroy {
   }
 
   rescheduleAppointment(appointmentId: number) {
-    // Aquí puedes redirigir al formulario de reagendar
-    alert('Función de reagendar en desarrollo');
+    this.selectedAppointmentId = appointmentId;
+    this.showRescheduleModal = true;
   }
 
   getUniqueSpecialties(): string[] {
@@ -268,9 +272,8 @@ export class MyAppointmentsComponent implements OnInit, OnDestroy {
 
   // Agregar este método a la clase MyAppointmentsComponent
   joinAppointment(appointmentId: number) {
-    // Implementación para unirse a una consulta virtual
-    alert('Conectando a la consulta virtual... Esta funcionalidad está en desarrollo.');
-    // Aquí se podría redirigir a una sala de videoconferencia o abrir un componente modal
+    // Implementa aquí la lógica para unirse a la videollamada o consulta
+    alert('Función de unirse a la consulta no implementada.');
   }
 
   ngOnDestroy() {

@@ -236,4 +236,14 @@
       </div>
     </div>
   </section>
+
+  <!-- Modal para reagendar cita -->
+  <div *ngIf="showRescheduleModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>Reagendar cita</h2>
+      <p>ID de cita: {{ selectedAppointmentId }}</p>
+      <!-- Aquí iría tu formulario de reagendar -->
+      <button (click)="showRescheduleModal = false">Cerrar</button>
+    </div>
+  </div>
 </main>
