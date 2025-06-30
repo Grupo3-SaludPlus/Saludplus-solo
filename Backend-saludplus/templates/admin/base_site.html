@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | SaludPlus Admin{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}" style="color: #2e7d32; text-decoration: none;">
+        🏥 SaludPlus
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrahead %}
+<style>
+    #header {
+        background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+        color: white;
+    }
+    
+    .module h2, .module caption, .inline-group h2 {
+        background: #2e7d32;
+    }
+    
+    .button, input[type=submit], input[type=button], .submit-row input, a.button {
+        background: #2e7d32;
+        border: none;
+    }
+    
+    .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover, a.button:hover {
+        background: #1b5e20;
+    }
+    
+    #changelist-search input[type="text"] {
+        border: 2px solid #2e7d32;
+    }
+    
+    .selector-available h2, .selector-chosen h2 {
+        background: #2e7d32;
+    }
+</style>
+{% endblock %}

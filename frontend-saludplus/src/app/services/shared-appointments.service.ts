@@ -1,5 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, tap } from 'rxjs';
 import { map } from 'rxjs/operators'; // Añadir esta importación
 import { isPlatformBrowser } from '@angular/common';
 
@@ -27,26 +28,27 @@ export interface AppointmentBase {
   providedIn: 'root'
 })
 export class SharedAppointmentsService {
+  private apiUrl = 'http://localhost:8000/api/appointments/';
   private STORAGE_KEY = 'saludplus_appointments';
   private GUEST_ID_KEY = 'saludplus_guest_id';
   private appointmentsSubject = new BehaviorSubject<AppointmentBase[]>([]);
   private appointmentsLoaded = false;
   private isBrowser: boolean;
   
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, private http: HttpClient) {
     this.isBrowser = isPlatformBrowser(platformId);
     this.loadAppointments();
   }
   
-  // Cargar citas del localStorage
+  // Cargar citas del API
   private loadAppointments(): void {
     if (this.appointmentsLoaded) return;
     
     let appointments: AppointmentBase[] = [];
     
-    // Solo intentar acceder a localStorage si estamos en el navegador
+    // Solo intentar acceder a API si estamos en el navegador
     if (this.isBrowser) {
-      const storedData = localStorage.getItem(this.STORAGE_KEY);
+      const storedData = API.getItem(this.STORAGE_KEY);
       if (storedData) {
         try {
           appointments = JSON.parse(storedData);
@@ -64,12 +66,12 @@ export class SharedAppointmentsService {
     this.appointmentsLoaded = true;
   }
   
-  // Guardar citas en localStorage
+  // Guardar citas en API
   private saveToStorage(appointments: AppointmentBase[]): void {
-    // Solo intentar guardar en localStorage si estamos en el navegador
+    // Solo intentar guardar en API si estamos en el navegador
     if (this.isBrowser) {
       try {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(appointments));
+        API.setItem(this.STORAGE_KEY, JSON.stringify(appointments));
       } catch (e) {
         console.error('Error al guardar citas:', e);
       }
@@ -111,88 +113,39 @@ export class SharedAppointmentsService {
   }
   
   // Crear nueva cita
-  createAppointment(appointment: Partial<AppointmentBase>): AppointmentBase {
-    const newAppointment: AppointmentBase = {
-      id: this.getNextId(),
-      patientId: appointment.patientId || 9999,
-      patientName: appointment.patientName || 'Anónimo',
-      doctorId: appointment.doctorId || 0,
-      doctorName: appointment.doctorName || '',
-      specialty: appointment.specialty || '',
-      date: appointment.date || '',
-      time: appointment.time || '',
-      status: appointment.status || 'scheduled',
-      reason: appointment.reason || '',
-      location: appointment.location || 'Centro Médico SaludPlus',
-      notes: appointment.notes || '',
-      createdAt: new Date(),
-      // Asignar el guestId de forma explícita para satisfacer a TypeScript
-      ...(appointment.patientId === 9999 ? { guestId: this.getGuestId() } : {})
-    };
-
-    const updatedAppointments = [...this.appointmentsSubject.value, newAppointment];
-    this.appointmentsSubject.next(updatedAppointments);
-    this.saveToStorage(updatedAppointments);
-    
-    console.log('Cita creada:', newAppointment);
-    console.log('Total citas:', updatedAppointments.length);
-    
-    return newAppointment;
+  createAppointment(appointment: Partial<AppointmentBase>): Observable<AppointmentBase> {
+    return this.http.post<AppointmentBase>(this.apiUrl, appointment).pipe(
+      tap(() => this.loadAppointments())
+    );
   }
   
   // Actualizar una cita existente
-  updateAppointment(updatedAppointment: Partial<AppointmentBase>): AppointmentBase | null {
-    if (!updatedAppointment.id) return null;
-    
-    const appointments = this.appointmentsSubject.value;
-    const index = appointments.findIndex(a => a.id === updatedAppointment.id);
-    
-    if (index === -1) return null;
-    
-    // Crear una copia actualizada de la cita
-    const updated: AppointmentBase = {
-      ...appointments[index],
-      ...updatedAppointment
-    };
-    
-    // Actualizar la lista de citas
-    const updatedAppointments = [...appointments];
-    updatedAppointments[index] = updated;
-    
-    this.appointmentsSubject.next(updatedAppointments);
-    this.saveToStorage(updatedAppointments);
-    
-    return updated;
+  updateAppointment(id: number, updatedAppointment: Partial<AppointmentBase>): Observable<AppointmentBase> {
+    return this.http.patch<AppointmentBase>(`${this.apiUrl}${id}/`, updatedAppointment).pipe(
+      tap(() => this.loadAppointments())
+    );
   }
   
   // Actualizar el estado de una cita
-  updateStatus(id: number, status: AppointmentBase['status'], notes?: string): AppointmentBase | null {
+  updateStatus(id: number, status: AppointmentBase['status'], notes?: string): Observable<AppointmentBase> | null {
     const update: Partial<AppointmentBase> = { id, status };
     if (notes) update.notes = notes;
-    return this.updateAppointment(update);
+    return this.updateAppointment(id, update);
   }
   
   // Cancelar una cita
-  cancelAppointment(id: number, reason: string): AppointmentBase | null {
-    return this.updateAppointment({
-      id,
+  cancelAppointment(id: number, reason: string): Observable<AppointmentBase> {
+    return this.updateAppointment(id, {
       status: 'cancelled',
       notes: `Cita cancelada. Motivo: ${reason}`
     });
   }
   
   // Eliminar una cita (solo administradores)
-  deleteAppointment(id: number): boolean {
-    const appointments = this.appointmentsSubject.value;
-    const filteredAppointments = appointments.filter(a => a.id !== id);
-    
-    if (filteredAppointments.length === appointments.length) {
-      return false; // No se encontró la cita
-    }
-    
-    this.appointmentsSubject.next(filteredAppointments);
-    this.saveToStorage(filteredAppointments);
-    return true;
+  deleteAppointment(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}${id}/`).pipe(
+      tap(() => this.loadAppointments())
+    );
   }
   
   // Datos de ejemplo
@@ -281,22 +234,22 @@ export class SharedAppointmentsService {
     console.log('Total de citas guardadas:', appointments.length);
     console.log('Citas:', appointments);
     
-    // Verificar localStorage solo si estamos en el navegador
+    // Verificar API solo si estamos en el navegador
     if (this.isBrowser) {
-      const storedData = localStorage.getItem(this.STORAGE_KEY);
-      console.log('Datos en localStorage:', storedData ? JSON.parse(storedData) : 'No hay datos');
+      const storedData = API.getItem(this.STORAGE_KEY);
+      console.log('Datos en API:', storedData ? JSON.parse(storedData) : 'No hay datos');
     } else {
-      console.log('Ejecutando en servidor - localStorage no disponible');
+      console.log('Ejecutando en servidor - API no disponible');
     }
   }
 
   // Agregar este método para obtener o crear un ID de invitado
   private getGuestId(): string {
     if (this.isBrowser) {
-      let guestId = localStorage.getItem(this.GUEST_ID_KEY);
+      let guestId = API.getItem(this.GUEST_ID_KEY);
       if (!guestId) {
         guestId = 'guest-' + new Date().getTime() + '-' + Math.random().toString(36).substring(2, 9);
-        localStorage.setItem(this.GUEST_ID_KEY, guestId);
+        API.setItem(this.GUEST_ID_KEY, guestId);
       }
       return guestId;
     }

@@ -1,4 +1,5 @@
 import { Injectable, Injector } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService, User } from './auth.service';
 
@@ -6,6 +7,8 @@ import { AuthService, User } from './auth.service';
   providedIn: 'root'
 })
 export class DataManagerService {
+  private apiUrl = 'http://localhost:8000/api/';
+
   // Clave única para todos los datos del sistema
   private MASTER_KEY = 'saludplus_master_data';
   
@@ -23,7 +26,7 @@ export class DataManagerService {
   // Referencia al servicio de autenticación (será inicializada más tarde)
   private authService: AuthService | null = null;
   
-  constructor(private injector: Injector) {
+  constructor(private injector: Injector, private http: HttpClient) {
     // Inicializar con datos vacíos
     this.appData = {
       users: [],
@@ -51,12 +54,12 @@ export class DataManagerService {
   // Cargar todos los datos del sistema
   loadAllData(): void {
     console.log('DataManagerService: Iniciando carga de datos');
-    const storedData = localStorage.getItem(this.MASTER_KEY);
+    const storedData = API.getItem(this.MASTER_KEY);
     
     if (storedData) {
       try {
         this.appData = JSON.parse(storedData);
-        console.log('DataManagerService: Datos cargados desde localStorage', {
+        console.log('DataManagerService: Datos cargados desde API', {
           usuarios: this.appData.users.length,
           citas: this.appData.appointments.length
         });
@@ -99,26 +102,23 @@ export class DataManagerService {
   // Guardar todos los datos
   private saveAllData(): void {
     this.appData.lastUpdate = new Date().toISOString();
-    localStorage.setItem(this.MASTER_KEY, JSON.stringify(this.appData));
+    API.setItem(this.MASTER_KEY, JSON.stringify(this.appData));
     this.dataSubject.next(this.appData);
   }
   
   // Obtener todos los usuarios
-  getAllUsers(): User[] {
-    return [...this.appData.users];
+  getAllUsers(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}users/`);
   }
   
   // Obtener todos los pacientes
-  getAllPatients(): User[] {
-    return this.appData.users.filter(user => 
-      user.role === 'patient' || 
-      (typeof user.id === 'string' && user.id.toString().includes('patient-'))
-    );
+  getAllPatients(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}patients/`);
   }
   
   // Obtener citas de un paciente
-  getPatientAppointments(patientId: string | number): any[] {
-    return this.appData.appointments.filter(app => app.patientId == patientId);
+  getPatientAppointments(patientId: string | number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}appointments/?patient=${patientId}`);
   }
   
   // Actualizar un paciente
@@ -131,52 +131,10 @@ export class DataManagerService {
   }
   
   // Exportar datos de un paciente como texto
-  exportPatientAsText(patientId: string | number): string {
-    const patient = this.appData.users.find(u => u.id == patientId);
-    if (!patient) return 'Paciente no encontrado';
-    
-    const appointments = this.getPatientAppointments(patientId);
-    const apptCount = appointments.length;
-    const lastAppt = appointments.length > 0 ? 
-      this.getSafeLastAppointmentDate(appointments) :
-      'Sin citas';
-    
-    // Formato de paciente como texto plano
-    return `
-${patient.name}
+  exportPatientAsText(patientId: string | number): Observable<string> {
+    return this.http.get(`${this.apiUrl}patients/${patientId}/export/`, { responseType: 'text' });
+  }
 
-ID: ${patient.id}
-Edad: ${this.calculateAge(patient.birthdate)} años
-Género: ${patient.gender === 'M' ? 'Masculino' : patient.gender === 'F' ? 'Femenino' : 'Otro'}
-Teléfono: ${patient.phone || 'No registrado'}
-Email: ${patient.email}
-Tipo de sangre: ${patient.bloodType || 'No registrado'}
-Seguro: ${patient.insurance || 'No registrado'}
-Alergias: ${patient.allergies?.length ? patient.allergies.join(', ') : 'Ninguna'}
-Enfermedades crónicas: ${patient.chronic?.length ? patient.chronic.join(', ') : 'Ninguna'}
-Estado: ${patient.status === 'active' ? 'Activo' : patient.status === 'inactive' ? 'Inactivo' : patient.status === 'critical' ? 'Crítico' : 'Desconocido'}
-Última visita: ${lastAppt}
-Total visitas: ${apptCount}
-`;
-  }
-  
-  // Calcular edad a partir de la fecha de nacimiento
-  private calculateAge(birthdate: string | undefined): number {
-    if (!birthdate) return 0;
-    
-    const today = new Date();
-    const birthDate = new Date(birthdate);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    
-    // Ajustar si aún no ha cumplido años este año
-    if (today.getMonth() < birthDate.getMonth() || 
-        (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
-  }
-  
   // Escuchar cambios en los datos
   getDataUpdates(): Observable<any> {
     return this.dataSubject.asObservable();
@@ -288,7 +246,7 @@ Total visitas: ${apptCount}
       // Guardar cambios
       this.saveAllData();
       
-      // También guardar en localStorage para compatibilidad con el resto del sistema
+      // También guardar en API para compatibilidad con el resto del sistema
       const authService = this.getAuthService();
       if (authService) {
         const users = authService.getRegisteredUsers();
@@ -301,9 +259,9 @@ Total visitas: ${apptCount}
           users.push(juanPerez);
         }
         
-        // Guardar en localStorage
-        localStorage.setItem('saludplus_users', JSON.stringify(users));
-        localStorage.setItem('users', JSON.stringify(users));
+        // Guardar en API
+        API.setItem('saludplus_users', JSON.stringify(users));
+        API.setItem('users', JSON.stringify(users));
       }
       
       console.log('Usuario Juan Pérez creado exitosamente:', juanPerez);
@@ -391,31 +349,5 @@ Total visitas: ${apptCount}
       console.error('Error al procesar fechas de citas:', error);
       return 'Error de fecha';
     }
-  }
-
-  /**
-   * Añade o actualiza un usuario en el sistema de gestión de datos
-   * @param user Usuario a añadir o actualizar
-   * @returns El usuario actualizado
-   */
-  public addOrUpdateUser(user: User): User {
-    // Buscar si el usuario ya existe
-    const existingIndex = this.appData.users.findIndex(u => u.id === user.id);
-    
-    if (existingIndex >= 0) {
-      // Actualizar usuario existente
-      this.appData.users[existingIndex] = {...user};
-    } else {
-      // Añadir nuevo usuario
-      this.appData.users.push(user);
-    }
-    
-    // Guardar cambios
-    this.saveAllData();
-    
-    // Notificar cambios
-    this.dataSubject.next(this.appData);
-    
-    return user;
   }
 }

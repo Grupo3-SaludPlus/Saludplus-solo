@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { DoctorsService, Doctor } from './doctors.service';
+import { HttpClient } from '@angular/common/http';
+import { tap, catchError } from 'rxjs/operators';
 
 // Actualizar la interfaz User para incluir todas las propiedades utilizadas
 export interface User {
@@ -46,22 +48,25 @@ export interface User {
   providedIn: 'root'
 })
 export class AuthService {
-  private currentUserSubject: BehaviorSubject<User | null>;
-  public currentUser: Observable<User | null>;
+  private apiUrl = 'http://localhost:8000/api/';
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
   private isBrowser: boolean;
   private usersKey = 'saludplus_users';
 
   constructor(
     private router: Router,
     @Inject(PLATFORM_ID) platformId: Object,
-    private doctorsService: DoctorsService
+    private doctorsService: DoctorsService,
+    private http: HttpClient
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
-    this.currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromLocalStorage());
-    this.currentUser = this.currentUserSubject.asObservable();
+    
+    // Cargar usuario desde token si existe
+    this.loadCurrentUser();
     
     // Inicializar la lista de usuarios si no existe
-    if (this.isBrowser && !localStorage.getItem(this.usersKey)) {
+    if (this.isBrowser (this.usersKey)) {
       this.initializeUsers();
     }
   }
@@ -69,73 +74,24 @@ export class AuthService {
   // Obtener todos los usuarios
   private getUsers(): User[] {
     if (!this.isBrowser) return [];
-    const usersJson = localStorage.getItem(this.usersKey);
+    const usersJson = .getItem(this.usersKey);
     return usersJson ? JSON.parse(usersJson) : [];
   }
 
   // Guardar todos los usuarios
   private saveUsers(users: User[]): void {
     if (this.isBrowser) {
-      localStorage.setItem(this.usersKey, JSON.stringify(users));
+      .setItem(this.usersKey, JSON.stringify(users));
     }
-  }
-
-  // Inicializar usuarios demo si no existen
-  private initializeUsers(): void {
-    const demoUsers: User[] = [
-      {
-        id: 'patient-001',
-        name: 'Juan Pérez',
-        email: 'juan@ejemplo.com',
-        role: 'patient',
-        phone: '+56912345678',
-        birthdate: '1990-05-15',
-        gender: 'M',
-        insurance: 'Fonasa',
-        loggedIn: false,
-        token: '',
-        createdAt: new Date(),
-        allergies: [],
-        chronic: []
-      },
-      {
-        id: 'patient-002',
-        name: 'María González',
-        email: 'maria@ejemplo.com',
-        role: 'patient',
-        phone: '+56987654321',
-        birthdate: '1985-10-20',
-        gender: 'F',
-        insurance: 'Isapre',
-        loggedIn: false,
-        token: '',
-        createdAt: new Date(),
-        allergies: [],
-        chronic: []
-      },
-      {
-        id: 'admin-001',
-        name: 'Administrador Principal',
-        email: 'admin@saludplus.com',
-        role: 'admin',
-        department: 'Administración',
-        permissions: ['all'],
-        loggedIn: false,
-        token: '',
-        createdAt: new Date()
-      }
-    ];
-    
-    this.saveUsers(demoUsers);
   }
 
   public get currentUserValue(): User | null {
     return this.currentUserSubject.value;
   }
 
-  getUserFromLocalStorage(): User | null {
+  getUserFromAPI(): User | null {
     if (this.isBrowser) {
-      const userJson = localStorage.getItem('currentUser');
+      const userJson = .getItem('currentUser');
       if (userJson) {
         return JSON.parse(userJson);
       }
@@ -169,15 +125,15 @@ export class AuthService {
 
   logout() {
     if (this.isBrowser) {
-      localStorage.removeItem('currentUser');
+      .removeItem('currentUser');
     }
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
 
-  saveUserToLocalStorage(user: User) {
+  saveUserToAPI(user: User) {
     if (this.isBrowser) {
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      .setItem('currentUser', JSON.stringify(user));
       this.currentUserSubject.next(user);
     }
   }
@@ -242,8 +198,6 @@ export class AuthService {
         token: 'doctor-token-' + Date.now()
       };
       
-      // Guardar en localStorage y actualizar el subject
-      this.saveUserToLocalStorage(loggedInUser);
       return true;
     }
     
@@ -351,7 +305,6 @@ export class AuthService {
 
     users[userIndex] = updatedUser;
     this.saveUsers(users);
-    this.saveUserToLocalStorage(updatedUser);
     return updatedUser;
   }
 
@@ -409,14 +362,14 @@ export class AuthService {
     return this.getUsers(); // Actualizado
   }
 
-  // Añadir este método a la clase AuthService
+
   updateCurrentUser(updatedUser: User): void {
-    // Actualizar el usuario en el BehaviorSubject
+    
     this.currentUserSubject.next(updatedUser);
     
-    // Actualizar en localStorage
+
     if (this.isBrowser) {
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      .setItem('currentUser', JSON.stringify(updatedUser));
     }
     
     // También actualizar en la lista de usuarios almacenados
@@ -426,7 +379,7 @@ export class AuthService {
     if (index !== -1) {
       users[index] = updatedUser;
       if (this.isBrowser) {
-        localStorage.setItem(this.usersKey, JSON.stringify(users));
+        .setItem(this.usersKey, JSON.stringify(users));
       }
     }
     
@@ -457,7 +410,7 @@ export class AuthService {
   }
 
   getAllRegisteredUsers(): User[] {
-    const users = localStorage.getItem('saludplus_users');
+    const users = .getItem('saludplus_users');
     return users ? JSON.parse(users) : [];
   }
 
