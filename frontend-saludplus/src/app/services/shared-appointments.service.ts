@@ -13,7 +13,7 @@ export interface AppointmentBase {
   specialty: string;
   date: string;
   time: string;
-  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
   reason: string;
   location: string;
   notes?: string;
@@ -48,7 +48,7 @@ export class SharedAppointmentsService {
     
     // Solo intentar acceder a API si estamos en el navegador
     if (this.isBrowser) {
-      const storedData = API.getItem(this.STORAGE_KEY);
+      const storedData = localStorage.getItem(this.STORAGE_KEY);
       if (storedData) {
         try {
           appointments = JSON.parse(storedData);
@@ -71,7 +71,7 @@ export class SharedAppointmentsService {
     // Solo intentar guardar en API si estamos en el navegador
     if (this.isBrowser) {
       try {
-        API.setItem(this.STORAGE_KEY, JSON.stringify(appointments));
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(appointments));
       } catch (e) {
         console.error('Error al guardar citas:', e);
       }
@@ -236,7 +236,7 @@ export class SharedAppointmentsService {
     
     // Verificar API solo si estamos en el navegador
     if (this.isBrowser) {
-      const storedData = API.getItem(this.STORAGE_KEY);
+      const storedData = localStorage.getItem(this.STORAGE_KEY);
       console.log('Datos en API:', storedData ? JSON.parse(storedData) : 'No hay datos');
     } else {
       console.log('Ejecutando en servidor - API no disponible');
@@ -246,10 +246,10 @@ export class SharedAppointmentsService {
   // Agregar este método para obtener o crear un ID de invitado
   private getGuestId(): string {
     if (this.isBrowser) {
-      let guestId = API.getItem(this.GUEST_ID_KEY);
+      let guestId = localStorage.getItem(this.GUEST_ID_KEY);
       if (!guestId) {
         guestId = 'guest-' + new Date().getTime() + '-' + Math.random().toString(36).substring(2, 9);
-        API.setItem(this.GUEST_ID_KEY, guestId);
+        localStorage.setItem(this.GUEST_ID_KEY, guestId);
       }
       return guestId;
     }

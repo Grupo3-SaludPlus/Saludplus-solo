@@ -1,125 +1,166 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService, User } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css'
+  styleUrls: ['./register.component.css']
 })
 export class RegisterComponent {
+  // Usar inject() en lugar del constructor
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   title = 'Registro de Usuario';
   subtitle = 'Crea tu cuenta para acceder a beneficios exclusivos';
   
   registrationForm = {
     firstName: '',
     lastName: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    rut: '',
-    birthDate: '',
     phone: '',
+    birthDate: '',
+    gender: 'O' as 'M' | 'F' | 'O',
+    role: 'patient' as 'patient' | 'doctor',
+    specialty: '', // Para doctores
+    rut: '',
     address: '',
     insurance: '',
-    gender: 'other',
-    bloodType: '',
+    acceptTerms: false,
     termsAccepted: false
   };
 
   insuranceOptions = [
-    'Consalud',
-    'Banmédica',
-    'Colmena',
-    'Cruz Blanca',
     'Fonasa',
-    'Otra'
+    'Isapre Banmédica',
+    'Isapre Colmena',
+    'Isapre Cruz Blanca',
+    'Isapre Consalud',
+    'Isapre Vida Tres',
+    'Sin seguro'
   ];
 
-  bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  errorMessage = '';
+  isLoading = false;
   passwordsMatch = true;
-  formError = '';
-  isSubmitting = false;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  submitForm() {
+    this.onSubmit();
+  }
+
+  onSubmit() {
+    if (!this.validateForm()) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    // Combinar firstName y lastName en name
+    this.registrationForm.name = `${this.registrationForm.firstName} ${this.registrationForm.lastName}`.trim();
+
+    const registerData = {
+      name: this.registrationForm.name,
+      email: this.registrationForm.email,
+      password: this.registrationForm.password,
+      role: this.registrationForm.role,
+      ...(this.registrationForm.role === 'doctor' && { 
+        specialty: this.registrationForm.specialty 
+      })
+    };
+
+    this.authService.register(registerData).subscribe({
+      next: (response) => {
+        console.log('Registro exitoso:', response);
+        
+        // Redirigir según el rol
+        switch (response.user.role) {
+          case 'admin':
+            this.router.navigate(['/admin']);
+            break;
+          case 'doctor':
+            this.router.navigate(['/doctor']);
+            break;
+          case 'patient':
+            this.router.navigate(['/patient']);
+            break;
+          default:
+            this.router.navigate(['/']);
+        }
+      },
+      error: (error) => {
+        console.error('Error de registro:', error);
+        this.errorMessage = error.error?.error || 'Error al registrar usuario';
+        this.isLoading = false;
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
+  }
 
   checkPasswords() {
     this.passwordsMatch = this.registrationForm.password === this.registrationForm.confirmPassword;
   }
 
-  // Método para mapear el género del formulario al valor correcto para la API
-  private mapGender(formGender: string): 'M' | 'F' | 'O' {
-    switch (formGender) {
-      case 'male': return 'M';
-      case 'female': return 'F';
-      default: return 'O';
+  private validateForm(): boolean {
+    if (!this.registrationForm.firstName.trim()) {
+      this.errorMessage = 'El nombre es requerido';
+      return false;
     }
+
+    if (!this.registrationForm.lastName.trim()) {
+      this.errorMessage = 'El apellido es requerido';
+      return false;
+    }
+
+    if (!this.registrationForm.email.trim()) {
+      this.errorMessage = 'El email es requerido';
+      return false;
+    }
+
+    if (!this.isValidEmail(this.registrationForm.email)) {
+      this.errorMessage = 'Formato de email inválido';
+      return false;
+    }
+
+    if (this.registrationForm.password.length < 6) {
+      this.errorMessage = 'La contraseña debe tener al menos 6 caracteres';
+      return false;
+    }
+
+    if (!this.passwordsMatch) {
+      this.errorMessage = 'Las contraseñas no coinciden';
+      return false;
+    }
+
+    if (this.registrationForm.role === 'doctor' && !this.registrationForm.specialty.trim()) {
+      this.errorMessage = 'La especialidad es requerida para doctores';
+      return false;
+    }
+
+    if (!this.registrationForm.acceptTerms && !this.registrationForm.termsAccepted) {
+      this.errorMessage = 'Debes aceptar los términos y condiciones';
+      return false;
+    }
+
+    return true;
   }
 
-  submitForm() {
-    if (this.isSubmitting) return;
-    this.isSubmitting = true;
-    this.formError = '';
-    
-    // Validaciones básicas
-    if (!this.registrationForm.firstName || !this.registrationForm.lastName) {
-      this.formError = 'Por favor ingrese su nombre y apellido';
-      this.isSubmitting = false;
-      return;
-    }
-    
-    if (!this.registrationForm.email) {
-      this.formError = 'Por favor ingrese su correo electrónico';
-      this.isSubmitting = false;
-      return;
-    }
-    
-    if (!this.registrationForm.password || this.registrationForm.password.length < 6) {
-      this.formError = 'La contraseña debe tener al menos 6 caracteres';
-      this.isSubmitting = false;
-      return;
-    }
-    
-    if (!this.passwordsMatch) {
-      this.formError = 'Las contraseñas no coinciden';
-      this.isSubmitting = false;
-      return;
-    }
-    
-    if (!this.registrationForm.termsAccepted) {
-      this.formError = 'Debe aceptar los términos y condiciones';
-      this.isSubmitting = false;
-      return;
-    }
-    
-    // Construir el objeto de usuario
-    const newUser: Partial<User> = {
-      name: `${this.registrationForm.firstName} ${this.registrationForm.lastName}`,
-      email: this.registrationForm.email,
-      phone: this.registrationForm.phone,
-      dateOfBirth: this.registrationForm.birthDate,
-      gender: this.mapGender(this.registrationForm.gender),  // Usar el método para mapear el género
-      bloodType: this.registrationForm.bloodType,
-      insurance: this.registrationForm.insurance
-    };
-    
-    // Registrar al usuario
-    const registeredUser = this.authService.registerPatient(newUser, this.registrationForm.password);
-    
-    if (registeredUser) {
-      // Registro exitoso, redirigir al dashboard
-      this.router.navigate(['/patient/dashboard']);
-    } else {
-      // Error en el registro
-      this.formError = 'El correo electrónico ya está registrado';
-      this.isSubmitting = false;
-    }
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  selectRole(role: 'patient' | 'doctor') {
+    this.registrationForm.role = role;
   }
 }

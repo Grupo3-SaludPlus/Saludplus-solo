@@ -1,22 +1,30 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { SharedAppointmentsService } from '../../../services/shared-appointments.service';
-import { AuthService } from '../../../services/auth.service';
 import { Subscription } from 'rxjs';
+import { AuthService, User } from '../../../services/auth.service';
+import { SharedAppointmentsService, AppointmentBase } from '../../../services/shared-appointments.service';
+
+interface DoctorStats {
+  todayTotal: number;
+  pendingTotal: number;
+  monthlyPatients: number;
+  completedRate: number;
+}
 
 @Component({
   selector: 'app-doctor-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './doctor-dashboard.component.html',
-  styleUrls: ['./doctor-dashboard.component.css']
+  styleUrl: './doctor-dashboard.component.css'
 })
 export class DoctorDashboardComponent implements OnInit, OnDestroy {
-  currentUser: any;
-  todayAppointments: any[] = [];
-  upcomingAppointments: any[] = [];
-  stats = {
+  currentUser: User | null = null;
+  todayAppointments: AppointmentBase[] = [];
+  upcomingAppointments: AppointmentBase[] = [];
+  stats: DoctorStats = {
     todayTotal: 0,
     pendingTotal: 0,
     monthlyPatients: 0,
@@ -24,152 +32,170 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   };
   
   private userSubscription?: Subscription;
-  private appointmentsSubscription?: Subscription;
-  
+
   constructor(
     private authService: AuthService,
     private appointmentsService: SharedAppointmentsService
   ) {}
-  
+
   ngOnInit() {
-    this.userSubscription = this.authService.currentUser.subscribe(user => {
+    this.userSubscription = this.authService.currentUser$.subscribe((user: User | null) => {
       this.currentUser = user;
       if (user) {
-        this.loadAppointments();
+        this.loadDoctorData();
       }
     });
   }
-  
-  loadAppointments() {
-    this.appointmentsSubscription = this.appointmentsService.getAllAppointments()
-      .subscribe(appointments => {
-        if (this.currentUser?.id) {
-          const doctorId = Number(this.currentUser.id);
-          const allDoctorAppointments = appointments.filter(a => a.doctorId === doctorId);
-          
-          // Citas de hoy
-          const today = new Date().toISOString().split('T')[0];
-          this.todayAppointments = allDoctorAppointments
-            .filter(a => a.date === today)
-            .sort((a, b) => a.time.localeCompare(b.time));
-          
-          // Próximas citas (futuras, incluyendo hoy)
-          this.upcomingAppointments = allDoctorAppointments
-            .filter(a => 
-              (a.date > today || (a.date === today && this.isTimeInFuture(a.time))) &&
-              (a.status === 'scheduled' || a.status === 'confirmed')
-            )
-            .sort((a, b) => {
-              if (a.date !== b.date) {
-                return a.date.localeCompare(b.date);
-              }
-              return a.time.localeCompare(b.time);
-            })
-            .slice(0, 5); // Limitar a 5 citas próximas
-          
-          console.log('Citas próximas cargadas:', this.upcomingAppointments.length);
-          
-          // Calcular estadísticas
-          this.calculateStats(allDoctorAppointments);
-        }
-      });
+
+  ngOnDestroy() {
+    this.userSubscription?.unsubscribe();
   }
-  
-  isTimeInFuture(time: string): boolean {
-    const now = new Date();
-    const [hours, minutes] = time.split(':').map(Number);
-    return (now.getHours() < hours) || (now.getHours() === hours && now.getMinutes() < minutes);
-  }
-  
-  calculateStats(appointments: any[]) {
-    const today = new Date().toISOString().split('T')[0];
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    
-    // Citas de hoy
-    this.stats.todayTotal = appointments.filter(a => a.date === today).length;
-    
-    // Citas pendientes (scheduled/confirmed)
-    this.stats.pendingTotal = appointments.filter(a => 
-      (a.status === 'scheduled' || a.status === 'confirmed') && 
-      (a.date >= today)
-    ).length;
-    
-    // Pacientes únicos este mes
-    const monthlyAppointments = appointments.filter(a => {
-      const appointmentDate = new Date(a.date);
-      return appointmentDate.getMonth() === currentMonth && 
-             appointmentDate.getFullYear() === currentYear;
-    });
-    
-    const uniquePatients = new Set(monthlyAppointments.map(a => a.patientId));
-    this.stats.monthlyPatients = uniquePatients.size;
-    
-    // Tasa de completitud (citas completadas vs total)
-    const completedAppointments = appointments.filter(a => a.status === 'completed').length;
-    const totalPastAppointments = appointments.filter(a => 
-      a.date < today || (a.date === today && !this.isTimeInFuture(a.time))
-    ).length;
-    
-    this.stats.completedRate = totalPastAppointments > 0 
-      ? Math.round((completedAppointments / totalPastAppointments) * 100) 
-      : 100;
-  }
-  
+
   getCurrentDate(): string {
-    const options: Intl.DateTimeFormatOptions = { 
+    const today = new Date();
+    return today.toLocaleDateString('es-ES', { 
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
-    };
-    return new Date().toLocaleDateString('es-ES', options);
+    });
   }
-  
-  getStatusText(status: string): string {
-    const statusMap: {[key: string]: string} = {
-      'scheduled': 'Agendada',
-      'confirmed': 'Confirmada',
-      'in_progress': 'En Progreso',
-      'completed': 'Completada',
-      'cancelled': 'Cancelada',
-      'no_show': 'No Asistió'
-    };
-    return statusMap[status] || status;
+
+  private loadDoctorData() {
+    this.loadTodayAppointments();
+    this.loadUpcomingAppointments();
+    this.calculateStats();
   }
-  
-  getStatusClass(status: string): string {
-    return `status-${status.replace('_', '-')}`;
+
+  private loadTodayAppointments() {
+    this.appointmentsService.getAllAppointments().subscribe((appointments: AppointmentBase[]) => {
+      const today = new Date().toISOString().split('T')[0];
+      if (this.currentUser) {
+        this.todayAppointments = appointments.filter(apt => 
+          apt.doctorName === this.currentUser?.name && apt.date === today
+        );
+        this.calculateStats();
+      }
+    });
   }
-  
-  canStart(appointment: any): boolean {
-    return appointment.status === 'confirmed';
+
+  private loadUpcomingAppointments() {
+    this.appointmentsService.getAllAppointments().subscribe((appointments: AppointmentBase[]) => {
+      if (this.currentUser) {
+        const today = new Date();
+        this.upcomingAppointments = appointments.filter(apt => {
+          const appointmentDate = new Date(apt.date);
+          return apt.doctorName === this.currentUser?.name && 
+                 appointmentDate > today &&
+                 (apt.status === 'scheduled' || apt.status === 'confirmed');
+        });
+      }
+    });
   }
-  
-  canComplete(appointment: any): boolean {
-    return appointment.status === 'in_progress';
+
+  private calculateStats() {
+    this.stats.todayTotal = this.todayAppointments.length;
+    this.stats.pendingTotal = this.todayAppointments.filter(apt => 
+      apt.status === 'scheduled' || apt.status === 'confirmed'
+    ).length;
+    
+    // Calcular pacientes del mes actual
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    this.appointmentsService.getAllAppointments().subscribe((appointments: AppointmentBase[]) => {
+      if (this.currentUser) {
+        const monthlyAppointments = appointments.filter(apt => {
+          const aptDate = new Date(apt.date);
+          return apt.doctorName === this.currentUser?.name &&
+                 aptDate.getMonth() === currentMonth &&
+                 aptDate.getFullYear() === currentYear;
+        });
+        
+        this.stats.monthlyPatients = new Set(monthlyAppointments.map(apt => apt.patientName)).size;
+        
+        const completedAppointments = monthlyAppointments.filter(apt => apt.status === 'completed');
+        this.stats.completedRate = monthlyAppointments.length > 0 ? 
+          Math.round((completedAppointments.length / monthlyAppointments.length) * 100) : 0;
+      }
+    });
   }
-  
+
+  canStart(appointment: AppointmentBase): boolean {
+    return appointment.status === 'confirmed' || appointment.status === 'scheduled';
+  }
+
+  canComplete(appointment: AppointmentBase): boolean {
+    return appointment.status === 'in-progress';
+  }
+
   startAppointment(id: number) {
-    const updatedAppointment = this.appointmentsService.updateAppointment({ id, status: 'scheduled' });
-    if (updatedAppointment) {
-      this.loadAppointments();
-    }
+    this.appointmentsService.updateAppointment(id, { status: 'in-progress' }).subscribe({
+      next: () => {
+        this.loadTodayAppointments();
+      },
+      error: (error) => console.error('Error iniciando cita:', error)
+    });
   }
-  
+
+  confirmAppointment(id: number) {
+    this.appointmentsService.updateAppointment(id, { status: 'confirmed' }).subscribe({
+      next: () => {
+        this.loadTodayAppointments();
+      },
+      error: (error) => console.error('Error confirmando cita:', error)
+    });
+  }
+
   completeAppointment(id: number) {
-    const updatedAppointment = this.appointmentsService.updateAppointment({ id, status: 'completed' });
-    if (updatedAppointment) {
-      this.loadAppointments();
+    this.appointmentsService.updateAppointment(id, { status: 'completed' }).subscribe({
+      next: () => {
+        this.loadTodayAppointments();
+      },
+      error: (error) => console.error('Error completando cita:', error)
+    });
+  }
+
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'scheduled': return 'status-scheduled';
+      case 'confirmed': return 'status-confirmed';
+      case 'in-progress': return 'status-in-progress';
+      case 'completed': return 'status-completed';
+      case 'cancelled': return 'status-cancelled';
+      default: return '';
     }
   }
-  
-  ngOnDestroy() {
-    if (this.userSubscription) {
-      this.userSubscription.unsubscribe();
+
+  getStatusText(status: string): string {
+    switch (status) {
+      case 'scheduled': return 'Programada';
+      case 'confirmed': return 'Confirmada';
+      case 'in-progress': return 'En progreso';
+      case 'completed': return 'Completada';
+      case 'cancelled': return 'Cancelada';
+      default: return status;
     }
-    if (this.appointmentsSubscription) {
-      this.appointmentsSubscription.unsubscribe();
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'scheduled': return '#ffa500';
+      case 'confirmed': return '#28a745';
+      case 'in-progress': return '#007bff';
+      case 'completed': return '#6c757d';
+      case 'cancelled': return '#dc3545';
+      default: return '#6c757d';
+    }
+  }
+
+  getPriorityColor(priority: string): string {
+    switch (priority) {
+      case 'urgent': return '#dc3545';
+      case 'high': return '#fd7e14';
+      case 'medium': return '#ffc107';
+      case 'low': return '#28a745';
+      default: return '#6c757d';
     }
   }
 }

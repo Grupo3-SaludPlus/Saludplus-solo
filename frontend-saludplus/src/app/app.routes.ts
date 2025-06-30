@@ -1,92 +1,89 @@
 import { Routes } from '@angular/router';
-import { DefaultLayoutComponent } from './layouts/default-layout/default-layout.component';
-import { HomeComponent } from './shared/home/home.component';
+import { LoginComponent } from './pages/login/login.component';
+import { RegisterComponent } from './pages/register/register.component';
 import { AppointmentsComponent } from './pages/appointments/appointments.component';
 import { DoctorsComponent } from './pages/doctors/doctors.component';
-import { LoginComponent } from './pages/auth/login/login.component';
-import { RegisterComponent } from './pages/register/register.component';
-import { PatientDashboardComponent } from './pages/patient/patient-dashboard/patient-dashboard.component';
-import { MyAppointmentsComponent } from './pages/patient/my-appointments/my-appointments.component';
-import { DoctorDashboardComponent } from './pages/doctors/doctor-dashboard/doctor-dashboard.component';
-import { AdminDashboardComponent } from './admin/components/dashboard/admin-dashboard.component';
 import { AuthGuard } from './guards/auth.guard';
-import { DoctorAppointmentsComponent } from './pages/doctors/doctor-appointments/doctor-appointments.component';
+import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
 import { DoctorLayoutComponent } from './layouts/doctor-layout/doctor-layout.component';
-import { UsersManagementComponent } from './admin/components/users/users-management.component';
-import { AdminGuard } from './guards/admin.guard';
+import { DoctorDashboardComponent } from './pages/doctors/doctor-dashboard/doctor-dashboard.component';
+import { DoctorAppointmentsComponent } from './pages/doctors/doctor-appointments/doctor-appointments.component';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  // Rutas principales con layout por defecto
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'appointments', component: AppointmentsComponent, canActivate: [AuthGuard] },
+  { path: 'doctors', component: DoctorsComponent },
+
+  // Rutas de Admin
   {
-    path: '',
-    component: DefaultLayoutComponent,
-    children: [
-      { path: '', component: HomeComponent },
-      { path: 'appointments', component: AppointmentsComponent },
-      { path: 'profile', component: PatientDashboardComponent },
-      { path: 'patient-dashboard', redirectTo: 'profile' },
-      { path: 'my-appointments', component: MyAppointmentsComponent },
-      { path: 'appointment-history', redirectTo: 'my-appointments' },
-      { path: 'doctors', component: DoctorsComponent },
-      { path: 'doctor-dashboard', component: DoctorDashboardComponent },
-      { path: 'login', component: LoginComponent },
-      { path: 'register', component: RegisterComponent },
-    ]
-  },
-  
-  // RUTAS ADMIN SEPARADAS - SIN LAYOUT
-  { path: 'admin/dashboard', component: AdminDashboardComponent, canActivate: [AuthGuard] },
-  
-  {
-    path: 'admin/users',
-    component: UsersManagementComponent,
-    canActivate: [AuthGuard, AdminGuard]
-  },
-  
-  // Rutas para médicos
-  {
-    path: 'doctor',
-    component: DoctorLayoutComponent,
+    path: 'admin',
+    component: AdminLayoutComponent,
+    canActivate: [adminGuard],
     children: [
       {
+        path: '',
+        loadComponent: () => import('./admin/components/dashboard/admin-dashboard.component')
+          .then(m => m.AdminDashboardComponent)
+      },
+      {
         path: 'dashboard',
-        loadComponent: () => import('./pages/doctors/doctor-dashboard/doctor-dashboard.component').then(m => m.DoctorDashboardComponent)
+        loadComponent: () => import('./admin/components/dashboard/admin-dashboard.component')
+          .then(m => m.AdminDashboardComponent)
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./admin/components/users/users-management.component')
+          .then(m => m.UsersManagementComponent)
       },
       {
         path: 'appointments',
-        loadComponent: () => import('./pages/doctors/doctor-appointments/doctor-appointments.component').then(m => m.DoctorAppointmentsComponent)
+        loadComponent: () => import('./admin/components/appointments/appointments-management.component')
+          .then(m => m.AppointmentsManagementComponent)
+      },
+    ]
+  },
+
+  // Rutas de Paciente
+  {
+    path: 'patient',
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/patient/patient-dashboard/patient-dashboard.component')
+          .then(m => m.PatientDashboardComponent)
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./pages/patient/patient-dashboard/patient-dashboard.component')
+          .then(m => m.PatientDashboardComponent)
       }
     ]
   },
-  
-  // Rutas para pacientes
+
+  // Rutas de Doctor
   {
-    path: 'patient',
-    component: DefaultLayoutComponent,
+    path: 'doctor',
+    component: DoctorLayoutComponent,
     canActivate: [AuthGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: PatientDashboardComponent },
-      { path: 'my-appointments', component: MyAppointmentsComponent },
-      // Usar el dashboard como perfil temporalmente
-      { path: 'profile', component: PatientDashboardComponent },
+      {
+        path: '',
+        component: DoctorDashboardComponent
+      },
+      {
+        path: 'dashboard',
+        component: DoctorDashboardComponent
+      },
+      {
+        path: 'appointments',
+        component: DoctorAppointmentsComponent
+      },
     ]
   },
-  
-  // Rutas de administrador agrupadas
-  {
-    path: 'admin',
-    canActivate: [AuthGuard, AdminGuard],
-    children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: AdminDashboardComponent },
-      { path: 'users', component: UsersManagementComponent }
-      // Otras rutas de administrador
-    ]
-  },
-  
-  {
-    path: '**',
-    redirectTo: '/home'
-  }
+
+  { path: '**', redirectTo: '/login' }
 ];

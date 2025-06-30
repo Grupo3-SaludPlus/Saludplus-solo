@@ -47,7 +47,7 @@ import { AuthService, User } from '../../../services/auth.service';
                 {{ getUserRoleText(user.role || '') }}
               </span>
             </td>
-            <td>{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
+            <td>{{ user.createdAt || 'N/A' | date:'dd/MM/yyyy' }}</td>
             <td>
               <button class="btn-edit" (click)="editUser(user)">
                 <i class="fas fa-edit"></i>
@@ -155,13 +155,21 @@ export class UsersManagementComponent implements OnInit {
 
   constructor(private authService: AuthService) {}
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.loadUsers();
   }
 
-  loadUsers(): void {
-    // Añadir un método en AuthService para obtener todos los usuarios
-    this.allUsers = this.authService.getAllUsersForAdmin();
+  private loadUsers() {
+    // Por ahora, crear usuarios de ejemplo hasta que tengamos la API funcionando
+    this.allUsers = [
+      {
+        id: 1,
+        name: 'Usuario Demo',
+        email: 'demo@demo.com',
+        role: 'patient' as 'patient',
+        createdAt: new Date().toISOString()
+      }
+    ];
     this.applyFilters();
   }
 
@@ -201,12 +209,19 @@ export class UsersManagementComponent implements OnInit {
     // Aquí podrías abrir un modal o navegar a una página de edición
   }
 
-  deleteUser(userId: string | number): void {
-    if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-      // Convertir a string si es necesario antes de pasar al servicio
-      const idToDelete = userId.toString();
-      this.authService.deleteUser(idToDelete);
-      this.loadUsers();
+  deleteUser(userId: number | string) {
+    if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+      // Convertir a número si es string
+      const idToDelete = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+      
+      // Filtrar el usuario de la lista local
+      this.allUsers = this.allUsers.filter(user => {
+        const currentId = typeof user.id === 'string' ? parseInt(user.id, 10) : user.id;
+        return currentId !== idToDelete;
+      });
+      
+      this.applyFilters();
+      console.log('Usuario eliminado:', idToDelete);
     }
   }
 

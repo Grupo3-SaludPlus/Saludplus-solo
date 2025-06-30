@@ -16,6 +16,7 @@ export class NavbarComponent {
   showUserMenu = false;
   showLogoutPopup = false;
   currentUser: User | null = null;
+  isLoggedIn = false;
 
   navItems = [
     { path: '/', label: 'Inicio', roles: ['admin', 'doctor', 'patient'] },
@@ -29,8 +30,9 @@ export class NavbarComponent {
     private router: Router,
     private elementRef: ElementRef
   ) {
-    this.authService.currentUser.subscribe(user => {
+    this.authService.currentUser$.subscribe((user: User | null) => {
       this.currentUser = user;
+      this.isLoggedIn = !!user;
     });
   }
 

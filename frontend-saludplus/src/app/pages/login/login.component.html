@@ -1,0 +1,82 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h2>Iniciar Sesión</h2>
+      <p>Bienvenido a SaludPlus</p>
+    </div>
+
+    <!-- Selector de tipo de usuario -->
+    <div class="user-type-selector">
+      <button 
+        type="button" 
+        class="user-type-btn" 
+        [class.active]="loginForm.userType === 'patient'"
+        (click)="selectUserType('patient')">
+        Paciente
+      </button>
+      <button 
+        type="button" 
+        class="user-type-btn" 
+        [class.active]="loginForm.userType === 'doctor'"
+        (click)="selectUserType('doctor')">
+        Doctor
+      </button>
+      <button 
+        type="button" 
+        class="user-type-btn" 
+        [class.active]="loginForm.userType === 'admin'"
+        (click)="selectUserType('admin')">
+        Admin
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #loginFormRef="ngForm">
+      <!-- Mensaje de error -->
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          class="form-control"
+          [(ngModel)]="loginForm.email"
+          required
+          placeholder="Ingresa tu email"
+          [disabled]="isLoading">
+      </div>
+
+      <!-- Contraseña -->
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          class="form-control"
+          [(ngModel)]="loginForm.password"
+          required
+          placeholder="Ingresa tu contraseña"
+          [disabled]="isLoading">
+      </div>
+
+      <!-- Botón de login -->
+      <button 
+        type="submit" 
+        class="btn-primary" 
+        [disabled]="isLoading || !loginFormRef.valid">
+        <span *ngIf="isLoading">Iniciando sesión...</span>
+        <span *ngIf="!isLoading">Iniciar Sesión</span>
+      </button>
+    </form>
+
+    <!-- Link de registro -->
+    <div class="register-link">
+      <p>¿No tienes cuenta? <a routerLink="/register">Regístrate aquí</a></p>
+    </div>
+  </div>
+</div>

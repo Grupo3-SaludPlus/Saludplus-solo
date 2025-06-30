@@ -1,141 +1,144 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
 import { AuthService, User } from '../../../services/auth.service';
-import { SharedAppointmentsService } from '../../../services/shared-appointments.service';
+import { SharedAppointmentsService, AppointmentBase } from '../../../services/shared-appointments.service';
 import { Subscription } from 'rxjs';
-
-interface Appointment {
-  id: number;
-  specialty: string;
-  doctor: string;
-  date: string;
-  time: string;
-  status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
-}
 
 @Component({
   selector: 'app-patient-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './patient-dashboard.component.html',
   styleUrl: './patient-dashboard.component.css'
 })
 export class PatientDashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
-  
-  // Próximas citas (máximo 3)
-  upcomingAppointments: Appointment[] = [
-    {
-      id: 1,
-      specialty: 'Cardiología',
-      doctor: 'Dra. Carla Mendoza',
-      date: '2025-06-15',
-      time: '10:00',
-      status: 'confirmed'
-    },
-    {
-      id: 2,
-      specialty: 'Medicina General',
-      doctor: 'Dr. Juan Pérez',
-      date: '2025-06-20',
-      time: '14:30',
-      status: 'pending'
-    }
-  ];
-
-  // Estadísticas básicas
-  totalAppointments: number = 0;
-  completedAppointments: number = 0;
-  pendingAppointments: number = 0;
-  cancelledAppointments: number = 0;
-  
-  // Para desuscribirse al destruir el componente
-  private appointmentSubscription: Subscription | undefined;
-  
-  // Propiedades para editar perfil
-  showProfileForm = false;
   editingUser: Partial<User> = {};
+  appointments: AppointmentBase[] = [];
+  upcomingAppointments: AppointmentBase[] = [];
+  isEditMode = false;
   allergiesText = '';
   chronicText = '';
+  showProfileForm = false;
   
+  // Estadísticas calculadas
+  totalAppointments = 0;
+  completedAppointments = 0;
+  pendingAppointments = 0;
+  cancelledAppointments = 0;
+  
+  private userSubscription?: Subscription;
+  private appointmentsSubscription?: Subscription;
+
   constructor(
     private authService: AuthService,
-    private appointmentsService: SharedAppointmentsService,
-    private router: Router
+    private appointmentsService: SharedAppointmentsService
   ) {}
-  
+
   ngOnInit() {
-    // Asegurar que currentUser existe antes de usarlo
-    this.authService.currentUser.subscribe(user => {
+    this.userSubscription = this.authService.currentUser$.subscribe((user: User | null) => {
+      this.currentUser = user;
       if (user) {
-        this.currentUser = user;
-        // Realizar otras inicializaciones que dependan del usuario
-      } else {
-        // Redirigir al login si no hay usuario
-        this.router.navigate(['/login']);
+        this.loadUserAppointments();
+        this.setupEditingUser();
       }
     });
-    
-    // Obtener el usuario actual
-    const currentUser = this.authService.currentUserValue;
-    
-    if (currentUser) {
-      // Extraer ID numérico
-      let userId: number;
-      
-      if (typeof currentUser.id === 'string' && currentUser.id.includes('-')) {
-        userId = parseInt(currentUser.id.split('-')[1], 10);
-      } else {
-        userId = parseInt(currentUser.id as string, 10);
-      }
-      
-      console.log('Dashboard: Obteniendo citas para usuario ID:', userId);
-      
-      // Suscribirse a los cambios de citas para este paciente
-      this.appointmentSubscription = this.appointmentsService
-        .getPatientAppointments(userId)
-        .subscribe(appointments => {
-          console.log('Dashboard: Citas obtenidas:', appointments.length);
-          
-          // Actualizar las estadísticas basadas en las citas reales
-          this.totalAppointments = appointments.length;
-          
-          // Contar por estado
-          this.completedAppointments = appointments.filter(apt => 
-            apt.status === 'completed'
-          ).length;
-          
-          this.pendingAppointments = appointments.filter(apt => 
-            ['scheduled', 'confirmed', 'pending'].includes(apt.status as string)
-          ).length;
-          
-          this.cancelledAppointments = appointments.filter(apt => 
-            apt.status === 'cancelled'
-          ).length;
-        });
-    }
+
+    // Cargar todas las citas para estadísticas
+    this.appointmentsSubscription = this.appointmentsService.getAllAppointments()
+      .subscribe((appointments: AppointmentBase[]) => {
+        this.upcomingAppointments = appointments.filter(apt => 
+          apt.patientName === this.currentUser?.name &&
+          (apt.status === 'scheduled' || apt.status === 'confirmed')
+        );
+        this.calculateStatistics();
+      });
   }
-  
+
   ngOnDestroy() {
-    // Limpiar suscripciones
-    if (this.appointmentSubscription) {
-      this.appointmentSubscription.unsubscribe();
-    }
+    this.userSubscription?.unsubscribe();
+    this.appointmentsSubscription?.unsubscribe();
   }
-  
-  // MÉTODOS PARA FECHAS
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
+
+  private loadUserAppointments() {
+    if (!this.currentUser) return;
+
+    this.appointmentsService.getAllAppointments().subscribe((allAppointments: AppointmentBase[]) => {
+      this.appointments = allAppointments.filter((apt: AppointmentBase) => 
+        apt.patientName === this.currentUser?.name
+      );
+      this.calculateStatistics();
     });
   }
 
+  private calculateStatistics() {
+    this.totalAppointments = this.appointments.length;
+    this.completedAppointments = this.appointments.filter(apt => apt.status === 'completed').length;
+    this.pendingAppointments = this.appointments.filter(apt => 
+      apt.status === 'scheduled' || apt.status === 'confirmed'
+    ).length;
+    this.cancelledAppointments = this.appointments.filter(apt => apt.status === 'cancelled').length;
+  }
+
+  private setupEditingUser() {
+    if (this.currentUser) {
+      this.editingUser = { 
+        ...this.currentUser,
+        phone: this.currentUser.phone || '',
+        birthdate: this.currentUser.birthdate || '',
+        gender: this.currentUser.gender || 'O',
+        bloodType: this.currentUser.bloodType || '',
+        emergencyContact: this.currentUser.emergencyContact || ''
+      };
+      
+      this.allergiesText = this.currentUser.allergies?.join(', ') || '';
+      this.chronicText = this.currentUser.chronic?.join(', ') || '';
+    }
+  }
+
+  editProfile() {
+    this.showProfileForm = true;
+    this.isEditMode = true;
+    this.setupEditingUser();
+  }
+
+  cancelEditProfile() {
+    this.showProfileForm = false;
+    this.isEditMode = false;
+    this.setupEditingUser();
+  }
+
+  toggleEditMode() {
+    this.isEditMode = !this.isEditMode;
+    if (this.isEditMode) {
+      this.setupEditingUser();
+    }
+  }
+
+  saveProfile() {
+    if (!this.currentUser || !this.editingUser) return;
+
+    const allergies = this.allergiesText.split(',').map(a => a.trim()).filter(a => a);
+    const chronic = this.chronicText.split(',').map(c => c.trim()).filter(c => c);
+
+    const updatedUser: Partial<User> = {
+      ...this.editingUser,
+      allergies,
+      chronic: chronic
+    };
+
+    this.authService.updateCurrentUser(updatedUser);
+    this.showProfileForm = false;
+    this.isEditMode = false;
+  }
+
+  cancelEdit() {
+    this.isEditMode = false;
+    this.setupEditingUser();
+  }
+
+  // Funciones utilitarias para fechas
   getDateDay(dateString: string): string {
     const date = new Date(dateString);
     return date.getDate().toString().padStart(2, '0');
@@ -144,115 +147,70 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
   getDateMonth(dateString: string): string {
     const date = new Date(dateString);
     const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 
-                    'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+                   'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
     return months[date.getMonth()];
   }
 
-  // MÉTODOS PARA ESTADOS
+  calculateAge(birthdate?: string): number | null {
+    if (!birthdate) return null;
+    const today = new Date();
+    const birth = new Date(birthdate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    
+    return age;
+  }
+
+  getGenderText(gender?: string): string {
+    switch (gender) {
+      case 'M': return 'Masculino';
+      case 'F': return 'Femenino';
+      case 'O': return 'Otro';
+      default: return 'No especificado';
+    }
+  }
+
   getStatusColor(status: string): string {
-    switch(status) {
-      case 'confirmed': return '#10b981';
-      case 'pending': return '#f59e0b';
-      case 'completed': return '#6b7280';
-      case 'cancelled': return '#ef4444';
-      default: return '#6b7280';
+    switch (status) {
+      case 'scheduled': return '#ffa500';
+      case 'confirmed': return '#28a745';
+      case 'completed': return '#007bff';
+      case 'cancelled': return '#dc3545';
+      default: return '#6c757d';
     }
   }
 
   getStatusText(status: string): string {
-    switch(status) {
+    switch (status) {
+      case 'scheduled': return 'Programada';
       case 'confirmed': return 'Confirmada';
-      case 'pending': return 'Pendiente';
       case 'completed': return 'Completada';
       case 'cancelled': return 'Cancelada';
-      default: return 'Desconocido';
+      default: return status;
     }
   }
 
-  // MÉTODOS DE ACCIÓN - EDITAR PERFIL
-  editProfile() {
-    this.showProfileForm = true;
-    this.editingUser = { ...this.currentUser };
-    
-    // Convertir arrays a texto para el formulario
-    this.allergiesText = this.currentUser?.allergies?.join(', ') || '';
-    this.chronicText = this.currentUser?.chronic?.join(', ') || '';
-  }
-
-  // Cancelar edición de perfil
-  cancelEditProfile() {
-    this.showProfileForm = false;
-    this.editingUser = {};
-    this.allergiesText = '';
-    this.chronicText = '';
-  }
-
-  // Guardar cambios en el perfil
-  saveProfile() {
-    if (!this.editingUser || !this.currentUser) return;
-    
-    // Convertir texto a arrays
-    const allergies = this.allergiesText
-      .split(',')
-      .map(item => item.trim())
-      .filter(item => item !== '');
-      
-    const chronic = this.chronicText
-      .split(',')
-      .map(item => item.trim())
-      .filter(item => item !== '');
-    
-    // Crear objeto con datos actualizados
-    const updatedUser: User = {
-      ...this.currentUser,
-      ...this.editingUser,
-      allergies,
-      chronic
-    };
-    
-    // Actualizar en el servicio
-    this.authService.updateCurrentUser(updatedUser);
-    
-    // Cerrar formulario
-    this.showProfileForm = false;
-    
-    // Mensaje de confirmación
-    alert('Perfil actualizado correctamente');
-  }
-
-  // Calcular edad a partir de la fecha de nacimiento
-  calculateAge(birthdate?: string): number | null {
-    if (!birthdate) return null;
-    
-    try {
-      const today = new Date();
-      const birthDate = new Date(birthdate);
-      
-      if (isNaN(birthDate.getTime())) return null;
-      
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      
-      return age;
-    } catch (error) {
-      return null;
+  getPriorityColor(priority: string): string {
+    switch (priority) {
+      case 'urgent': return '#dc3545';
+      case 'high': return '#fd7e14';
+      case 'medium': return '#ffc107';
+      case 'low': return '#28a745';
+      default: return '#6c757d';
     }
   }
 
-  // Método para mapear valores de género
-  getGenderText(gender?: string): string {
-    if (!gender) return 'No especificado';
-    
-    const genderMap: Record<string, string> = {
-      'M': 'Masculino',
-      'F': 'Femenino', 
-      'O': 'Otro'
-    };
-    
-    return genderMap[gender] || 'No especificado';
+  getPriorityText(priority: string): string {
+    switch (priority) {
+      case 'urgent': return 'Urgente';
+      case 'high': return 'Alta';
+      case 'medium': return 'Media';
+      case 'low': return 'Baja';
+      default: return priority;
+    }
   }
 }

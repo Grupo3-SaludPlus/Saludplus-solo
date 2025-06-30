@@ -1,10 +1,11 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { DoctorsService, Doctor } from '../../services/doctors.service';
-import { SharedAppointmentsService } from '../../services/shared-appointments.service';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, User } from '../../services/auth.service'; // Cambiar esta línea
+import { SharedAppointmentsService, AppointmentBase } from '../../services/shared-appointments.service';
 
 @Component({
   selector: 'app-appointments',
@@ -13,7 +14,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './appointments.component.html',
   styleUrls: ['./appointments.component.css']
 })
-export class AppointmentsComponent implements OnInit {
+export class AppointmentsComponent implements OnInit, OnDestroy {
   title = 'Agenda tu Hora Médica';
   subtitle = 'Programa una cita con nuestros profesionales en simples pasos';
   
@@ -51,6 +52,15 @@ export class AppointmentsComponent implements OnInit {
 
   calendarMonth: Date = new Date();
   calendarDays: { date: Date, label: number | string, available: boolean, isToday: boolean }[] = [];
+
+  // Nueva propiedad para el usuario actual
+  currentUser: User | null = null;
+  appointments: AppointmentBase[] = [];
+  filteredAppointments: AppointmentBase[] = [];
+  
+  // Suscripciones
+  private userSubscription?: Subscription;
+  private appointmentsSubscription?: Subscription;
 
   constructor(
     private doctorsService: DoctorsService,
@@ -92,7 +102,8 @@ export class AppointmentsComponent implements OnInit {
     });
     
     // Verificar si el usuario está autenticado
-    this.authService.currentUser.subscribe(user => {
+    this.authService.currentUser$.subscribe((user: User | null) => {
+      this.currentUser = user;
       if (user) {
         this.isLoggedIn = true;
         this.currentUserName = user.name;
@@ -101,6 +112,9 @@ export class AppointmentsComponent implements OnInit {
         this.appointmentForm.name = user.name;
         this.appointmentForm.email = user.email || '';
         this.appointmentForm.phone = user.phone || '';
+        
+        // Cargar citas del usuario
+        this.loadUserAppointments();
       } else {
         this.isLoggedIn = false;
         this.currentUserName = '';
@@ -108,6 +122,19 @@ export class AppointmentsComponent implements OnInit {
     });
 
     this.generateCalendar();
+
+    // Suscribirse a los cambios del usuario
+    this.userSubscription = this.authService.currentUser$.subscribe((user: User | null) => {
+      this.currentUser = user;
+      if (user) {
+        this.loadUserAppointments();
+      }
+    });
+  }
+  
+  ngOnDestroy() {
+    this.userSubscription?.unsubscribe();
+    this.appointmentsSubscription?.unsubscribe();
   }
   
   // Método para verificar si hay parámetros de consulta
@@ -412,5 +439,18 @@ export class AppointmentsComponent implements OnInit {
   nextMonth() {
     this.calendarMonth = new Date(this.calendarMonth.getFullYear(), this.calendarMonth.getMonth() + 1, 1);
     this.generateCalendar();
+  }
+
+  // Método para cargar las citas del usuario
+  private loadUserAppointments() {
+    const currentUser = this.currentUser;
+    if (!currentUser) return;
+
+    this.appointmentsService.getAllAppointments().subscribe((allAppointments: AppointmentBase[]) => {
+      this.appointments = allAppointments.filter((apt: AppointmentBase) => 
+        apt.patientName === currentUser.name
+      );
+      this.filteredAppointments = [...this.appointments];
+    });
   }
 }
