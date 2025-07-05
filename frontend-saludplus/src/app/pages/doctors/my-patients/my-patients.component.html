@@ -1,0 +1,189 @@
+<main>
+  <section class="content">
+    <div class="patients-header">
+      <h1 class="page-title">
+        <i class="fas fa-users"></i>
+        Mis Pacientes
+      </h1>
+      <p class="page-subtitle">
+        Gestiona las citas y consultas de tus pacientes
+      </p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p>Cargando pacientes...</p>
+      </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div *ngIf="!isLoading">
+      <!-- Pestañas de navegación -->
+      <div class="tabs-container">
+        <div class="tabs">
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'today'"
+            (click)="setActiveTab('today')">
+            <i class="fas fa-calendar-day"></i>
+            Hoy
+            <span class="tab-count">{{ todayPatients.length }}</span>
+          </button>
+          
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'upcoming'"
+            (click)="setActiveTab('upcoming')">
+            <i class="fas fa-clock"></i>
+            Próximas Citas
+            <span class="tab-count">{{ upcomingPatients.length }}</span>
+          </button>
+          
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'all'"
+            (click)="setActiveTab('all')">
+            <i class="fas fa-list"></i>
+            Todos
+            <span class="tab-count">{{ allPatients.length }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros y búsqueda -->
+      <div class="filters-section">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre de paciente o motivo..."
+            [(ngModel)]="searchTerm"
+            (input)="applyFilters()">
+        </div>
+
+        <div class="filter-group">
+          <select 
+            [(ngModel)]="filterStatus" 
+            (change)="applyFilters()"
+            class="filter-select">
+            <option value="">Todos los estados</option>
+            <option 
+              *ngFor="let status of getUniqueStatuses()" 
+              [value]="status">
+              {{ getStatusText(status) }}
+            </option>
+          </select>
+
+          <button 
+            class="clear-filters-btn" 
+            (click)="clearFilters()"
+            *ngIf="filterStatus || searchTerm">
+            <i class="fas fa-times"></i>
+            Limpiar Filtros
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de pacientes -->
+      <div class="patients-container">
+        <div *ngIf="filteredPatients.length === 0" class="no-patients">
+          <div class="no-patients-icon">
+            <i class="fas fa-user-friends"></i>
+          </div>
+          <h3>No se encontraron pacientes</h3>
+          <p *ngIf="activeTab === 'today'">
+            No tienes pacientes programados para hoy.
+          </p>
+          <p *ngIf="activeTab === 'upcoming'">
+            No tienes citas próximas programadas.
+          </p>
+          <p *ngIf="activeTab === 'all'">
+            Aún no tienes pacientes asignados.
+          </p>
+        </div>
+
+        <div class="patients-grid" *ngIf="filteredPatients.length > 0">
+          <div 
+            class="patient-card" 
+            *ngFor="let patient of filteredPatients"
+            [class]="patient.status">
+            
+            <!-- Header de la tarjeta -->
+            <div class="patient-header">
+              <div class="appointment-date">
+                <span class="date-day">
+                  {{ getDateDay(patient.date) }}
+                </span>
+                <span class="date-month">
+                  {{ getDateMonth(patient.date) }}
+                </span>
+                <span class="date-year">
+                  {{ getDateYear(patient.date) }}
+                </span>
+              </div>
+              
+              <div class="appointment-time">
+                <i class="fas fa-clock"></i>
+                {{ patient.time }}
+              </div>
+              
+              <div class="appointment-status">
+                <span 
+                  class="status-badge" 
+                  [style.background-color]="getStatusColor(patient.status)">
+                  {{ getStatusText(patient.status) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Contenido de la tarjeta -->
+            <div class="patient-body">
+              <div class="patient-name">
+                <i class="fas fa-user"></i>
+                <span>{{ patient.patientName }}</span>
+              </div>
+              
+              <div class="appointment-reason">
+                <i class="fas fa-file-medical-alt"></i>
+                <span>{{ patient.reason }}</span>
+              </div>
+              
+              <div class="appointment-location">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ patient.location }}</span>
+              </div>
+            </div>
+
+            <!-- Acciones de la tarjeta -->
+            <div class="patient-actions">
+              <button 
+                *ngIf="canStart(patient)"
+                class="action-btn primary"
+                (click)="startConsultation(patient.id)">
+                <i class="fas fa-play"></i>
+                Iniciar Consulta
+              </button>
+              
+              <button 
+                class="action-btn secondary"
+                (click)="viewPatientHistory(patient.id)">
+                <i class="fas fa-history"></i>
+                Historial
+              </button>
+              
+              <button 
+                class="action-btn danger"
+                (click)="cancelAppointment(patient.id)"
+                [disabled]="!canCancel(patient)">
+                <i class="fas fa-times"></i>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

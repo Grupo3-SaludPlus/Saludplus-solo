@@ -30,15 +30,24 @@
       <!-- Contraseña -->
       <div class="form-group">
         <label for="password">Contraseña</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          class="form-control"
-          [(ngModel)]="loginForm.password"
-          required
-          placeholder="Ingresa tu contraseña"
-          [disabled]="isLoading">
+        <div class="password-input-container">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            name="password"
+            class="form-control"
+            [(ngModel)]="loginForm.password"
+            required
+            placeholder="Ingresa tu contraseña"
+            [disabled]="isLoading">
+          <button
+            type="button"
+            class="password-toggle-btn"
+            (click)="togglePasswordVisibility()"
+            [disabled]="isLoading">
+            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Botón de login -->

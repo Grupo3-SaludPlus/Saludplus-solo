@@ -4,139 +4,45 @@
     <div class="welcome-header">
       <div class="welcome-text">
         <h1>Bienvenido, Dr. {{ currentUser?.name }}</h1>
-        <p>{{ getCurrentDate() }}</p>
-      </div>
-
-      <div class="quick-actions">
-        <a routerLink="/doctor/appointments" class="btn-action">
-          <i class="fas fa-calendar-check"></i>
-          Ver Todas las Citas
-        </a>
-        <button class="btn-action emergency">
-          <i class="fas fa-ambulance"></i>
-          Emergencia
-        </button>
+        <p>Especialidad: {{ currentUser?.specialty }}</p>
+        <p>Email: {{ currentUser?.email }}</p>
+        <p>Teléfono: {{ currentUser?.phone }}</p>
       </div>
     </div>
 
-    <!-- Tarjetas de estadísticas -->
-    <div class="stats-cards">
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-calendar-day"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.todayTotal }}</div>
-          <div class="stat-label">Citas Hoy</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-clock"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.pendingTotal }}</div>
-          <div class="stat-label">Pendientes</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-user-injured"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.monthlyPatients }}</div>
-          <div class="stat-label">Pacientes este mes</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-chart-line"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.completedRate }}%</div>
-          <div class="stat-label">Tasa de Completitud</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Contenido principal -->
-    <div class="dashboard-content">
-      <!-- Citas de hoy -->
-      <section class="today-appointments-section">
-        <div class="section-header">
-          <h2>Citas para Hoy</h2>
-          <a routerLink="/doctor/appointments" class="section-link">Ver Todas</a>
-        </div>
-
-        <div class="today-appointments">
-          @if (todayAppointments.length === 0) {
-            <div class="empty-state">
-              <i class="far fa-calendar"></i>
-              <p>No hay citas programadas para hoy</p>
-              <a routerLink="/doctor/appointments" class="btn-empty-action">Ver Calendario</a>
-            </div>
-          }
-
-          @for (appointment of todayAppointments; track appointment) {
-            <div class="appointment-card" [class]="getStatusClass(appointment.status)">
-              <div class="appointment-time">
-                <i class="far fa-clock"></i>
-                <span>{{ appointment.time }}</span>
-              </div>
-              <div class="appointment-details">
-                <div class="patient-name">{{ appointment.patient_name }}</div>
-                <div class="appointment-type">{{ appointment.reason }}</div>
-              </div>
-              <div class="appointment-actions">
-                @if (canStart(appointment)) {
-                  <button class="btn-start" (click)="startAppointment(appointment)">
-                    <i class="fas fa-play"></i> Iniciar
-                  </button>
-                }
-                @if (canComplete(appointment)) {
-                  <button class="btn-complete" (click)="completeAppointment(appointment)">
-                    <i class="fas fa-check"></i> Completar
-                  </button>
-                }
-                <a [routerLink]="['/doctor/appointments']" [queryParams]="{appointmentId: appointment.id}" class="btn-view">
-                  <i class="fas fa-eye"></i>
-                </a>
-              </div>
-            </div>
-          }
-        </div>
-      </section>
-
-      <!-- Panel derecho: Próximas citas -->
-      <section class="upcoming-appointments-section">
-        <div class="section-header">
-          <h2>Próximas Citas</h2>
-        </div>
-
-        <div class="upcoming-appointments">
-          @if (upcomingAppointments.length > 0) {
-            <div>
-              @for (appointment of upcomingAppointments; track appointment) {
-                <div class="appointment-card">
-                  <!-- Contenido de cada cita -->
-                  <div>Paciente: {{appointment.patient_name}}</div>
-                  <div>Fecha: {{appointment.date | date:'dd/MM/yyyy'}}</div>
-                  <div>Hora: {{appointment.time}}</div>
-                  <div>Estado: {{getStatusText(appointment.status)}}</div>
-                </div>
-              }
-            </div>
-          }
-          @if (upcomingAppointments.length === 0) {
-            <div class="no-appointments">
-              No tienes citas próximas agendadas
-            </div>
-          }
-        </div>
-      </section>
+    <!-- Solo el perfil del doctor -->
+    <div class="profile-card">
+      <h2>Perfil del Doctor</h2>
+      <form *ngIf="editableUser" (ngSubmit)="saveProfile()" #profileForm="ngForm">
+        <ul>
+          <li>
+            <strong>Nombre:</strong>
+            <input type="text" [(ngModel)]="editableUser.name" name="name" required />
+          </li>
+          <li>
+            <strong>Email:</strong>
+            <input type="email" [(ngModel)]="editableUser.email" name="email" required />
+          </li>
+          <li>
+            <strong>Especialidad:</strong>
+            <input type="text" [(ngModel)]="editableUser.specialty" name="specialty" />
+          </li>
+          <li>
+            <strong>Teléfono:</strong>
+            <input type="text" [(ngModel)]="editableUser.phone" name="phone" />
+          </li>
+          <li>
+            <strong>Años de experiencia:</strong>
+            <input type="number" min="0" [(ngModel)]="editableUser.experience_years" name="experience_years" />
+          </li>
+          <li>
+            <strong>Perfil profesional:</strong>
+            <textarea [(ngModel)]="editableUser.education" name="education"></textarea>
+          </li>
+        </ul>
+        <button class="btn-action" type="submit" [disabled]="profileForm.invalid">Guardar cambios</button>
+        <span *ngIf="profileSaved" style="color: var(--success); margin-left: 16px;">¡Perfil actualizado!</span>
+      </form>
     </div>
   </div>
 </main>

@@ -15,19 +15,22 @@ export class LoginComponent {
   loginForm = {
     email: '',
     password: ''
-    // Eliminar userType ya que se detectará automáticamente
   };
 
   errorMessage: string = '';
   isLoading: boolean = false;
+  // ✅ AÑADIDO: Propiedad para controlar la visibilidad de la contraseña
+  showPassword: boolean = false;
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
-  // ELIMINAR el método selectUserType completamente
-  // selectUserType(type: 'admin' | 'doctor' | 'patient') { ... }
+  // ✅ AÑADIDO: Método para alternar la visibilidad de la contraseña
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   async onSubmit() {
     if (!this.loginForm.email || !this.loginForm.password) {
@@ -39,14 +42,12 @@ export class LoginComponent {
     this.errorMessage = '';
 
     try {
-      // El backend detectará automáticamente el tipo de usuario
       const response = await this.authService.login(
         this.loginForm.email,
         this.loginForm.password
       ).toPromise();
 
       if (response && response.user) {
-        // Redirigir basándose en el rol detectado por el backend
         this.redirectBasedOnRole(response.user.role);
       }
     } catch (error: any) {

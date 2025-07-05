@@ -24,29 +24,41 @@ export class LoginComponent {
   ) {}
 
   onSubmit() {
-    this.isLoading = true;
-    this.errorMessage = '';
-    
-    if (!this.email || !this.password) {
-      this.errorMessage = 'Por favor, complete todos los campos';
-      this.isLoading = false;
-      return;
-    }
-
-    const loginSuccessful = this.authService.login(this.email, this.password, this.userType);
-    
-    if (loginSuccessful) {
-      // Redirigir según el tipo de usuario
-      if (this.userType === 'doctor') {
-        this.router.navigate(['/doctor/dashboard']);
-      } else if (this.userType === 'admin') {
-        this.router.navigate(['/admin/dashboard']);
-      } else {
-        this.router.navigate(['/patient/dashboard']);
-      }
+    if (this.email && this.password && this.userType) {
+      this.isLoading = true;
+      this.errorMessage = '';
+      
+      // ✅ CORREGIDO: Solo pasar email y password al método login
+      this.authService.login(this.email, this.password).subscribe({
+        next: (response) => {
+          console.log('✅ Login successful:', response);
+          this.isLoading = false;
+          
+          // ✅ AÑADIDO: Verificar el tipo de usuario después del login
+          if (response.user) {
+            const userRole = response.user.role || response.user.type;
+            
+            // Verificar que el rol coincida con el tipo seleccionado
+            if (userRole === this.userType) {
+              // Navegar según el tipo de usuario
+              if (this.userType === 'patient') {
+                this.router.navigate(['/patient/dashboard']);
+              } else if (this.userType === 'doctor') {
+                this.router.navigate(['/doctor/dashboard']);
+              }
+            } else {
+              this.errorMessage = `Este usuario no tiene permisos de ${this.userType === 'patient' ? 'paciente' : 'doctor'}`;
+            }
+          }
+        },
+        error: (error) => {
+          console.error('❌ Login error:', error);
+          this.isLoading = false;
+          this.errorMessage = error.error?.message || 'Error en el login. Verifique sus credenciales.';
+        }
+      });
     } else {
-      this.errorMessage = 'Credenciales incorrectas';
-      this.isLoading = false;
+      this.errorMessage = 'Por favor, complete todos los campos';
     }
   }
 }

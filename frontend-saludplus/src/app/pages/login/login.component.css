@@ -150,3 +150,43 @@
 .register-link a:hover {
   text-decoration: underline;
 }
+
+/* ✅ AÑADIDO: Estilos para el contenedor de contraseña con visualizador */
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-container .form-control {
+  padding-right: 45px; /* Espacio para el botón */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+  color: #667eea;
+}
+
+.password-toggle-btn:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.password-toggle-btn i {
+  font-size: 14px;
+}

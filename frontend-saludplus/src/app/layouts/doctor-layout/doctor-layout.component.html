@@ -1,62 +1,142 @@
 <div class="doctor-layout">
   <nav class="doctor-sidebar">
     <div class="sidebar-header">
-      <h2>SaludPlus</h2>
-      <span class="doctor-portal">Portal Médico</span>
+      <div class="logo-container">
+        <div class="brand-info">
+          <h2>SaludPlus</h2>
+          <span class="doctor-portal">Portal Médico</span>
+        </div>
+      </div>
     </div>
 
     <ul class="nav-menu">
       <li>
-        <a routerLink="/doctor/dashboard" routerLinkActive="active">
-          <i class="fas fa-home"></i> Dashboard
+        <a routerLink="/doctor/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+          <i class="fas fa-tachometer-alt"></i> 
+          <span>Dashboard</span>
         </a>
       </li>
       <li>
         <a routerLink="/doctor/appointments" routerLinkActive="active">
-          <i class="fas fa-calendar-check"></i> Mis Consultas
+          <i class="fas fa-calendar-check"></i> 
+          <span>Mis Consultas</span>
         </a>
       </li>
+      <!-- ✅ AÑADIDO: Nueva ruta para Mis Pacientes -->
       <li>
         <a routerLink="/doctor/patients" routerLinkActive="active">
-          <i class="fas fa-user-injured"></i> Mis Pacientes
+          <i class="fas fa-users"></i> 
+          <span>Mis Pacientes</span>
         </a>
-      </li>
-      <li>
-        <a routerLink="/doctor/records" routerLinkActive="active">
-          <i class="fas fa-file-medical"></i> Historial Clínico
-        </a>
-      </li>
-      <li>
-        <a routerLink="/doctor/profile" routerLinkActive="active">
-          <i class="fas fa-user-md"></i> Mi Perfil
-        </a>
+      
       </li>
     </ul>
 
     <div class="sidebar-footer">
+      <div class="doctor-info">
+        <div class="doctor-avatar">
+          {{ userInitials }}
+        </div>
+        <div class="doctor-details">
+          <p class="doctor-name">{{ doctorName || 'Doctor' }}</p>
+          <p class="doctor-specialty">{{ doctorSpecialty }}</p>
+        </div>
+      </div>
+      
       <button class="btn-logout" (click)="logout()">
-        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        <i class="fas fa-sign-out-alt"></i> 
+        <span>Cerrar Sesión</span>
       </button>
     </div>
   </nav>
 
   <main class="content-area">
     <header class="doctor-header">
-      <div class="user-welcome">
-        <h2>Bienvenido, Dr. {{doctorName}}</h2>
-        <p>{{doctorSpecialty}} · {{currentDate | date:'EEEE, d MMMM yyyy'}}</p>
+      <div class="header-left">
+        <button class="btn-menu-toggle" (click)="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="user-welcome">
+          <h2>Bienvenido, Dr. {{ doctorName || 'Doctor' }}</h2>
+          <p>{{ doctorSpecialty }} · {{ currentDate | date:'EEEE, d MMMM yyyy':'es-ES' }}</p>
+        </div>
       </div>
 
       <div class="header-actions">
-        <button class="btn-notification">
-          <i class="fas fa-bell"></i>
-          @if (notificationCount > 0) {
-            <span class="notification-badge">{{notificationCount}}</span>
-          }
+        <!-- ✅ AÑADIDO: Botón de búsqueda rápida -->
+        <button class="btn-search" title="Búsqueda rápida">
+          <i class="fas fa-search"></i>
         </button>
-        <button class="btn-user">
-          <div class="user-avatar">{{userInitials}}</div>
-        </button>
+        
+        <!-- ✅ MEJORADO: Notificaciones con dropdown -->
+        <div class="notification-container">
+          <button class="btn-notification" (click)="toggleNotifications()" title="Notificaciones">
+            <i class="fas fa-bell"></i>
+            @if (notificationCount > 0) {
+              <span class="notification-badge">{{ notificationCount }}</span>
+            }
+          </button>
+          
+          <!-- Dropdown de notificaciones -->
+          <div class="notifications-dropdown" *ngIf="showNotifications">
+            <div class="dropdown-header">
+              <h4>Notificaciones</h4>
+              <span class="notification-count">{{ notificationCount }} nuevas</span>
+            </div>
+            <div class="notifications-list">
+              <div class="notification-item" *ngFor="let notification of notifications">
+                <div class="notification-icon">
+                  <i [class]="notification.icon"></i>
+                </div>
+                <div class="notification-content">
+                  <p class="notification-title">{{ notification.title }}</p>
+                  <p class="notification-message">{{ notification.message }}</p>
+                  <span class="notification-time">{{ notification.time }}</span>
+                </div>
+              </div>
+              
+              <div class="notification-empty" *ngIf="notifications.length === 0">
+                <i class="fas fa-bell-slash"></i>
+                <p>No tienes notificaciones nuevas</p>
+              </div>
+            </div>
+            <div class="dropdown-footer">
+              <button class="btn-view-all">Ver todas</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ✅ MEJORADO: Menú de usuario con dropdown -->
+        <div class="user-menu-container">
+          <button class="btn-user" (click)="toggleUserMenu()" title="Menú de usuario">
+            <div class="user-avatar">{{ userInitials }}</div>
+            <div class="user-info">
+              <span class="user-name">Dr. {{ doctorName || 'Doctor' }}</span>
+              <span class="user-status">En línea</span>
+            </div>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          
+          <!-- Dropdown del usuario -->
+          <div class="user-dropdown" *ngIf="showUserMenu">
+            <div class="dropdown-section">
+              <a routerLink="/doctor/profile" (click)="closeUserMenu()">
+                <i class="fas fa-user-circle"></i> Mi Perfil
+              </a>
+              <a routerLink="/doctor/settings" (click)="closeUserMenu()">
+                <i class="fas fa-cog"></i> Configuración
+              </a>
+              <a routerLink="/doctor/help" (click)="closeUserMenu()">
+                <i class="fas fa-question-circle"></i> Ayuda
+              </a>
+            </div>
+            <div class="dropdown-section border-top">
+              <a (click)="logout()" class="logout-link">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -64,4 +144,10 @@
       <router-outlet></router-outlet>
     </div>
   </main>
+  
+  <!-- ✅ AÑADIDO: Overlay para cerrar dropdowns -->
+  <div class="overlay" 
+       *ngIf="showNotifications || showUserMenu" 
+       (click)="closeAllDropdowns()">
+  </div>
 </div>

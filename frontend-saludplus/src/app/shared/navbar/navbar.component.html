@@ -9,26 +9,76 @@
       <i class="fas fa-bars"></i>
     </button>
     
+    <!-- ✅ CORREGIDO: Solo una estructura de navegación que cambia según el usuario -->
     <ul class="navbar-nav" [class.show]="menuOpen">
-      @for (item of navItems; track item.path) {
+      <!-- Enlaces para usuarios NO logueados -->
+      <ng-container *ngIf="!currentUser">
         <li class="nav-item">
-          <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" 
-             [routerLinkActiveOptions]="{exact: item.path === '/'}">{{ item.label }}</a>
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
         </li>
-      }
-      <!-- ✅ AGREGAR MI CUENTA AQUÍ -->
-      <li class="nav-item">
-        <a class="nav-link" (click)="goToMyAccount($event)" href="#" style="cursor: pointer;">Mi Cuenta</a>
-      </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/doctors" routerLinkActive="active">Nuestros Médicos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/appointments" routerLinkActive="active">Agenda</a>
+        </li>
+      
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/about" routerLinkActive="active">Nosotros</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/contact" routerLinkActive="active">Contacto</a>
+        </li>
+      </ng-container>
+
+      <!-- Enlaces para usuarios LOGUEADOS -->
+      <ng-container *ngIf="currentUser">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
+        </li>
+        
+        <!-- Enlaces específicos para PACIENTES -->
+        <ng-container *ngIf="currentUser.role === 'patient'">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/appointments" routerLinkActive="active">Agenda</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/patient/dashboard" routerLinkActive="active">Mi Dashboard</a>
+          </li>
+        </ng-container>
+        
+        <!-- Enlaces específicos para MÉDICOS -->
+        <ng-container *ngIf="currentUser.role === 'doctor'">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/doctor/dashboard" routerLinkActive="active">Mi Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/doctor/appointments" routerLinkActive="active">Mis Consultas</a>
+          </li>
+        </ng-container>
+        
+        <!-- Enlaces específicos para ADMINISTRADORES -->
+        <ng-container *ngIf="currentUser.role === 'admin'">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/admin/dashboard" routerLinkActive="active">Panel Admin</a>
+          </li>
+        </ng-container>
+        
+        <!-- Enlaces comunes para todos los usuarios logueados -->
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/doctors" routerLinkActive="active">Médicos</a>
+        </li>
+      
+      </ng-container>
     </ul>
 
-    <!-- Usuario no autenticado -->
+    <!-- Botones de autenticación para usuarios NO logueados -->
     <div class="auth-buttons" *ngIf="!currentUser">
       <a routerLink="/login" class="btn-login">Iniciar Sesión</a>
       <a routerLink="/register" class="btn-signup">Registrarse</a>
     </div>
 
-    <!-- Usuario autenticado -->
+    <!-- Menú de usuario para usuarios LOGUEADOS -->
     <div class="user-menu" *ngIf="currentUser">
       <div class="user-menu-trigger" (click)="toggleUserMenu($event)">
         <div class="user-avatar">

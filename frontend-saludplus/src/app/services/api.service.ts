@@ -26,6 +26,8 @@ export interface User {
   createdAt?: string;
   specialty?: string;
   profile?: any;
+  experience_years?: number;
+  education?: string;
 }
 
 export interface LoginRequest {
