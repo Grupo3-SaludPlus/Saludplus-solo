@@ -400,35 +400,52 @@
                 </textarea>
               </div>
               <div class="modal-actions">
-                <button class="btn-modal btn-secondary" (click)="closeAppointmentModal()">Cerrar</button>
-                <button class="btn-modal btn-primary" (click)="saveNotes()" [disabled]="selectedAppointment.status === 'cancelled'">
+                <!-- Confirmar -->
+                <button 
+                  *ngIf="canConfirm(selectedAppointment)" 
+                  class="btn-modal btn-success" 
+                  (click)="confirmAppointment(selectedAppointment)">
+                  <i class="fas fa-check-circle"></i> Confirmar
+                </button>
+
+                <!-- Iniciar -->
+                <button 
+                  *ngIf="canStart(selectedAppointment)" 
+                  class="btn-modal btn-primary" 
+                  (click)="startAppointment(selectedAppointment)">
+                  <i class="fas fa-play"></i> Iniciar
+                </button>
+
+                <!-- Guardar notas -->
+                <button 
+                  class="btn-modal btn-primary" 
+                  (click)="saveNotes()" 
+                  [disabled]="selectedAppointment.status === 'cancelled'">
                   <i class="fas fa-save"></i> Guardar Notas
                 </button>
-                @if (canConfirm(selectedAppointment)) {
-                  <button class="btn-modal btn-success" (click)="confirmAppointment(selectedAppointment)">
-                    <i class="fas fa-check-circle"></i> Confirmar
-                  </button>
-                }
-                @if (canReschedule(selectedAppointment)) {
-                  <button class="btn-modal btn-warning" (click)="rescheduleAppointment(selectedAppointment)">
-                    <i class="fas fa-calendar-alt"></i> Reagendar
-                  </button>
-                }
-                @if (canCancel(selectedAppointment)) {
-                  <button class="btn-modal btn-danger" (click)="cancelAppointment(selectedAppointment)">
-                    <i class="fas fa-times"></i> Cancelar
-                  </button>
-                }
-                @if (canStart(selectedAppointment)) {
-                  <button class="btn-modal btn-primary" (click)="startAppointment(selectedAppointment)">
-                    <i class="fas fa-play"></i> Iniciar
-                  </button>
-                }
-                @if (canComplete(selectedAppointment)) {
-                  <button class="btn-modal btn-success" (click)="completeAppointment(selectedAppointment)">
-                    <i class="fas fa-check"></i> Finalizar
-                  </button>
-                }
+
+                <!-- Reagendar -->
+                <button 
+                  *ngIf="canReschedule(selectedAppointment)" 
+                  class="btn-modal btn-warning" 
+                  (click)="rescheduleAppointment(selectedAppointment)">
+                  <i class="fas fa-calendar-alt"></i> Reagendar
+                </button>
+
+                <!-- Cancelar -->
+                <button 
+                  *ngIf="canCancel(selectedAppointment)" 
+                  class="btn-modal btn-danger" 
+                  (click)="cancelAppointment(selectedAppointment)">
+                  <i class="fas fa-times"></i> Cancelar
+                </button>
+
+                <!-- Cerrar -->
+                <button 
+                  class="btn-modal btn-secondary" 
+                  (click)="closeAppointmentModal()">
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>
