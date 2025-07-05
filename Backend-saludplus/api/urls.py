@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from rest_framework.authtoken.views import obtain_auth_token
 
 router = DefaultRouter()
 # ✅ COMENTAR TEMPORALMENTE: Estas rutas del router causan conflicto
@@ -14,6 +15,12 @@ urlpatterns = [
     # Estadísticas
     path('dashboard/stats/', views.DashboardStatsView.as_view(), name='dashboard-stats'),
     
+    # Registro y login custom
+    path('auth/register/', views.AuthRegisterView.as_view(), name='register'),
+    path('auth/login/',    views.AuthLoginView.as_view(),    name='login'),
+    # TokenAuth si lo quieres también
+    path('auth/token/',    obtain_auth_token,          name='api_token_auth'),
+
     # Usuarios
     path('users/', views.UserListView.as_view(), name='user-list'),
 

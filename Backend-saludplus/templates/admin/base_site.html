@@ -3,41 +3,97 @@
 {% block title %}{{ title }} | SaludPlus Admin{% endblock %}
 
 {% block branding %}
-<h1 id="site-name">
-    <a href="{% url 'admin:index' %}" style="color: #2e7d32; text-decoration: none;">
-        🏥 SaludPlus
-    </a>
-</h1>
+<div id="branding-formal" style="display: flex; align-items: center; gap: 16px; padding: 20px 30px;">
+   
+    <div>
+        <h1 style="margin: 0; font-size: 1.8rem; font-weight: 600; color: #2C3E50;">
+            SaludPlus
+        </h1>
+        <p style="margin: 0; font-size: 0.85rem; color: #7F8C8D;">
+            Sistema de Gestión Médica
+        </p>
+    </div>
+</div>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
 
 {% block extrahead %}
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap');
+    
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+    body {
+        background-color: #F7F7F7;
+    }
+    /* Cabecera */
     #header {
-        background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
-        color: white;
+        background-color: #2C3E50;
+        border-bottom: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
-    .module h2, .module caption, .inline-group h2 {
-        background: #6fa371;
+    #header h1, #header h2, #header a {
+        color: #ECF0F1 !important;
     }
-    
+    /* Módulos */
+    .module, .grp-module {
+        background: #FFFFFF;
+        border: 1px solid #D0D3D4;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: box-shadow 0.2s ease;
+    }
+    .module:hover, .grp-module:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .module h2, .inline-group h2 {
+        background: #2C3E50;
+        color: #ECF0F1;
+        padding: 10px 15px;
+        font-size: 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: 0;
+    }
+    /* Botones */
     .button, input[type=submit], input[type=button], .submit-row input, a.button {
-        background: #2e7d32;
-        border: none;
+        background-color: #2980B9;
+        color: #FFFFFF !important;
+        border-radius: 4px;
+        padding: 8px 16px;
+        font-weight: 500;
+        text-transform: none;
+        transition: background-color 0.2s ease;
     }
-    
-    .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover, a.button:hover {
-        background: #1b5e20;
+    .button:hover, input[type=submit]:hover, input[type=button]:hover,
+    .submit-row input:hover, a.button:hover {
+        background-color: #1F618D;
     }
-    
+    /* Buscador */
     #changelist-search input[type="text"] {
-        border: 2px solid #2e7d32;
+        border: 1px solid #D0D3D4;
+        border-radius: 4px;
+        padding: 8px;
+        font-size: 0.95rem;
+        background: #FFFFFF;
     }
-    
-    .selector-available h2, .selector-chosen h2 {
-        background: #2e7d32;
+    #changelist-search input[type="text"]:focus {
+        outline: none;
+        border-color: #2980B9;
+    }
+    /* Enlaces y breadcrumbs */
+    .breadcrumbs {
+        background: transparent;
+        padding: 8px 0;
+        margin-bottom: 16px;
+    }
+    .breadcrumbs a {
+        color: #2980B9;
+        text-decoration: none;
+    }
+    .breadcrumbs a:hover {
+        text-decoration: underline;
     }
 </style>
 {% endblock %}
