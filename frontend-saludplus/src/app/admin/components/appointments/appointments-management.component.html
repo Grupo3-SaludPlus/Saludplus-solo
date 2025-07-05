@@ -1,369 +1,378 @@
 <div class="admin-content-container">
   <!-- Vista de lista de citas -->
-  <div *ngIf="currentView === 'list'">
-    <div class="content-header">
-      <div>
-        <h1>Gestión de Citas</h1>
-        <p>Administra todas las citas médicas del sistema</p>
-      </div>
-      
-      <div class="header-actions">
-        <button class="primary-btn" (click)="createNewAppointment()">
-          <i class="fas fa-plus"></i>
-          Nueva Cita
-        </button>
-      </div>
-    </div>
-    
-    <!-- Filtros y búsqueda -->
-    <div class="filter-container">
-      <div class="search-box">
-        <input 
-          type="text" 
-          [(ngModel)]="searchTerm" 
-          placeholder="Buscar por paciente, doctor o ID de cita..."
-          (keyup.enter)="onSearch()"
-        >
-        <button class="search-btn" (click)="onSearch()">
-          <i class="fas fa-search"></i>
-        </button>
-      </div>
-      
-      <div class="filter-options">
-        <div class="filter-option">
-          <label>Estado:</label>
-          <select [(ngModel)]="statusFilter" (change)="onStatusFilterChange(statusFilter)">
-            <option value="all">Todos</option>
-            <option value="scheduled">Programadas</option>
-            <option value="completed">Completadas</option>
-            <option value="cancelled">Canceladas</option>
-            <option value="pending">Pendientes</option>
-          </select>
+  @if (currentView === 'list') {
+    <div>
+      <div class="content-header">
+        <div>
+          <h1>Gestión de Citas</h1>
+          <p>Administra todas las citas médicas del sistema</p>
         </div>
-        
-        <div class="filter-option">
-          <label>Fecha:</label>
-          <input 
-            type="date" 
-            [(ngModel)]="dateFilter" 
-            (change)="onDateFilterChange()"
-          >
+        <div class="header-actions">
+          <button class="primary-btn" (click)="createNewAppointment()">
+            <i class="fas fa-plus"></i>
+            Nueva Cita
+          </button>
         </div>
-        
-        <button class="filter-reset" (click)="resetFilters()">
-          <i class="fas fa-sync-alt"></i>
-          Restablecer
-        </button>
       </div>
-    </div>
-    
-    <!-- Tabla de citas -->
-    <div class="table-container">
-      <div *ngIf="isLoading" class="loading-indicator">
-        <i class="fas fa-spinner fa-spin"></i>
-        <span>Cargando citas...</span>
-      </div>
-      
-      <table *ngIf="!isLoading" class="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Paciente</th>
-            <th>Doctor</th>
-            <th>Especialidad</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="filteredAppointments.length === 0">
-            <td colspan="8" class="no-data">
-              No se encontraron citas con los filtros seleccionados
-            </td>
-          </tr>
-          <tr *ngFor="let appointment of filteredAppointments">
-            <td>#{{ appointment.id }}</td>
-            <td>{{ appointment.patientName }}</td>
-            <td>{{ appointment.doctorName }}</td>
-            <td>{{ appointment.specialtyName }}</td>
-            <td>{{ formatDateForDisplay(appointment.date) }}</td>
-            <td>{{ appointment.time }}</td>
-            <td>
-              <span class="status-badge" [ngClass]="getStatusBadgeClass(appointment.status)">
-                {{ getStatusText(appointment.status) }}
-              </span>
-            </td>
-            <td class="actions-cell">
-              <button class="action-btn view-btn" title="Ver detalles" (click)="viewAppointmentDetails(appointment)">
-                <i class="fas fa-eye"></i>
+      <!-- Filtros y búsqueda -->
+      <div class="filter-container">
+        <div class="search-box">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Buscar por paciente, doctor o ID de cita..."
+            (keyup.enter)="onSearch()"
+            >
+            <button class="search-btn" (click)="onSearch()">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          <div class="filter-options">
+            <div class="filter-option">
+              <label>Estado:</label>
+              <select [(ngModel)]="statusFilter" (change)="onStatusFilterChange(statusFilter)">
+                <option value="all">Todos</option>
+                <option value="scheduled">Programadas</option>
+                <option value="completed">Completadas</option>
+                <option value="cancelled">Canceladas</option>
+                <option value="pending">Pendientes</option>
+              </select>
+            </div>
+            <div class="filter-option">
+              <label>Fecha:</label>
+              <input
+                type="date"
+                [(ngModel)]="dateFilter"
+                (change)="onDateFilterChange()"
+                >
+              </div>
+              <button class="filter-reset" (click)="resetFilters()">
+                <i class="fas fa-sync-alt"></i>
+                Restablecer
               </button>
-              <button class="action-btn edit-btn" title="Editar cita" (click)="editAppointment(appointment)">
+            </div>
+          </div>
+          <!-- Tabla de citas -->
+          <div class="table-container">
+            @if (isLoading) {
+              <div class="loading-indicator">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Cargando citas...</span>
+              </div>
+            }
+            @if (!isLoading) {
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Paciente</th>
+                    <th>Doctor</th>
+                    <th>Especialidad</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (filteredAppointments.length === 0) {
+                    <tr>
+                      <td colspan="8" class="no-data">
+                        No se encontraron citas con los filtros seleccionados
+                      </td>
+                    </tr>
+                  }
+                  @for (appointment of filteredAppointments; track appointment) {
+                    <tr>
+                      <td>#{{ appointment.id }}</td>
+                      <td>{{ appointment.patientName }}</td>
+                      <td>{{ appointment.doctorName }}</td>
+                      <td>{{ appointment.specialtyName }}</td>
+                      <td>{{ formatDateForDisplay(appointment.date) }}</td>
+                      <td>{{ appointment.time }}</td>
+                      <td>
+                        <span class="status-badge" [ngClass]="getStatusBadgeClass(appointment.status)">
+                          {{ getStatusText(appointment.status) }}
+                        </span>
+                      </td>
+                      <td class="actions-cell">
+                        <button class="action-btn view-btn" title="Ver detalles" (click)="viewAppointmentDetails(appointment)">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn edit-btn" title="Editar cita" (click)="editAppointment(appointment)">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        @if (appointment.status !== 'cancelled' && appointment.status !== 'completed') {
+                          <button
+                            class="action-btn cancel-btn"
+                            title="Cancelar cita"
+                            (click)="cancelAppointment(appointment)"
+                            >
+                            <i class="fas fa-ban"></i>
+                          </button>
+                        }
+                        <button class="action-btn delete-btn" title="Eliminar cita" (click)="deleteAppointment(appointment)">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+            <!-- Paginación -->
+            @if (totalItems > 0) {
+              <div class="pagination-container">
+                <div class="pagination-info">
+                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} a
+                  {{ currentPage * itemsPerPage > totalItems ? totalItems : currentPage * itemsPerPage }}
+                  de {{ totalItems }} citas
+                </div>
+                <div class="pagination-controls">
+                  <button
+                    class="page-btn"
+                    [disabled]="currentPage === 1"
+                    (click)="changePage(currentPage - 1)"
+                    >
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
+                  <span class="current-page">{{ currentPage }}</span>
+                  <button
+                    class="page-btn"
+                    [disabled]="currentPage * itemsPerPage >= totalItems"
+                    (click)="changePage(currentPage + 1)"
+                    >
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Vista de detalle de cita -->
+      @if (currentView === 'detail' && selectedAppointment) {
+        <div class="detail-view">
+          <div class="content-header">
+            <div>
+              <h1>Detalles de Cita #{{ selectedAppointment.id }}</h1>
+            </div>
+            <div class="header-actions">
+              <button class="secondary-btn" (click)="currentView = 'list'">
+                <i class="fas fa-arrow-left"></i>
+                Volver
+              </button>
+              <button class="primary-btn" (click)="editAppointment(selectedAppointment)">
                 <i class="fas fa-edit"></i>
+                Editar
               </button>
-              <button 
-                *ngIf="appointment.status !== 'cancelled' && appointment.status !== 'completed'"
-                class="action-btn cancel-btn" 
-                title="Cancelar cita" 
-                (click)="cancelAppointment(appointment)"
-              >
-                <i class="fas fa-ban"></i>
-              </button>
-              <button class="action-btn delete-btn" title="Eliminar cita" (click)="deleteAppointment(appointment)">
+            </div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-section">
+              <h3>Información de la Cita</h3>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">ID:</span>
+                  <span class="detail-value">#{{ selectedAppointment.id }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Estado:</span>
+                  <span class="detail-value">
+                    <span class="status-badge" [ngClass]="getStatusBadgeClass(selectedAppointment.status)">
+                      {{ getStatusText(selectedAppointment.status) }}
+                    </span>
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Fecha:</span>
+                  <span class="detail-value">{{ formatDateForDisplay(selectedAppointment.date) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Hora:</span>
+                  <span class="detail-value">{{ selectedAppointment.time }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Creada:</span>
+                  <span class="detail-value">{{ formatDateForDisplay(selectedAppointment.createdAt) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Actualizada:</span>
+                  <span class="detail-value">{{ formatDateForDisplay(selectedAppointment.updatedAt) }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="detail-section">
+              <h3>Paciente</h3>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">ID:</span>
+                  <span class="detail-value">#{{ selectedAppointment.patientId }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Nombre:</span>
+                  <span class="detail-value">{{ selectedAppointment.patientName }}</span>
+                </div>
+                <!-- Aquí podrías agregar más información del paciente si estuviera disponible -->
+              </div>
+            </div>
+            <div class="detail-section">
+              <h3>Doctor</h3>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">ID:</span>
+                  <span class="detail-value">#{{ selectedAppointment.doctorId }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Nombre:</span>
+                  <span class="detail-value">{{ selectedAppointment.doctorName }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Especialidad:</span>
+                  <span class="detail-value">{{ selectedAppointment.specialtyName }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="detail-section">
+              <h3>Notas</h3>
+              <p class="detail-notes">{{ selectedAppointment.notes || 'No hay notas registradas para esta cita.' }}</p>
+            </div>
+            <div class="detail-actions">
+              @if (selectedAppointment.status !== 'cancelled' && selectedAppointment.status !== 'completed') {
+                <button
+                  class="danger-btn"
+                  (click)="cancelAppointment(selectedAppointment)"
+                  >
+                  <i class="fas fa-ban"></i>
+                  Cancelar Cita
+                </button>
+              }
+              <button class="delete-btn" (click)="deleteAppointment(selectedAppointment)">
                 <i class="fas fa-trash-alt"></i>
+                Eliminar Cita
               </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <!-- Paginación -->
-      <div class="pagination-container" *ngIf="totalItems > 0">
-        <div class="pagination-info">
-          Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} a 
-          {{ currentPage * itemsPerPage > totalItems ? totalItems : currentPage * itemsPerPage }}
-          de {{ totalItems }} citas
-        </div>
-        <div class="pagination-controls">
-          <button 
-            class="page-btn" 
-            [disabled]="currentPage === 1"
-            (click)="changePage(currentPage - 1)"
-          >
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          
-          <span class="current-page">{{ currentPage }}</span>
-          
-          <button 
-            class="page-btn" 
-            [disabled]="currentPage * itemsPerPage >= totalItems"
-            (click)="changePage(currentPage + 1)"
-          >
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Vista de detalle de cita -->
-  <div *ngIf="currentView === 'detail' && selectedAppointment" class="detail-view">
-    <div class="content-header">
-      <div>
-        <h1>Detalles de Cita #{{ selectedAppointment.id }}</h1>
-      </div>
-      
-      <div class="header-actions">
-        <button class="secondary-btn" (click)="currentView = 'list'">
-          <i class="fas fa-arrow-left"></i>
-          Volver
-        </button>
-        <button class="primary-btn" (click)="editAppointment(selectedAppointment)">
-          <i class="fas fa-edit"></i>
-          Editar
-        </button>
-      </div>
-    </div>
-    
-    <div class="detail-card">
-      <div class="detail-section">
-        <h3>Información de la Cita</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">ID:</span>
-            <span class="detail-value">#{{ selectedAppointment.id }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Estado:</span>
-            <span class="detail-value">
-              <span class="status-badge" [ngClass]="getStatusBadgeClass(selectedAppointment.status)">
-                {{ getStatusText(selectedAppointment.status) }}
-              </span>
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Fecha:</span>
-            <span class="detail-value">{{ formatDateForDisplay(selectedAppointment.date) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Hora:</span>
-            <span class="detail-value">{{ selectedAppointment.time }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Creada:</span>
-            <span class="detail-value">{{ formatDateForDisplay(selectedAppointment.createdAt) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Actualizada:</span>
-            <span class="detail-value">{{ formatDateForDisplay(selectedAppointment.updatedAt) }}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="detail-section">
-        <h3>Paciente</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">ID:</span>
-            <span class="detail-value">#{{ selectedAppointment.patientId }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Nombre:</span>
-            <span class="detail-value">{{ selectedAppointment.patientName }}</span>
-          </div>
-          <!-- Aquí podrías agregar más información del paciente si estuviera disponible -->
-        </div>
-      </div>
-      
-      <div class="detail-section">
-        <h3>Doctor</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">ID:</span>
-            <span class="detail-value">#{{ selectedAppointment.doctorId }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Nombre:</span>
-            <span class="detail-value">{{ selectedAppointment.doctorName }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Especialidad:</span>
-            <span class="detail-value">{{ selectedAppointment.specialtyName }}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="detail-section">
-        <h3>Notas</h3>
-        <p class="detail-notes">{{ selectedAppointment.notes || 'No hay notas registradas para esta cita.' }}</p>
-      </div>
-      
-      <div class="detail-actions">
-        <button 
-          *ngIf="selectedAppointment.status !== 'cancelled' && selectedAppointment.status !== 'completed'"
-          class="danger-btn" 
-          (click)="cancelAppointment(selectedAppointment)"
-        >
-          <i class="fas fa-ban"></i>
-          Cancelar Cita
-        </button>
-        <button class="delete-btn" (click)="deleteAppointment(selectedAppointment)">
-          <i class="fas fa-trash-alt"></i>
-          Eliminar Cita
-        </button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Formulario para crear/editar cita -->
-  <div *ngIf="currentView === 'create' || currentView === 'edit'" class="form-view">
-    <div class="content-header">
-      <div>
-        <h1>{{ currentView === 'create' ? 'Nueva Cita' : 'Editar Cita #' + (selectedAppointment?.id || '') }}</h1>
-      </div>
-      
-      <div class="header-actions">
-        <button class="secondary-btn" (click)="cancelForm()">
-          <i class="fas fa-times"></i>
-          Cancelar
-        </button>
-      </div>
-    </div>
-    
-    <div class="form-container">
-      <form [formGroup]="appointmentForm" (ngSubmit)="submitAppointmentForm()">
-        <div class="form-section">
-          <h3>Información del Paciente</h3>
-          <div class="form-group">
-            <label for="patientId">Paciente <span class="required">*</span></label>
-            <select id="patientId" formControlName="patientId" required>
-              <option value="">Seleccionar paciente</option>
-              <option *ngFor="let patient of patients" [value]="patient.id">
-                {{ patient.name }}
-              </option>
-            </select>
-            <div class="form-error" *ngIf="appointmentForm.get('patientId')?.invalid && appointmentForm.get('patientId')?.touched">
-              Debe seleccionar un paciente
             </div>
           </div>
         </div>
-        
-        <div class="form-section">
-          <h3>Información Médica</h3>
-          <div class="form-group">
-            <label for="specialtyId">Especialidad <span class="required">*</span></label>
-            <select id="specialtyId" formControlName="specialtyId" required>
-              <option value="">Seleccionar especialidad</option>
-              <option *ngFor="let specialty of specialties" [value]="specialty.id">
-                {{ specialty.name }}
-              </option>
-            </select>
-            <div class="form-error" *ngIf="appointmentForm.get('specialtyId')?.invalid && appointmentForm.get('specialtyId')?.touched">
-              Debe seleccionar una especialidad
+      }
+
+      <!-- Formulario para crear/editar cita -->
+      @if (currentView === 'create' || currentView === 'edit') {
+        <div class="form-view">
+          <div class="content-header">
+            <div>
+              <h1>{{ currentView === 'create' ? 'Nueva Cita' : 'Editar Cita #' + (selectedAppointment?.id || '') }}</h1>
+            </div>
+            <div class="header-actions">
+              <button class="secondary-btn" (click)="cancelForm()">
+                <i class="fas fa-times"></i>
+                Cancelar
+              </button>
             </div>
           </div>
-          
-          <div class="form-group">
-            <label for="doctorId">Doctor <span class="required">*</span></label>
-            <select id="doctorId" formControlName="doctorId" required>
-              <option value="">Seleccionar doctor</option>
-              <option *ngFor="let doctor of doctors" [value]="doctor.id">
-                {{ doctor.name }} - {{ doctor.specialtyName }}
-              </option>
-            </select>
-            <div class="form-error" *ngIf="appointmentForm.get('doctorId')?.invalid && appointmentForm.get('doctorId')?.touched">
-              Debe seleccionar un doctor
-            </div>
-          </div>
-        </div>
-        
-        <div class="form-section">
-          <h3>Detalles de la Cita</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="date">Fecha <span class="required">*</span></label>
-              <input type="date" id="date" formControlName="date" required>
-              <div class="form-error" *ngIf="appointmentForm.get('date')?.invalid && appointmentForm.get('date')?.touched">
-                Debe seleccionar una fecha válida
+          <div class="form-container">
+            <form [formGroup]="appointmentForm" (ngSubmit)="submitAppointmentForm()">
+              <div class="form-section">
+                <h3>Información del Paciente</h3>
+                <div class="form-group">
+                  <label for="patientId">Paciente <span class="required">*</span></label>
+                  <select id="patientId" formControlName="patientId" required>
+                    <option value="">Seleccionar paciente</option>
+                    @for (patient of patients; track patient) {
+                      <option [value]="patient.id">
+                        {{ patient.name }}
+                      </option>
+                    }
+                  </select>
+                  @if (appointmentForm.get('patientId')?.invalid && appointmentForm.get('patientId')?.touched) {
+                    <div class="form-error">
+                      Debe seleccionar un paciente
+                    </div>
+                  }
+                </div>
               </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="time">Hora <span class="required">*</span></label>
-              <input type="time" id="time" formControlName="time" required>
-              <div class="form-error" *ngIf="appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched">
-                Debe seleccionar una hora válida
+              <div class="form-section">
+                <h3>Información Médica</h3>
+                <div class="form-group">
+                  <label for="specialtyId">Especialidad <span class="required">*</span></label>
+                  <select id="specialtyId" formControlName="specialtyId" required>
+                    <option value="">Seleccionar especialidad</option>
+                    @for (specialty of specialties; track specialty) {
+                      <option [value]="specialty.id">
+                        {{ specialty.name }}
+                      </option>
+                    }
+                  </select>
+                  @if (appointmentForm.get('specialtyId')?.invalid && appointmentForm.get('specialtyId')?.touched) {
+                    <div class="form-error">
+                      Debe seleccionar una especialidad
+                    </div>
+                  }
+                </div>
+                <div class="form-group">
+                  <label for="doctorId">Doctor <span class="required">*</span></label>
+                  <select id="doctorId" formControlName="doctorId" required>
+                    <option value="">Seleccionar doctor</option>
+                    @for (doctor of doctors; track doctor) {
+                      <option [value]="doctor.id">
+                        {{ doctor.name }} - {{ doctor.specialtyName }}
+                      </option>
+                    }
+                  </select>
+                  @if (appointmentForm.get('doctorId')?.invalid && appointmentForm.get('doctorId')?.touched) {
+                    <div class="form-error">
+                      Debe seleccionar un doctor
+                    </div>
+                  }
+                </div>
               </div>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label for="status">Estado <span class="required">*</span></label>
-            <select id="status" formControlName="status" required>
-              <option value="scheduled">Programada</option>
-              <option value="pending">Pendiente</option>
-              <option value="completed">Completada</option>
-              <option value="cancelled">Cancelada</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="notes">Notas</label>
-            <textarea id="notes" formControlName="notes" rows="4" placeholder="Información adicional sobre la cita..."></textarea>
+              <div class="form-section">
+                <h3>Detalles de la Cita</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="date">Fecha <span class="required">*</span></label>
+                    <input type="date" id="date" formControlName="date" required>
+                    @if (appointmentForm.get('date')?.invalid && appointmentForm.get('date')?.touched) {
+                      <div class="form-error">
+                        Debe seleccionar una fecha válida
+                      </div>
+                    }
+                  </div>
+                  <div class="form-group">
+                    <label for="time">Hora <span class="required">*</span></label>
+                    <input type="time" id="time" formControlName="time" required>
+                    @if (appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched) {
+                      <div class="form-error">
+                        Debe seleccionar una hora válida
+                      </div>
+                    }
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="status">Estado <span class="required">*</span></label>
+                  <select id="status" formControlName="status" required>
+                    <option value="scheduled">Programada</option>
+                    <option value="pending">Pendiente</option>
+                    <option value="completed">Completada</option>
+                    <option value="cancelled">Cancelada</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="notes">Notas</label>
+                  <textarea id="notes" formControlName="notes" rows="4" placeholder="Información adicional sobre la cita..."></textarea>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="secondary-btn" (click)="cancelForm()">
+                  Cancelar
+                </button>
+                <button type="submit" class="primary-btn" [disabled]="appointmentForm.invalid">
+                  {{ currentView === 'create' ? 'Crear Cita' : 'Actualizar Cita' }}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-        
-        <div class="form-actions">
-          <button type="button" class="secondary-btn" (click)="cancelForm()">
-            Cancelar
-          </button>
-          <button type="submit" class="primary-btn" [disabled]="appointmentForm.invalid">
-            {{ currentView === 'create' ? 'Crear Cita' : 'Actualizar Cita' }}
-          </button>
-        </div>
-      </form>
+      }
     </div>
-  </div>
-</div>

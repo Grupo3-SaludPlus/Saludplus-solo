@@ -1,27 +1,52 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService, User } from '../../../services/auth.service';
-import { SharedAppointmentsService, AppointmentBase } from '../../../services/shared-appointments.service';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
+import { AppointmentsService } from '../../../services/appointments.service';
+import { User, Appointment } from '../../../services/api.service';
 import { Subscription } from 'rxjs';
+
+// ✅ INTERFACE SIMPLIFICADA
+interface EditableUser {
+  phone: string;
+  birthdate: string;
+  gender: 'M' | 'F' | 'O';
+  bloodType: string;
+  emergencyContact: string;
+  allergies: string[];
+  chronic: string[];
+}
 
 @Component({
   selector: 'app-patient-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './patient-dashboard.component.html',
-  styleUrl: './patient-dashboard.component.css'
+  styleUrls: ['./patient-dashboard.component.css'],
+  providers: [AuthService, AppointmentsService]
 })
 export class PatientDashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
-  editingUser: Partial<User> = {};
-  appointments: AppointmentBase[] = [];
-  upcomingAppointments: AppointmentBase[] = [];
+  
+  editingUser: EditableUser = {
+    phone: '',
+    birthdate: '',
+    gender: 'O',
+    bloodType: '',
+    emergencyContact: '',
+    allergies: [],
+    chronic: []
+  };
+  
+  appointments: Appointment[] = [];
+  upcomingAppointments: Appointment[] = [];
   isEditMode = false;
   allergiesText = '';
   chronicText = '';
   showProfileForm = false;
-  
+  isLoading: boolean = true;
+
   // Estadísticas calculadas
   totalAppointments = 0;
   completedAppointments = 0;
@@ -33,7 +58,7 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private appointmentsService: SharedAppointmentsService
+    private appointmentsService: AppointmentsService
   ) {}
 
   ngOnInit() {
@@ -42,18 +67,9 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
       if (user) {
         this.loadUserAppointments();
         this.setupEditingUser();
+        this.loadDashboardData();
       }
     });
-
-    // Cargar todas las citas para estadísticas
-    this.appointmentsSubscription = this.appointmentsService.getAllAppointments()
-      .subscribe((appointments: AppointmentBase[]) => {
-        this.upcomingAppointments = appointments.filter(apt => 
-          apt.patientName === this.currentUser?.name &&
-          (apt.status === 'scheduled' || apt.status === 'confirmed')
-        );
-        this.calculateStatistics();
-      });
   }
 
   ngOnDestroy() {
@@ -64,12 +80,12 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
   private loadUserAppointments() {
     if (!this.currentUser) return;
 
-    this.appointmentsService.getAllAppointments().subscribe((allAppointments: AppointmentBase[]) => {
-      this.appointments = allAppointments.filter((apt: AppointmentBase) => 
-        apt.patientName === this.currentUser?.name
-      );
-      this.calculateStatistics();
-    });
+    this.appointmentsService.getPatientAppointments(Number(this.currentUser.id))
+      .subscribe((appointments: Appointment[]) => {
+        this.appointments = appointments;
+        this.calculateStatistics();
+        this.isLoading = false;
+      });
   }
 
   private calculateStatistics() {
@@ -83,17 +99,34 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
 
   private setupEditingUser() {
     if (this.currentUser) {
-      this.editingUser = { 
-        ...this.currentUser,
+      const validGender = this.currentUser.gender === 'M' || this.currentUser.gender === 'F' || this.currentUser.gender === 'O' 
+        ? this.currentUser.gender 
+        : 'O';
+
+      this.editingUser = {
         phone: this.currentUser.phone || '',
         birthdate: this.currentUser.birthdate || '',
-        gender: this.currentUser.gender || 'O',
+        gender: validGender,
         bloodType: this.currentUser.bloodType || '',
-        emergencyContact: this.currentUser.emergencyContact || ''
+        emergencyContact: this.currentUser.emergencyContact || '',
+        allergies: this.currentUser.allergies || [],
+        chronic: this.currentUser.chronic || []
       };
       
-      this.allergiesText = this.currentUser.allergies?.join(', ') || '';
-      this.chronicText = this.currentUser.chronic?.join(', ') || '';
+      this.allergiesText = this.editingUser.allergies.join(', ');
+      this.chronicText = this.editingUser.chronic.join(', ');
+    } else {
+      this.editingUser = {
+        phone: '',
+        birthdate: '',
+        gender: 'O',
+        bloodType: '',
+        emergencyContact: '',
+        allergies: [],
+        chronic: []
+      };
+      this.allergiesText = '';
+      this.chronicText = '';
     }
   }
 
@@ -117,20 +150,30 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
   }
 
   saveProfile() {
-    if (!this.currentUser || !this.editingUser) return;
+    if (!this.currentUser) return;
 
     const allergies = this.allergiesText.split(',').map(a => a.trim()).filter(a => a);
     const chronic = this.chronicText.split(',').map(c => c.trim()).filter(c => c);
 
     const updatedUser: Partial<User> = {
-      ...this.editingUser,
+      phone: this.editingUser.phone,
+      birthdate: this.editingUser.birthdate,
+      gender: this.editingUser.gender,
+      bloodType: this.editingUser.bloodType,
+      emergencyContact: this.editingUser.emergencyContact,
       allergies,
       chronic: chronic
     };
 
-    this.authService.updateCurrentUser(updatedUser);
-    this.showProfileForm = false;
-    this.isEditMode = false;
+    this.authService.updateCurrentUser(updatedUser).subscribe({
+      next: () => {
+        this.showProfileForm = false;
+        this.isEditMode = false;
+      },
+      error: (error: any) => {
+        console.error('Error updating profile:', error);
+      }
+    });
   }
 
   cancelEdit() {
@@ -138,34 +181,63 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     this.setupEditingUser();
   }
 
-  // Funciones utilitarias para fechas
+  private loadDashboardData() {
+    if (!this.currentUser) return;
+    
+    this.appointmentsService.getPatientAppointments(Number(this.currentUser.id))
+      .subscribe({
+        next: (appointments: Appointment[]) => {
+          this.upcomingAppointments = appointments
+            .filter(apt => apt.status === 'scheduled' || apt.status === 'confirmed')
+            .slice(0, 3);
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          console.error('Error loading appointments:', error);
+          this.isLoading = false;
+        }
+      });
+  }
+
+  // ✅ MÉTODOS UTILITARIOS
   getDateDay(dateString: string): string {
-    const date = new Date(dateString);
-    return date.getDate().toString().padStart(2, '0');
+    try {
+      const date = new Date(dateString);
+      return date.getDate().toString().padStart(2, '0');
+    } catch {
+      return '01';
+    }
   }
 
   getDateMonth(dateString: string): string {
-    const date = new Date(dateString);
-    const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 
-                   'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
-    return months[date.getMonth()];
-  }
-
-  calculateAge(birthdate?: string): number | null {
-    if (!birthdate) return null;
-    const today = new Date();
-    const birth = new Date(birthdate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+    try {
+      const date = new Date(dateString);
+      const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 
+                     'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+      return months[date.getMonth()] || 'ENE';
+    } catch {
+      return 'ENE';
     }
-    
-    return age;
   }
 
-  getGenderText(gender?: string): string {
+  calculateAge(birthdate: string): number {
+    try {
+      const today = new Date();
+      const birth = new Date(birthdate);
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      
+      return age;
+    } catch {
+      return 0;
+    }
+  }
+
+  getGenderText(gender: string | undefined): string {
     switch (gender) {
       case 'M': return 'Masculino';
       case 'F': return 'Femenino';
@@ -212,5 +284,51 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
       case 'low': return 'Baja';
       default: return priority;
     }
+  }
+
+  // ✅ MÉTODOS HELPER PARA TEMPLATE
+  getUserName(): string {
+    return this.currentUser?.name || 'No especificado';
+  }
+
+  getUserEmail(): string {
+    return this.currentUser?.email || 'No especificado';
+  }
+
+  getUserPhone(): string {
+    return this.currentUser?.phone || 'No especificado';
+  }
+
+  getUserBirthdate(): string {
+    return this.currentUser?.birthdate || 'No especificado';
+  }
+
+  getUserAge(): string {
+    if (this.currentUser?.birthdate) {
+      return `${this.calculateAge(this.currentUser.birthdate)} años`;
+    }
+    return 'No especificado';
+  }
+
+  getUserBloodType(): string {
+    return this.currentUser?.bloodType || 'No especificado';
+  }
+
+  getUserEmergencyContact(): string {
+    return this.currentUser?.emergencyContact || 'No especificado';
+  }
+
+  getUserAllergies(): string {
+    if (this.currentUser?.allergies && this.currentUser.allergies.length > 0) {
+      return this.currentUser.allergies.join(', ');
+    }
+    return 'No registradas';
+  }
+
+  getUserChronic(): string {
+    if (this.currentUser?.chronic && this.currentUser.chronic.length > 0) {
+      return this.currentUser.chronic.join(', ');
+    }
+    return 'No registradas';
   }
 }

@@ -6,19 +6,21 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
 
-// Importar servicios
+// ✅ SOLO IMPORTAR SERVICIOS QUE EXISTEN
 import { AuthService } from './app/services/auth.service';
 import { ApiService } from './app/services/api.service';
-import { SharedAppointmentsService } from './app/services/shared-appointments.service';
+import { AppointmentsService } from './app/services/appointments.service';
+import { DoctorsService } from './app/services/doctors.service';
 
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
     
-    // Registrar servicios explícitamente
+    // ✅ REGISTRAR SOLO SERVICIOS QUE EXISTEN
     AuthService,
     ApiService,
-    SharedAppointmentsService
+    AppointmentsService,
+    DoctorsService
   ]
 }).catch(err => console.error(err));

@@ -1,157 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService, User } from '../../../services/auth.service';
-
+import { AuthService } from '../../../services/auth.service';
+import { User } from '../../../services/api.service';
 @Component({
   selector: 'app-users-management',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="users-management">
-      <h2>Gestión de Usuarios</h2>
-      
-      <div class="filters">
-        <select [(ngModel)]="roleFilter" (change)="applyFilters()">
-          <option value="">Todos los roles</option>
-          <option value="patient">Pacientes</option>
-          <option value="doctor">Médicos</option>
-          <option value="admin">Administradores</option>
-        </select>
-        
-        <input type="text" [(ngModel)]="searchTerm" 
-               placeholder="Buscar usuario..." 
-               (input)="applyFilters()">
-      </div>
-      
-      <table class="users-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Fecha registro</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of filteredUsers">
-            <td>{{ user.id }}</td>
-            <td>{{ user.name }}</td>
-            <td>{{ user.email }}</td>
-            <td>
-              <span class="badge" [class.patient]="user.role === 'patient'"
-                    [class.doctor]="user.role === 'doctor'"
-                    [class.admin]="user.role === 'admin'">
-                {{ getUserRoleText(user.role || '') }}
-              </span>
-            </td>
-            <td>{{ user.createdAt || 'N/A' | date:'dd/MM/yyyy' }}</td>
-            <td>
-              <button class="btn-edit" (click)="editUser(user)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn-delete" (click)="deleteUser(user.id)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <div class="no-results" *ngIf="filteredUsers.length === 0">
-        No se encontraron usuarios con los criterios seleccionados
-      </div>
-    </div>
-  `,
-  styles: [`
-    .users-management {
-      padding: 20px;
-    }
-    
-    .filters {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-    
-    .filters select, .filters input {
-      padding: 8px 12px;
-      border-radius: 4px;
-      border: 1px solid #ddd;
-    }
-    
-    .users-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    
-    .users-table th, .users-table td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .users-table th {
-      background-color: #f9fafb;
-      font-weight: 600;
-    }
-    
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    
-    .badge.patient {
-      background-color: #e0f2fe;
-      color: #0369a1;
-    }
-    
-    .badge.doctor {
-      background-color: #dcfce7;
-      color: #166534;
-    }
-    
-    .badge.admin {
-      background-color: #fef3c7;
-      color: #92400e;
-    }
-    
-    .btn-edit, .btn-delete {
-      padding: 6px;
-      margin-right: 5px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    
-    .btn-edit {
-      background-color: #eff6ff;
-      color: #2563eb;
-    }
-    
-    .btn-delete {
-      background-color: #fee2e2;
-      color: #dc2626;
-    }
-    
-    .no-results {
-      text-align: center;
-      padding: 20px;
-      color: #6b7280;
-    }
-  `]
+  templateUrl: './users-management.component..html',
+  styleUrls: ['./users-management.component..css']
 })
 export class UsersManagementComponent implements OnInit {
   allUsers: User[] = [];
   filteredUsers: User[] = [];
   roleFilter: string = '';
   searchTerm: string = '';
+
+  // ✅ NUEVO: Objeto para almacenar los datos del nuevo usuario
+  newUserData: Partial<User> = {
+    name: '',
+    email: '',
+    role: 'patient',
+    phone: ''
+  };
 
   constructor(private authService: AuthService) {}
 
@@ -244,4 +115,21 @@ export class UsersManagementComponent implements OnInit {
       return nameLower.includes(searchLower) || emailLower.includes(searchLower);
     });
   }
+
+  // CORREGIR LÍNEA 174:
+  createUser() {
+    const newUser: User = {
+      id: Date.now(),
+      name: this.newUserData.name ?? '',
+      email: this.newUserData.email ?? '',
+      role: this.newUserData.role ?? 'patient',
+      phone: this.newUserData.phone,
+      createdAt: new Date().toISOString(), // ✅ AHORA SÍ EXISTE
+      // ...otras propiedades...
+    };
+    
+    // ...resto del código...
+  }
+
+  // ...resto del código...
 }

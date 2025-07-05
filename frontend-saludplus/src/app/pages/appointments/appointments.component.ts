@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { DoctorsService, Doctor } from '../../services/doctors.service';
-import { AuthService, User } from '../../services/auth.service'; // Cambiar esta línea
+import { DoctorsService} from '../../services/doctors.service';
+import { Doctor } from '../../services/api.service';
+import { AuthService} from '../../services/auth.service';
+import { User } from '../../services/api.service';// Cambiar esta línea
 import { SharedAppointmentsService, AppointmentBase } from '../../services/shared-appointments.service';
 
 @Component({
@@ -77,7 +79,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   
   ngOnInit() {
     // Cargar médicos desde el servicio
-    this.doctorsService.getDoctors().subscribe(doctors => {
+    this.doctorsService.getAllDoctors().subscribe(doctors => {
       this.availableDoctors = doctors;
       
       // Extraer especialidades únicas de los médicos
@@ -293,12 +295,13 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
       let patientId: number;
       
       // Si el ID tiene formato "patient-XXX", extraer el número
-      if (typeof currentUser.id === 'string' && currentUser.id.includes('-')) {
-        const parts = currentUser.id.split('-');
+      let idStr: string = typeof currentUser.id === 'number' ? currentUser.id.toString() : (currentUser.id || '');
+      if (idStr.includes('-')) {
+        const parts = idStr.split('-');
         patientId = parseInt(parts[1], 10);
       } else {
         // Si es un ID simple, intentar convertirlo directamente
-        patientId = parseInt(currentUser.id as string, 10);
+        patientId = parseInt(idStr, 10);
       }
       
       // Verificar que el patientId sea válido

@@ -1,25 +1,17 @@
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-export const adminGuard = () => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
+export const AdminGuard: CanActivateFn = (route, state) => {
+  const auth = inject(AuthService);
 
-  if (authService.isLoggedIn() && authService.isAdmin()) {
-    return true;
-  } else {
-    if (authService.isLoggedIn()) {
-      // Redirigir según el rol
-      const role = authService.getUserRole();
-      if (role === 'doctor') {
-        router.navigate(['/doctor']);
-      } else if (role === 'patient') {
-        router.navigate(['/patient']);
-      }
-    } else {
-      router.navigate(['/login']);
-    }
+  if (!auth.isAuthenticated) {
+    // Aquí podrías redirigir al login si quieres
     return false;
   }
+  if (!auth.isAdmin()) {
+    // Aquí podrías redirigir a otra página si quieres
+    return false;
+  }
+  return true;
 };

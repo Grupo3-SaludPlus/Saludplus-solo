@@ -10,240 +10,248 @@
       </p>
     </div>
 
-    <!-- Pestañas de navegación -->
-    <div class="tabs-container">
-      <div class="tabs">
-        <button 
-          class="tab-btn" 
-          [class.active]="activeTab === 'upcoming'"
-          (click)="setActiveTab('upcoming')">
-          <i class="fas fa-clock"></i>
-          Próximas Citas
-          <span class="tab-count">{{ upcomingAppointments.length }}</span>
-        </button>
-        
-        <button 
-          class="tab-btn" 
-          [class.active]="activeTab === 'history'"
-          (click)="setActiveTab('history')">
-          <i class="fas fa-history"></i>
-          Historial
-          <span class="tab-count">{{ historyAppointments.length }}</span>
-        </button>
-        
-        <button 
-          class="tab-btn" 
-          [class.active]="activeTab === 'all'"
-          (click)="setActiveTab('all')">
-          <i class="fas fa-list"></i>
-          Todas
-          <span class="tab-count">{{ allAppointments.length }}</span>
-        </button>
-      </div>
-
-      <!-- Botón agendar nueva cita -->
-      <a routerLink="/appointments" class="new-appointment-btn">
-        <i class="fas fa-plus"></i>
-        Nueva Cita
-      </a>
-    </div>
-
-    <!-- Filtros y búsqueda -->
-    <div class="filters-section">
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input 
-          type="text" 
-          placeholder="Buscar por especialidad, doctor o motivo..."
-          [(ngModel)]="searchTerm"
-          (input)="applyFilters()">
-      </div>
-
-      <div class="filter-group">
-        <select 
-          [(ngModel)]="filterSpecialty" 
-          (change)="applyFilters()"
-          class="filter-select">
-          <option value="">Todas las especialidades</option>
-          <option 
-            *ngFor="let specialty of getUniqueSpecialties()" 
-            [value]="specialty">
-            {{ specialty }}
-          </option>
-        </select>
-
-        <select 
-          [(ngModel)]="filterDoctor" 
-          (change)="applyFilters()"
-          class="filter-select">
-          <option value="">Todos los doctores</option>
-          <option 
-            *ngFor="let doctor of getUniqueDoctors()" 
-            [value]="doctor">
-            {{ doctor }}
-          </option>
-        </select>
-
-        <button 
-          class="clear-filters-btn" 
-          (click)="clearFilters()"
-          *ngIf="filterSpecialty || filterDoctor || searchTerm">
-          <i class="fas fa-times"></i>
-          Limpiar Filtros
-        </button>
+    <!-- ✅ MOSTRAR LOADING -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p>Cargando citas...</p>
       </div>
     </div>
 
-    <!-- Lista de citas -->
-    <div class="appointments-container">
-      <div *ngIf="filteredAppointments.length === 0" class="no-appointments">
-        <div class="no-appointments-icon">
-          <i class="fas fa-calendar-times"></i>
+    <!-- ✅ CONTENIDO PRINCIPAL (solo mostrar cuando no esté cargando) -->
+    <div *ngIf="!isLoading">
+      <!-- Pestañas de navegación -->
+      <div class="tabs-container">
+        <div class="tabs">
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'upcoming'"
+            (click)="setActiveTab('upcoming')">
+            <i class="fas fa-clock"></i>
+            Próximas Citas
+            <span class="tab-count">{{ upcomingAppointments.length }}</span>
+          </button>
+          
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'history'"
+            (click)="setActiveTab('history')">
+            <i class="fas fa-history"></i>
+            Historial
+            <span class="tab-count">{{ historyAppointments.length }}</span>
+          </button>
+          
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'all'"
+            (click)="setActiveTab('all')">
+            <i class="fas fa-list"></i>
+            Todas
+            <span class="tab-count">{{ allAppointments.length }}</span>
+          </button>
         </div>
-        <h3>No se encontraron citas</h3>
-        <p *ngIf="activeTab === 'upcoming'">
-          No tienes citas programadas próximamente.
-        </p>
-        <p *ngIf="activeTab === 'history'">
-          No tienes historial de citas médicas.
-        </p>
-        <p *ngIf="activeTab === 'all' && (filterSpecialty || filterDoctor || searchTerm)">
-          No hay citas que coincidan con los filtros aplicados.
-        </p>
-        <p *ngIf="activeTab === 'all' && !filterSpecialty && !filterDoctor && !searchTerm">
-          Aún no tienes citas médicas registradas.
-        </p>
-        <a routerLink="/appointments" class="cta-btn">
+
+        <!-- Botón agendar nueva cita -->
+        <a routerLink="/create-appointment" class="new-appointment-btn">
           <i class="fas fa-plus"></i>
-          Agendar Primera Cita
+          Nueva Cita
         </a>
       </div>
 
-      <div class="appointments-grid" *ngIf="filteredAppointments.length > 0">
-        <div 
-          class="appointment-card" 
-          *ngFor="let appointment of filteredAppointments"
-          [class]="appointment.status">
-          
-          <!-- Header de la tarjeta -->
-          <div class="appointment-header">
-            <div class="appointment-date">
-              <span class="date-day">
-                {{ getDateDay(appointment.date) }}
-              </span>
-              <span class="date-month">
-                {{ getDateMonth(appointment.date) }}
-              </span>
-              <span class="date-year">
-                {{ getDateYear(appointment.date) }}
-              </span>
-            </div>
-            
-            <div class="appointment-time">
-              <i class="fas fa-clock"></i>
-              {{ appointment.time }}
-            </div>
-            
-            <div class="appointment-status">
-              <span 
-                class="status-badge" 
-                [style.background-color]="getStatusColor(appointment.status)">
-                {{ getStatusText(appointment.status) }}
-              </span>
-            </div>
-          </div>
+      <!-- Filtros y búsqueda -->
+      <div class="filters-section">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input 
+            type="text" 
+            placeholder="Buscar por especialidad, doctor o motivo..."
+            [(ngModel)]="searchTerm"
+            (input)="applyFilters()">
+        </div>
 
-          <!-- Contenido de la tarjeta -->
-          <div class="appointment-body">
-            <div class="appointment-specialty">
-              <i class="fas fa-stethoscope"></i>
-              <span>{{ appointment.specialty }}</span>
-            </div>
-            
-            <div class="appointment-doctor">
-              <i class="fas fa-user-md"></i>
-              <span>{{ appointment.doctor }}</span>
-            </div>
-            
-            <div class="appointment-location">
-              <i class="fas fa-map-marker-alt"></i>
-              <span>{{ appointment.location }}</span>
-            </div>
-            
-            <div class="appointment-reason">
-              <i class="fas fa-file-medical-alt"></i>
-              <span>{{ appointment.reason }}</span>
-            </div>
-          </div>
+        <div class="filter-group">
+          <select 
+            [(ngModel)]="filterSpecialty" 
+            (change)="applyFilters()"
+            class="filter-select">
+            <option value="">Todas las especialidades</option>
+            <option 
+              *ngFor="let specialty of getUniqueSpecialties()" 
+              [value]="specialty">
+              {{ specialty }}
+            </option>
+          </select>
 
-          <!-- Acciones de la tarjeta -->
-          <div class="appointment-actions" *ngIf="activeTab === 'upcoming'">
-            <button 
-              class="action-btn secondary"
-              (click)="rescheduleAppointment(appointment.id)"
-              [disabled]="appointment.status === 'cancelled'">
-              <i class="fas fa-calendar-edit"></i>
-              Reagendar
-            </button>
-            
-            <button 
-              class="action-btn danger"
-              (click)="cancelAppointment(appointment.id)"
-              [disabled]="!canCancel(appointment)">
-              <i class="fas fa-times"></i>
-              Cancelar
-            </button>
-          </div>
+          <select 
+            [(ngModel)]="filterDoctor" 
+            (change)="applyFilters()"
+            class="filter-select">
+            <option value="">Todos los doctores</option>
+            <option 
+              *ngFor="let doctor of getUniqueDoctors()" 
+              [value]="doctor">
+              {{ doctor }}
+            </option>
+          </select>
 
-          <!-- Agregar un enlace en las citas programadas para unirse a la consulta (cuando esté en progreso) -->
           <button 
-            *ngIf="appointment.status === 'in-progress'"
-            class="join-btn"
-            (click)="joinAppointment(appointment.id)">
-            <i class="fas fa-video"></i>
-            Unirse a la consulta
+            class="clear-filters-btn" 
+            (click)="clearFilters()"
+            *ngIf="filterSpecialty || filterDoctor || searchTerm">
+            <i class="fas fa-times"></i>
+            Limpiar Filtros
           </button>
+        </div>
+      </div>
 
-          <!-- Info adicional para historial -->
-          <div class="appointment-footer" *ngIf="activeTab === 'history'">
-            <small class="appointment-completed-date">
-              <i class="fas fa-calendar-check"></i>
-              {{ formatDate(appointment.date) }}
-            </small>
+      <!-- Lista de citas -->
+      <div class="appointments-container">
+        <div *ngIf="filteredAppointments.length === 0" class="no-appointments">
+          <div class="no-appointments-icon">
+            <i class="fas fa-calendar-times"></i>
+          </div>
+          <h3>No se encontraron citas</h3>
+          <p *ngIf="activeTab === 'upcoming'">
+            No tienes citas programadas próximamente.
+          </p>
+          <p *ngIf="activeTab === 'history'">
+            No tienes historial de citas médicas.
+          </p>
+          <p *ngIf="activeTab === 'all' && (filterSpecialty || filterDoctor || searchTerm)">
+            No hay citas que coincidan con los filtros aplicados.
+          </p>
+          <p *ngIf="activeTab === 'all' && !filterSpecialty && !filterDoctor && !searchTerm">
+            Aún no tienes citas médicas registradas.
+          </p>
+          <a routerLink="/create-appointment" class="cta-btn">
+            <i class="fas fa-plus"></i>
+            Agendar Primera Cita
+          </a>
+        </div>
+
+        <div class="appointments-grid" *ngIf="filteredAppointments.length > 0">
+          <div 
+            class="appointment-card" 
+            *ngFor="let appointment of filteredAppointments"
+            [class]="appointment.status">
+            
+            <!-- Header de la tarjeta -->
+            <div class="appointment-header">
+              <div class="appointment-date">
+                <span class="date-day">
+                  {{ getDateDay(appointment.date) }}
+                </span>
+                <span class="date-month">
+                  {{ getDateMonth(appointment.date) }}
+                </span>
+                <span class="date-year">
+                  {{ getDateYear(appointment.date) }}
+                </span>
+              </div>
+              
+              <div class="appointment-time">
+                <i class="fas fa-clock"></i>
+                {{ appointment.time }}
+              </div>
+              
+              <div class="appointment-status">
+                <span 
+                  class="status-badge" 
+                  [style.background-color]="getStatusColor(appointment.status)">
+                  {{ getStatusText(appointment.status) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Contenido de la tarjeta -->
+            <div class="appointment-body">
+              <div class="appointment-specialty">
+                <i class="fas fa-stethoscope"></i>
+                <span>{{ appointment.doctorSpecialty }}</span>
+              </div>
+              
+              <div class="appointment-doctor">
+                <i class="fas fa-user-md"></i>
+                <span>{{ appointment.doctorName }}</span>
+              </div>
+              
+              <div class="appointment-location">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ appointment.location }}</span>
+              </div>
+              
+              <div class="appointment-reason">
+                <i class="fas fa-file-medical-alt"></i>
+                <span>{{ appointment.reason }}</span>
+              </div>
+            </div>
+
+            <!-- Acciones de la tarjeta -->
+            <div class="appointment-actions" *ngIf="activeTab === 'upcoming'">
+              <button 
+                class="action-btn secondary"
+                (click)="rescheduleAppointment(appointment.id)"
+                [disabled]="appointment.status === 'cancelled'">
+                <i class="fas fa-calendar-edit"></i>
+                Reagendar
+              </button>
+              
+              <button 
+                class="action-btn danger"
+                (click)="cancelAppointment(appointment.id)"
+                [disabled]="!canCancel(appointment)">
+                <i class="fas fa-times"></i>
+                Cancelar
+              </button>
+            </div>
+
+            <button 
+              *ngIf="appointment.status === 'in-progress'"
+              class="join-btn"
+              (click)="joinAppointment(appointment.id)">
+              <i class="fas fa-video"></i>
+              Unirse a la consulta
+            </button>
+
+            <div class="appointment-footer" *ngIf="activeTab === 'history'">
+              <small class="appointment-completed-date">
+                <i class="fas fa-calendar-check"></i>
+                {{ formatDate(appointment.date) }}
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen de estadísticas -->
+      <div class="appointments-summary" *ngIf="filteredAppointments.length > 0">
+        <div class="summary-card">
+          <h4>Resumen de Citas</h4>
+          <div class="summary-stats">
+            <div class="stat-item">
+              <span class="stat-number">{{ upcomingAppointments.length }}</span>
+              <span class="stat-label">Próximas</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">{{ completedAppointmentsCount }}</span>
+              <span class="stat-label">Completadas</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">{{ cancelledAppointmentsCount }}</span>
+              <span class="stat-label">Canceladas</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Resumen de estadísticas -->
-    <div class="appointments-summary" *ngIf="filteredAppointments.length > 0">
-      <div class="summary-card">
-        <h4>Resumen de Citas</h4>
-        <div class="summary-stats">
-          <div class="stat-item">
-            <span class="stat-number">{{ upcomingAppointments.length }}</span>
-            <span class="stat-label">Próximas</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">{{ completedAppointmentsCount }}</span>
-            <span class="stat-label">Completadas</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">{{ cancelledAppointmentsCount }}</span>
-            <span class="stat-label">Canceladas</span>
-          </div>
-        </div>
+    <!-- Modal para reagendar cita -->
+    <div *ngIf="showRescheduleModal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Reagendar cita</h2>
+        <p>ID de cita: {{ selectedAppointmentId }}</p>
+        <button (click)="showRescheduleModal = false">Cerrar</button>
       </div>
     </div>
   </section>
-
-  <!-- Modal para reagendar cita -->
-  <div *ngIf="showRescheduleModal" class="modal-overlay">
-    <div class="modal-content">
-      <h2>Reagendar cita</h2>
-      <p>ID de cita: {{ selectedAppointmentId }}</p>
-      <!-- Aquí iría tu formulario de reagendar -->
-      <button (click)="showRescheduleModal = false">Cerrar</button>
-    </div>
-  </div>
 </main>

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Inject } from '@angular/core';
-import { AuthService, User } from '../../../services/auth.service';
+import { AuthService} from '../../../services/auth.service';
+import { User } from '../../../services/api.service';
 import { NotificationService } from '../../../admin/services/notification.service';
 
 interface Appointment {
@@ -72,7 +73,7 @@ export class AppointmentHistoryComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser.subscribe(user => {
+    this.authService.currentUser$.subscribe((user: User | null) => {
       this.currentUser = user;
       if (user) {
         // Determinar el rol del usuario

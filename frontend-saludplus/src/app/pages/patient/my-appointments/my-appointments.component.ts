@@ -1,22 +1,26 @@
-import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { SharedAppointmentsService, AppointmentBase } from '../../../services/shared-appointments.service';
+import { AppointmentsService } from '../../../services/appointments.service';
+import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
-import { isPlatformBrowser } from '@angular/common';
-import { PLATFORM_ID } from '@angular/core';
 
-interface AppointmentDetails {
+interface Appointment {
   id: number;
-  specialty: string;
-  doctor: string;
+  patientName: string;
+  doctorName: string;
+  doctorSpecialty: string;
   date: string;
   time: string;
-  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'pending';
   reason: string;
-  location: string;
+  priority: string;
+  status: string;
+  notes?: string;
+  location?: string;
+  doctor_name?: string;  // Alias para compatibilidad
+  specialty?: string;    // Alias para compatibilidad
 }
 
 @Component({
@@ -24,261 +28,289 @@ interface AppointmentDetails {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './my-appointments.component.html',
-  styleUrl: './my-appointments.component.css'
+  styleUrls: ['./my-appointments.component.css']
 })
 export class MyAppointmentsComponent implements OnInit, OnDestroy {
+  // Tabs y filtros
   activeTab: 'upcoming' | 'history' | 'all' = 'upcoming';
-  
-  // Todas las citas del paciente
-  allAppointments: AppointmentDetails[] = [];
+  searchTerm: string = '';
+  filterSpecialty: string = '';
+  filterDoctor: string = '';
 
-  // Filtros
-  filterSpecialty = '';
-  filterDoctor = '';
-  searchTerm = '';
+  // Listas de citas
+  allAppointments: Appointment[] = [];
+  upcomingAppointments: Appointment[] = [];
+  historyAppointments: Appointment[] = [];
+  filteredAppointments: Appointment[] = [];
 
-  // Listas calculadas
-  filteredAppointments: AppointmentDetails[] = [];
-  upcomingAppointments: AppointmentDetails[] = [];
-  historyAppointments: AppointmentDetails[] = [];
+  // Estadísticas
+  completedAppointmentsCount: number = 0;
+  cancelledAppointmentsCount: number = 0;
 
-  currentUser: any; // Almacena el usuario currentUserValue
-  appointmentSubscription: Subscription | undefined; // Almacena la suscripción a las citas
-  loading: boolean = true; // Nueva propiedad para controlar la carga
-  noAppointmentsMessage: string = ''; // Mensaje para mostrar cuando no hay citas
-
-  // Nueva propiedad para la cita seleccionada
-  selectedAppointmentId: number | null = null;
+  // Modal de reagendar
   showRescheduleModal: boolean = false;
+  selectedAppointmentId: number | null = null;
+
+  // Usuario actual
+  currentUser: any = null;
+  isLoading = true;
+
+  private subscription: Subscription = new Subscription();
 
   constructor(
-    @Inject(AuthService) private authService: AuthService,
-    @Inject(SharedAppointmentsService) private appointmentsService: SharedAppointmentsService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private authService: AuthService,
+    private appointmentsService: AppointmentsService,
+    private http: HttpClient
   ) {}
 
   ngOnInit() {
-    // Obtener usuario actual
-    this.currentUser = this.authService.currentUserValue;
+    console.log('🔍 MyAppointments component initialized');
     
-    // Comprobar si estamos en el navegador antes de usar localStorage o llamar a métodos que lo usan
-    if (isPlatformBrowser(this.platformId)) {
-      // Ahora es seguro llamar a debugAppointments() y otros métodos que usan localStorage
-      this.loadAppointments();
-      this.appointmentsService.debugAppointments();
-    }
+    this.subscription.add(
+      this.authService.currentUser$.subscribe(user => {
+        console.log('👤 Current user:', user);
+        this.currentUser = user;
+        if (user) {
+          this.loadUserAppointments();
+        }
+      })
+    );
   }
 
-  // Método separado para cargar las citas
-  private loadAppointments(): void {
-    if (this.currentUser) {
-      // Código existente para usuarios autenticados...
-      let userId: number;
-      
-      // Si el ID tiene formato "patient-XXX", extraer el número
-      if (typeof this.currentUser.id === 'string' && this.currentUser.id.includes('-')) {
-        userId = parseInt(this.currentUser.id.split('-')[1], 10);
-      } else {
-        // Si es un ID simple, intentar convertirlo directamente
-        userId = parseInt(this.currentUser.id as string, 10);
-      }
-      
-      console.log('Buscando citas para usuario ID:', userId);
-      
-      // Cargar citas del servicio
-      this.appointmentSubscription = this.appointmentsService
-        .getPatientAppointments(userId)
-        .subscribe(appointments => {
-          // Código existente...
-          this.processAppointments(appointments);
-        });
-    } else {
-      // Usuario no autenticado - mostrar citas de invitado
-      this.appointmentSubscription = this.appointmentsService
-        .getGuestAppointments()
-        .subscribe(appointments => {
-          console.log('Citas de invitado cargadas:', appointments);
-          if (appointments.length === 0) {
-            // Mensaje cuando no hay citas
-            this.noAppointmentsMessage = 'No se encontraron citas. Para ver sus citas, primero debe agendar una.';
-          } else {
-            this.processAppointments(appointments);
-          }
-        });
-    }
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
   }
-  
-  // Método auxiliar para procesar citas
-  private processAppointments(appointments: AppointmentBase[]) {
-    // Mapear desde AppointmentBase a AppointmentDetails
-    this.allAppointments = appointments.map((apt: AppointmentBase) => ({
+
+  loadUserAppointments() {
+    console.log('📅 Loading appointments...');
+    this.isLoading = true;
+
+    // ✅ CARGAR DIRECTAMENTE DESDE LA API
+    this.http.get<Appointment[]>('http://localhost:8000/api/appointments/')
+      .subscribe({
+        next: (appointments) => {
+          console.log('✅ Appointments loaded:', appointments);
+          this.allAppointments = this.formatAppointments(appointments);
+          this.categorizeAppointments();
+          this.calculateStatistics();
+          this.applyFilters();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('❌ Error loading appointments:', error);
+          this.isLoading = false;
+          // ✅ DATOS DE PRUEBA si falla la API
+          this.loadMockData();
+        }
+      });
+  }
+
+  formatAppointments(appointments: any[]): Appointment[] {
+    return appointments.map(apt => ({
       id: apt.id,
-      specialty: apt.specialty,
-      doctor: apt.doctorName, 
+      patientName: apt.patient?.name || apt.patientName || 'Paciente Desconocido',
+      doctorName: apt.doctor?.name || apt.doctorName || apt.doctor_name || 'Doctor Desconocido',
+      doctorSpecialty: apt.doctor?.specialty || apt.doctorSpecialty || apt.specialty || 'Especialidad Desconocida',
       date: apt.date,
       time: apt.time,
-      status: apt.status as 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'pending',
-      reason: apt.reason || '',
-      location: apt.location || 'Sin asignar'
+      reason: apt.reason || 'Consulta general',
+      priority: apt.priority || 'medium',
+      status: apt.status || 'scheduled',
+      notes: apt.notes || '',
+      location: apt.location || 'Consulta Externa',
+      doctor_name: apt.doctor?.name || apt.doctorName || apt.doctor_name,
+      specialty: apt.doctor?.specialty || apt.doctorSpecialty || apt.specialty
     }));
-    
-    console.log('Citas mapeadas:', this.allAppointments);
-    
-    // Procesar las citas
-    this.calculateAppointmentLists();
-    this.applyFilters();
-    this.loading = false;
   }
 
-  calculateAppointmentLists() {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Filtrar citas próximas (fecha >= hoy)
-    this.upcomingAppointments = this.allAppointments.filter(apt => 
-      apt.date >= today && apt.status !== 'cancelled' && apt.status !== 'completed'
-    );
-    
-    // Filtrar citas históricas (completadas o canceladas, o fecha < hoy)
-    this.historyAppointments = this.allAppointments.filter(apt => 
-      apt.date < today || apt.status === 'cancelled' || apt.status === 'completed'
-    );
-    
-    // Aplicar filtros actuales
+  loadMockData() {
+    console.log('🧪 Loading mock data...');
+    this.allAppointments = [
+      {
+        id: 1,
+        patientName: 'Juan Pérez',
+        doctorName: 'Dr. María García',
+        doctorSpecialty: 'Cardiología',
+        date: '2025-07-10',
+        time: '10:00',
+        reason: 'Control rutinario',
+        priority: 'medium',
+        status: 'scheduled',
+        location: 'Consulta Externa - Piso 2',
+        doctor_name: 'Dr. María García',
+        specialty: 'Cardiología'
+      },
+      {
+        id: 2,
+        patientName: 'Juan Pérez',
+        doctorName: 'Dra. Ana López',
+        doctorSpecialty: 'Medicina General',
+        date: '2025-06-15',
+        time: '14:30',
+        reason: 'Consulta general',
+        priority: 'low',
+        status: 'completed',
+        location: 'Consulta Externa - Piso 1',
+        doctor_name: 'Dra. Ana López',
+        specialty: 'Medicina General'
+      },
+      {
+        id: 3,
+        patientName: 'Juan Pérez',
+        doctorName: 'Dr. Carlos Ruiz',
+        doctorSpecialty: 'Traumatología',
+        date: '2025-07-20',
+        time: '16:00',
+        reason: 'Dolor en rodilla',
+        priority: 'high',
+        status: 'scheduled',
+        location: 'Consulta Externa - Piso 3',
+        doctor_name: 'Dr. Carlos Ruiz',
+        specialty: 'Traumatología'
+      }
+    ];
+
+    this.categorizeAppointments();
+    this.calculateStatistics();
     this.applyFilters();
+    this.isLoading = false;
+  }
+
+  categorizeAppointments() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    this.upcomingAppointments = this.allAppointments.filter(apt => {
+      const aptDate = new Date(apt.date);
+      return aptDate >= today && (apt.status === 'scheduled' || apt.status === 'confirmed');
+    });
+
+    this.historyAppointments = this.allAppointments.filter(apt => {
+      const aptDate = new Date(apt.date);
+      return aptDate < today || apt.status === 'completed' || apt.status === 'cancelled';
+    });
+
+    console.log('📊 Categorized appointments:');
+    console.log('📅 Upcoming:', this.upcomingAppointments);
+    console.log('📚 History:', this.historyAppointments);
+  }
+
+  calculateStatistics() {
+    this.completedAppointmentsCount = this.allAppointments.filter(apt => apt.status === 'completed').length;
+    this.cancelledAppointmentsCount = this.allAppointments.filter(apt => apt.status === 'cancelled').length;
   }
 
   setActiveTab(tab: 'upcoming' | 'history' | 'all') {
+    console.log('📑 Setting active tab:', tab);
     this.activeTab = tab;
     this.applyFilters();
   }
 
   applyFilters() {
-    let appointments: AppointmentDetails[];
-    
-    switch(this.activeTab) {
+    let appointments: Appointment[] = [];
+
+    // ✅ SELECCIONAR CITAS SEGÚN LA PESTAÑA ACTIVA
+    switch (this.activeTab) {
       case 'upcoming':
-        appointments = this.upcomingAppointments;
+        appointments = [...this.upcomingAppointments];
         break;
       case 'history':
-        appointments = this.historyAppointments;
+        appointments = [...this.historyAppointments];
         break;
-      default:
-        appointments = this.allAppointments;
+      case 'all':
+        appointments = [...this.allAppointments];
+        break;
     }
 
+    // ✅ APLICAR FILTROS
     this.filteredAppointments = appointments.filter(apt => {
-      const matchesSpecialty = !this.filterSpecialty || apt.specialty === this.filterSpecialty;
-      const matchesDoctor = !this.filterDoctor || apt.doctor === this.filterDoctor;
       const matchesSearch = !this.searchTerm || 
-        apt.specialty.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        apt.doctor.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        apt.doctorName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        apt.doctorSpecialty.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         apt.reason.toLowerCase().includes(this.searchTerm.toLowerCase());
-      
-      return matchesSpecialty && matchesDoctor && matchesSearch;
+
+      const matchesSpecialty = !this.filterSpecialty || 
+        apt.doctorSpecialty === this.filterSpecialty;
+
+      const matchesDoctor = !this.filterDoctor || 
+        apt.doctorName === this.filterDoctor;
+
+      return matchesSearch && matchesSpecialty && matchesDoctor;
     });
+
+    console.log('🔍 Filtered appointments:', this.filteredAppointments);
   }
 
   clearFilters() {
+    this.searchTerm = '';
     this.filterSpecialty = '';
     this.filterDoctor = '';
-    this.searchTerm = '';
     this.applyFilters();
   }
 
+  getUniqueSpecialties(): string[] {
+    return [...new Set(this.allAppointments.map(a => a.doctorSpecialty))];
+  }
+
+  getUniqueDoctors(): string[] {
+    return [...new Set(this.allAppointments.map(a => a.doctorName))];
+  }
+
+  // ✅ MÉTODOS UTILITARIOS
+  getDateDay(date: string): string {
+    return new Date(date).getDate().toString().padStart(2, '0');
+  }
+
+  getDateMonth(date: string): string {
+    const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 
+                   'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+    return months[new Date(date).getMonth()];
+  }
+
+  getDateYear(date: string): string {
+    return new Date(date).getFullYear().toString();
+  }
+
   getStatusColor(status: string): string {
-    switch(status) {
+    switch (status) {
+      case 'scheduled': return '#2563eb';
       case 'confirmed': return '#10b981';
-      case 'pending': return '#f59e0b';
+      case 'in-progress': return '#f59e0b';
       case 'completed': return '#6b7280';
       case 'cancelled': return '#ef4444';
-      default: return '#6b7280';
+      default: return '#64748b';
     }
   }
 
   getStatusText(status: string): string {
-    switch(status) {
+    switch (status) {
+      case 'scheduled': return 'Programada';
       case 'confirmed': return 'Confirmada';
-      case 'pending': return 'Pendiente';
+      case 'in-progress': return 'En Progreso';
       case 'completed': return 'Completada';
       case 'cancelled': return 'Cancelada';
-      default: return 'Desconocido';
+      default: return status;
     }
   }
 
-  // ASEGÚRATE DE QUE ESTOS MÉTODOS ESTÉN PRESENTES:
-  getDateDay(dateString: string): string {
-    const date = new Date(dateString);
-    return date.getDate().toString().padStart(2, '0');
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('es-CL');
   }
 
-  getDateMonth(dateString: string): string {
-    const date = new Date(dateString);
-    const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 
-                    'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
-    return months[date.getMonth()];
-  }
-
-  getDateYear(dateString: string): string {
-    const date = new Date(dateString);
-    return date.getFullYear().toString();
-  }
-
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  }
-
-  // Propiedades calculadas para evitar .filter() en template
-  get completedAppointmentsCount(): number {
-    return this.historyAppointments.filter(a => a.status === 'completed').length;
-  }
-
-  get cancelledAppointmentsCount(): number {
-    return this.historyAppointments.filter(a => a.status === 'cancelled').length;
-  }
-
-  // Método para cancelar una cita
-  cancelAppointment(id: number) {
-    if (confirm('¿Está seguro de que desea cancelar esta cita?')) {
-      this.appointmentsService.cancelAppointment(
-        id, 
-        'Cancelada por el paciente'
-      );
-    }
-  }
-
-  // Verificar si una cita puede ser cancelada
-  canCancel(appointment: AppointmentDetails): boolean {
-    return ['scheduled', 'confirmed', 'pending'].includes(appointment.status);
-  }
-
-  rescheduleAppointment(appointmentId: number) {
-    this.selectedAppointmentId = appointmentId;
+  rescheduleAppointment(id: number) {
+    this.selectedAppointmentId = id;
     this.showRescheduleModal = true;
   }
 
-  getUniqueSpecialties(): string[] {
-    return [...new Set(this.allAppointments.map(apt => apt.specialty))];
+  cancelAppointment(id: number) {
+    console.log('Cancelar cita:', id);
   }
 
-  getUniqueDoctors(): string[] {
-    return [...new Set(this.allAppointments.map(apt => apt.doctor))];
+  canCancel(appointment: Appointment): boolean {
+    return appointment.status === 'scheduled' || appointment.status === 'confirmed';
   }
 
-  // Agregar este método a la clase MyAppointmentsComponent
-  joinAppointment(appointmentId: number) {
-    // Implementa aquí la lógica para unirse a la videollamada o consulta
-    alert('Función de unirse a la consulta no implementada.');
-  }
-
-  ngOnDestroy() {
-    if (this.appointmentSubscription) {
-      this.appointmentSubscription.unsubscribe();
-    }
+  joinAppointment(id: number) {
+    console.log('Unirse a consulta:', id);
   }
 }

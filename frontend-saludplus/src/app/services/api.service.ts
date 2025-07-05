@@ -1,121 +1,80 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { catchError, tap, map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+// Interfaces base
 export interface ApiResponse<T> {
-  data?: T;
+  success: boolean;
+  data: T;
   message?: string;
-  error?: string;
+  errors?: any;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: 'patient' | 'doctor' | 'admin';
+  phone?: string;
+  birthdate?: string;
+  gender?: 'M' | 'F' | 'O';
+  bloodType?: string;
+  allergies?: string[];
+  chronic?: string[];
+  emergencyContact?: string;
+  createdAt?: string;
+  specialty?: string;
+  profile?: any;
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
-  user_type: 'patient' | 'doctor' | 'admin';
+  user_type?: 'patient' | 'doctor' | 'admin';
 }
 
 export interface RegisterRequest {
   name: string;
   email: string;
   password: string;
-  role: 'patient' | 'doctor';
-  specialty?: string;
+  phone: string;
+  role: 'patient' | 'doctor' | 'admin';
+  gender?: 'M' | 'F' | 'O';
+  birthdate?: string;
 }
 
-export interface Patient {
+export interface Appointment {
   id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  age?: number;
-  gender: 'M' | 'F' | 'O';
-  address?: string;
-  medical_history?: string;
-  allergies?: string;
-  emergency_contact?: string;
-  priority_level: 'low' | 'medium' | 'high' | 'urgent';
-  is_active: boolean;
+  patient_id: number;
+  doctor_id: number;
+  patient_name: string;
+  doctor_name: string;
+  specialty: string;
+  date: string;
+  time: string;
+  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+  reason: string;
+  location: string;
+  notes?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   created_at: string;
-  updated_at: string;
-  total_appointments?: number;
-  pending_appointments?: number;
-  next_appointment_date?: string;
-  age_group?: string;
 }
 
 export interface Doctor {
   id: number;
   name: string;
-  email: string;
-  phone?: string;
   specialty: string;
-  specialty_display?: string;
-  license_number: string;
-  experience_years: number;
-  education?: string;
-  consultation_fee: number;
-  is_available: boolean;
-  rating: number;
-  created_at: string;
-  updated_at: string;
-  total_appointments?: number;
-  appointments_today?: number;
-  average_rating?: number;
-  availability_status?: string;
-}
-
-export interface Appointment {
-  id: number;
-  patient: number;
-  patient_name?: string;
-  doctor: number;
-  doctor_name?: string;
-  doctor_specialty?: string;
-  date: string;
-  time: string;
-  reason: string;
-  appointment_type: 'consultation' | 'follow_up' | 'emergency' | 'routine';
-  type_display?: string;
-  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show' | 'rescheduled';
-  status_display?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  priority_display?: string;
-  notes?: string;
-  patient_notes?: string;
-  location?: string;
-  duration_minutes: number;
-  duration_hours?: number;
-  diagnosis?: string;
-  treatment?: string;
-  prescription?: string;
+  email: string;
+  phone: string;
+  license_number?: string;
+  experience_years?: number;
   rating?: number;
-  guestId: string;
-  created_at: string;
-  updated_at: string;
-  is_today?: boolean;
-  is_past_due?: boolean;
-  time_until?: string;
-  can_cancel?: boolean;
-}
-
-export interface DashboardStats {
-  patients: {
-    total: number;
-    active: number;
-    new_this_month: number;
-  };
-  doctors: {
-    total: number;
-    available: number;
-    specialties: Array<{specialty: string, count: number}>;
-  };
-  appointments: {
-    total: number;
-    today: number;
-    pending: number;
-    completed_this_month: number;
-    by_status: Array<{status: string, count: number}>;
-  };
+  profile_image?: string;
+  bio?: string;
+  availability?: string;
+  consultation_fee?: number;
+  department?: string;
 }
 
 @Injectable({
@@ -123,197 +82,255 @@ export interface DashboardStats {
 })
 export class ApiService {
   private baseUrl = 'http://localhost:8000/api';
-  private tokenSubject = new BehaviorSubject<string | null>(localStorage.getItem('token'));
-  private userSubject = new BehaviorSubject<any>(null);
-
+  
+  // Estado de autenticación
+  private tokenSubject = new BehaviorSubject<string | null>(this.getStoredToken());
+  private userSubject = new BehaviorSubject<User | null>(this.getStoredUser());
+  
   public token$ = this.tokenSubject.asObservable();
   public user$ = this.userSubject.asObservable();
 
-  constructor(private http: HttpClient) {
-    // Cargar usuario si hay token
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    if (token && user) {
-      this.tokenSubject.next(token);
-      this.userSubject.next(JSON.parse(user));
+  constructor(private http: HttpClient) {}
+
+  // **UTILIDADES PRIVADAS**
+  private getStoredToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth_token');
     }
+    return null;
+  }
+
+  private getStoredUser(): User | null {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem('user_data');
+      return userData ? JSON.parse(userData) : null;
+    }
+    return null;
   }
 
   private getHeaders(): HttpHeaders {
     const token = this.tokenSubject.value;
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Token ${token}` })
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json'
     });
+    
+    if (token) {
+      headers = headers.set('Authorization', `Token ${token}`);
+    }
+    
+    return headers;
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    console.error('API Error:', error);
+    
+    let errorMessage = 'Ha ocurrido un error';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Error del cliente
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Error del servidor
+      if (error.status === 401) {
+        this.logout();
+        errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+      } else if (error.status === 403) {
+        errorMessage = 'No tienes permisos para realizar esta acción.';
+      } else if (error.status === 404) {
+        errorMessage = 'Recurso no encontrado.';
+      } else if (error.status === 500) {
+        errorMessage = 'Error interno del servidor.';
+      } else if (error.error?.message) {
+        errorMessage = error.error.message;
+      } else if (error.error?.error) {
+        errorMessage = error.error.error;
+      }
+    }
+    
+    return throwError(() => new Error(errorMessage));
   }
 
   // **AUTENTICACIÓN**
   login(credentials: LoginRequest): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/login/`, credentials);
+    return this.http.post<any>(`${this.baseUrl}/auth/login/`, credentials).pipe(
+      tap(response => {
+        if (response.token && response.user) {
+          this.setAuthData(response.token, response.user);
+        }
+      }),
+      catchError(this.handleError.bind(this))
+    );
   }
 
   register(userData: RegisterRequest): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/register/`, userData);
+    return this.http.post<any>(`${this.baseUrl}/auth/register/`, userData).pipe(
+      tap(response => {
+        if (response.token && response.user) {
+          this.setAuthData(response.token, response.user);
+        }
+      }),
+      catchError(this.handleError.bind(this))
+    );
   }
 
   logout(): Observable<any> {
     const headers = this.getHeaders();
-    return this.http.post(`${this.baseUrl}/auth/logout/`, {}, { headers });
+    return this.http.post(`${this.baseUrl}/auth/logout/`, {}, { headers }).pipe(
+      tap(() => this.clearAuthData()),
+      catchError(() => {
+        // Incluso si falla el logout del servidor, limpiar datos locales
+        this.clearAuthData();
+        return throwError(() => new Error('Error al cerrar sesión'));
+      })
+    );
   }
 
-  getProfile(): Observable<any> {
-    const headers = this.getHeaders();
-    return this.http.get(`${this.baseUrl}/auth/profile/`, { headers });
-  }
-
-  setAuthData(token: string, user: any): void {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
+  setAuthData(token: string, user: User): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_data', JSON.stringify(user));
+    }
+    
     this.tokenSubject.next(token);
     this.userSubject.next(user);
   }
 
   clearAuthData(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+    }
+    
     this.tokenSubject.next(null);
     this.userSubject.next(null);
+  }
+
+  getCurrentUser(): User | null {
+    return this.userSubject.value;
+  }
+
+  getCurrentToken(): string | null {
+    return this.tokenSubject.value;
   }
 
   isAuthenticated(): boolean {
     return !!this.tokenSubject.value;
   }
 
-  // **PACIENTES**
-  getPatients(params?: any): Observable<Patient[]> {
-    const headers = this.getHeaders();
-    const queryParams = params ? '?' + new URLSearchParams(params).toString() : '';
-    return this.http.get<Patient[]>(`${this.baseUrl}/patients/${queryParams}`, { headers });
-  }
-
-  getPatient(id: number): Observable<Patient> {
-    const headers = this.getHeaders();
-    return this.http.get<Patient>(`${this.baseUrl}/patients/${id}/`, { headers });
-  }
-
-  createPatient(patient: Partial<Patient>): Observable<Patient> {
-    const headers = this.getHeaders();
-    return this.http.post<Patient>(`${this.baseUrl}/patients/`, patient, { headers });
-  }
-
-  updatePatient(id: number, patient: Partial<Patient>): Observable<Patient> {
-    const headers = this.getHeaders();
-    return this.http.put<Patient>(`${this.baseUrl}/patients/${id}/`, patient, { headers });
-  }
-
-  deletePatient(id: number): Observable<any> {
-    const headers = this.getHeaders();
-    return this.http.delete(`${this.baseUrl}/patients/${id}/`, { headers });
-  }
-
-  getPatientAppointments(id: number): Observable<Appointment[]> {
-    const headers = this.getHeaders();
-    return this.http.get<Appointment[]>(`${this.baseUrl}/patients/${id}/appointments/`, { headers });
-  }
-
-  getPatientMedicalSummary(id: number): Observable<any> {
-    const headers = this.getHeaders();
-    return this.http.get(`${this.baseUrl}/patients/${id}/medical_summary/`, { headers });
-  }
-
-  // **DOCTORES**
-  getDoctors(params?: any): Observable<Doctor[]> {
-    const headers = this.getHeaders();
-    const queryParams = params ? '?' + new URLSearchParams(params).toString() : '';
-    return this.http.get<Doctor[]>(`${this.baseUrl}/doctors/${queryParams}`, { headers });
-  }
-
-  getDoctor(id: number): Observable<Doctor> {
-    const headers = this.getHeaders();
-    return this.http.get<Doctor>(`${this.baseUrl}/doctors/${id}/`, { headers });
-  }
-
-  createDoctor(doctor: Partial<Doctor>): Observable<Doctor> {
-    const headers = this.getHeaders();
-    return this.http.post<Doctor>(`${this.baseUrl}/doctors/`, doctor, { headers });
-  }
-
-  updateDoctor(id: number, doctor: Partial<Doctor>): Observable<Doctor> {
-    const headers = this.getHeaders();
-    return this.http.put<Doctor>(`${this.baseUrl}/doctors/${id}/`, doctor, { headers });
-  }
-
-  deleteDoctor(id: number): Observable<any> {
-    const headers = this.getHeaders();
-    return this.http.delete(`${this.baseUrl}/doctors/${id}/`, { headers });
-  }
-
-  getDoctorSchedule(id: number, date?: string): Observable<any> {
-    const headers = this.getHeaders();
-    const params = date ? `?date=${date}` : '';
-    return this.http.get(`${this.baseUrl}/doctors/${id}/schedule/${params}`, { headers });
-  }
-
-  getDoctorStatistics(id: number): Observable<any> {
-    const headers = this.getHeaders();
-    return this.http.get(`${this.baseUrl}/doctors/${id}/statistics/`, { headers });
-  }
-
-  // **CITAS**
+  // **CITAS MÉDICAS**
   getAppointments(params?: any): Observable<Appointment[]> {
     const headers = this.getHeaders();
-    const queryParams = params ? '?' + new URLSearchParams(params).toString() : '';
-    return this.http.get<Appointment[]>(`${this.baseUrl}/appointments/${queryParams}`, { headers });
+    let url = `${this.baseUrl}/appointments/`;
+    
+    if (params) {
+      const queryParams = new URLSearchParams(params).toString();
+      url += `?${queryParams}`;
+    }
+    
+    return this.http.get<Appointment[]>(url, { headers }).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
   getAppointment(id: number): Observable<Appointment> {
     const headers = this.getHeaders();
-    return this.http.get<Appointment>(`${this.baseUrl}/appointments/${id}/`, { headers });
+    return this.http.get<Appointment>(`${this.baseUrl}/appointments/${id}/`, { headers }).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
   createAppointment(appointment: Partial<Appointment>): Observable<Appointment> {
     const headers = this.getHeaders();
-    return this.http.post<Appointment>(`${this.baseUrl}/appointments/`, appointment, { headers });
+    return this.http.post<Appointment>(`${this.baseUrl}/appointments/`, appointment, { headers }).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
   updateAppointment(id: number, appointment: Partial<Appointment>): Observable<Appointment> {
     const headers = this.getHeaders();
-    return this.http.put<Appointment>(`${this.baseUrl}/appointments/${id}/`, appointment, { headers });
+    return this.http.patch<Appointment>(`${this.baseUrl}/appointments/${id}/`, appointment, { headers }).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
   deleteAppointment(id: number): Observable<any> {
     const headers = this.getHeaders();
-    return this.http.delete(`${this.baseUrl}/appointments/${id}/`, { headers });
+    return this.http.delete(`${this.baseUrl}/appointments/${id}/`, { headers }).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
-  confirmAppointment(id: number): Observable<any> {
-    const headers = this.getHeaders();
-    return this.http.post(`${this.baseUrl}/appointments/${id}/confirm/`, {}, { headers });
+  // **DOCTORES**
+  getDoctors(): Observable<Doctor[]> {
+    return this.http.get<Doctor[]>(`${this.baseUrl}/doctors/`).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
-  cancelAppointment(id: number): Observable<any> {
-    const headers = this.getHeaders();
-    return this.http.post(`${this.baseUrl}/appointments/${id}/cancel/`, {}, { headers });
+  getDoctor(id: number): Observable<Doctor> {
+    return this.http.get<Doctor>(`${this.baseUrl}/doctors/${id}/`).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
-  completeAppointment(id: number, data: any): Observable<any> {
+  createDoctor(doctor: Partial<Doctor>): Observable<Doctor> {
     const headers = this.getHeaders();
-    return this.http.post(`${this.baseUrl}/appointments/${id}/complete/`, data, { headers });
+    return this.http.post<Doctor>(`${this.baseUrl}/doctors/`, doctor, { headers }).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
-  getTodayAppointments(): Observable<Appointment[]> {
+  updateDoctor(id: number, doctor: Partial<Doctor>): Observable<Doctor> {
     const headers = this.getHeaders();
-    return this.http.get<Appointment[]>(`${this.baseUrl}/appointments/today/`, { headers });
+    return this.http.patch<Doctor>(`${this.baseUrl}/doctors/${id}/`, doctor, { headers }).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
-  getUpcomingAppointments(): Observable<Appointment[]> {
+  deleteDoctor(id: number): Observable<void> {
     const headers = this.getHeaders();
-    return this.http.get<Appointment[]>(`${this.baseUrl}/appointments/upcoming/`, { headers });
+    return this.http.delete<void>(`${this.baseUrl}/doctors/${id}/`, { headers }).pipe(
+      catchError(this.handleError.bind(this))
+    );
   }
 
-  // **DASHBOARD Y ESTADÍSTICAS**
-  getDashboardStats(): Observable<DashboardStats> {
+  // **PERFIL DE USUARIO**
+  getProfile(): Observable<User> {
     const headers = this.getHeaders();
-    return this.http.get<DashboardStats>(`${this.baseUrl}/dashboard/stats/`, { headers });
+    return this.http.get<User>(`${this.baseUrl}/auth/profile/`, { headers }).pipe(
+      tap(user => this.userSubject.next(user)),
+      catchError(this.handleError.bind(this))
+    );
+  }
+
+  updateProfile(profile: Partial<User>): Observable<User> {
+    const headers = this.getHeaders();
+    return this.http.patch<User>(`${this.baseUrl}/auth/profile/`, profile, { headers }).pipe(
+      tap(user => this.userSubject.next(user)),
+      catchError(this.handleError.bind(this))
+    );
+  }
+
+  // **ESTADÍSTICAS Y DASHBOARD**
+  getDashboardStats(): Observable<any> {
+    const headers = this.getHeaders();
+    return this.http.get<any>(`${this.baseUrl}/dashboard/stats/`, { headers }).pipe(
+      catchError(this.handleError.bind(this))
+    );
+  }
+
+  // **VALIDAR TOKEN**
+  validateToken(): Observable<boolean> {
+    if (!this.isAuthenticated()) {
+      return throwError(() => new Error('No hay token'));
+    }
+    
+    return this.getProfile().pipe(
+      map(() => true), // ✅ CORREGIR: retornar boolean
+      catchError(() => {
+        this.clearAuthData();
+        return throwError(() => new Error('Token inválido'));
+      })
+    );
   }
 }

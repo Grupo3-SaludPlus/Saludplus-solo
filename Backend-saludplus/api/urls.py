@@ -3,22 +3,34 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register(r'patients', views.PatientViewSet)
-router.register(r'doctors', views.DoctorViewSet)
-router.register(r'appointments', views.AppointmentViewSet)
+# ✅ COMENTAR TEMPORALMENTE: Estas rutas del router causan conflicto
+# router.register(r'patients', views.PatientViewSet)
+# router.register(r'doctors', views.DoctorViewSet)
+# router.register(r'appointments', views.AppointmentViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    
-    # Autenticación
-    path('auth/login/', views.AuthLoginView.as_view(), name='auth-login'),
-    path('auth/register/', views.AuthRegisterView.as_view(), name='auth-register'),
-    path('auth/register-form/', views.register_form_view, name='register-form'),
-    path('auth/login-form/', views.login_form_view, name='login-form'),
     
     # Estadísticas
     path('dashboard/stats/', views.DashboardStatsView.as_view(), name='dashboard-stats'),
     
     # Usuarios
     path('users/', views.UserListView.as_view(), name='user-list'),
+
+    # ✅ RUTAS PRINCIPALES para el API Tester y Dashboard
+    path('patients/', views.PatientListView.as_view(), name='patient_list'),
+    path('doctors/', views.DoctorListView.as_view(), name='doctor_list'),
+    
+    # ✅ OPCIÓN 1: Una vista que maneja GET y POST
+    #path('appointments/', views.AppointmentCreateView.as_view(), name='appointments'),
+    
+    # ✅ OPCIÓN 2: Vistas separadas (comentar la línea de arriba y usar estas)
+    path('appointments/', views.AppointmentListView.as_view(), name='appointment_list'),
+    path('appointments/create/', views.AppointmentCreateView.as_view(), name='appointment_create'),
+    
+    path('appointments/<int:pk>/', views.AppointmentDetailView.as_view(), name='appointment_detail'),
+
+    # Testing y debug
+    path('create-test-data/', views.CreateTestDataView.as_view(), name='create_test_data'),
+    path('debug/patient-fields/', views.DebugPatientFieldsView.as_view(), name='debug_patient_fields'),
 ]

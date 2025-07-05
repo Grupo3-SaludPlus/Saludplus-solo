@@ -6,7 +6,7 @@
         <h1>Bienvenido, Dr. {{ currentUser?.name }}</h1>
         <p>{{ getCurrentDate() }}</p>
       </div>
-      
+
       <div class="quick-actions">
         <a routerLink="/doctor/appointments" class="btn-action">
           <i class="fas fa-calendar-check"></i>
@@ -18,7 +18,7 @@
         </button>
       </div>
     </div>
-    
+
     <!-- Tarjetas de estadísticas -->
     <div class="stats-cards">
       <div class="stat-card">
@@ -30,7 +30,7 @@
           <div class="stat-label">Citas Hoy</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-clock"></i>
@@ -40,7 +40,7 @@
           <div class="stat-label">Pendientes</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-user-injured"></i>
@@ -50,7 +50,7 @@
           <div class="stat-label">Pacientes este mes</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-chart-line"></i>
@@ -61,7 +61,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Contenido principal -->
     <div class="dashboard-content">
       <!-- Citas de hoy -->
@@ -70,57 +70,71 @@
           <h2>Citas para Hoy</h2>
           <a routerLink="/doctor/appointments" class="section-link">Ver Todas</a>
         </div>
-        
+
         <div class="today-appointments">
-          <div *ngIf="todayAppointments.length === 0" class="empty-state">
-            <i class="far fa-calendar"></i>
-            <p>No hay citas programadas para hoy</p>
-            <a routerLink="/doctor/appointments" class="btn-empty-action">Ver Calendario</a>
-          </div>
-          
-          <div *ngFor="let appointment of todayAppointments" class="appointment-card" [class]="getStatusClass(appointment.status)">
-            <div class="appointment-time">
-              <i class="far fa-clock"></i>
-              <span>{{ appointment.time }}</span>
+          @if (todayAppointments.length === 0) {
+            <div class="empty-state">
+              <i class="far fa-calendar"></i>
+              <p>No hay citas programadas para hoy</p>
+              <a routerLink="/doctor/appointments" class="btn-empty-action">Ver Calendario</a>
             </div>
-            <div class="appointment-details">
-              <div class="patient-name">{{ appointment.patientName }}</div>
-              <div class="appointment-type">{{ appointment.reason }}</div>
+          }
+
+          @for (appointment of todayAppointments; track appointment) {
+            <div class="appointment-card" [class]="getStatusClass(appointment.status)">
+              <div class="appointment-time">
+                <i class="far fa-clock"></i>
+                <span>{{ appointment.time }}</span>
+              </div>
+              <div class="appointment-details">
+                <div class="patient-name">{{ appointment.patient_name }}</div>
+                <div class="appointment-type">{{ appointment.reason }}</div>
+              </div>
+              <div class="appointment-actions">
+                @if (canStart(appointment)) {
+                  <button class="btn-start" (click)="startAppointment(appointment)">
+                    <i class="fas fa-play"></i> Iniciar
+                  </button>
+                }
+                @if (canComplete(appointment)) {
+                  <button class="btn-complete" (click)="completeAppointment(appointment)">
+                    <i class="fas fa-check"></i> Completar
+                  </button>
+                }
+                <a [routerLink]="['/doctor/appointments']" [queryParams]="{appointmentId: appointment.id}" class="btn-view">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </div>
             </div>
-            <div class="appointment-actions">
-              <button *ngIf="canStart(appointment)" class="btn-start" (click)="startAppointment(appointment.id)">
-                <i class="fas fa-play"></i> Iniciar
-              </button>
-              <button *ngIf="canComplete(appointment)" class="btn-complete" (click)="completeAppointment(appointment.id)">
-                <i class="fas fa-check"></i> Completar
-              </button>
-              <a [routerLink]="['/doctor/appointments']" [queryParams]="{appointmentId: appointment.id}" class="btn-view">
-                <i class="fas fa-eye"></i>
-              </a>
-            </div>
-          </div>
+          }
         </div>
       </section>
-      
+
       <!-- Panel derecho: Próximas citas -->
       <section class="upcoming-appointments-section">
         <div class="section-header">
           <h2>Próximas Citas</h2>
         </div>
-        
+
         <div class="upcoming-appointments">
-          <div *ngIf="upcomingAppointments.length > 0">
-            <div *ngFor="let appointment of upcomingAppointments" class="appointment-card">
-              <!-- Contenido de cada cita -->
-              <div>Paciente: {{appointment.patientName}}</div>
-              <div>Fecha: {{appointment.date | date:'dd/MM/yyyy'}}</div>
-              <div>Hora: {{appointment.time}}</div>
-              <div>Estado: {{getStatusText(appointment.status)}}</div>
+          @if (upcomingAppointments.length > 0) {
+            <div>
+              @for (appointment of upcomingAppointments; track appointment) {
+                <div class="appointment-card">
+                  <!-- Contenido de cada cita -->
+                  <div>Paciente: {{appointment.patient_name}}</div>
+                  <div>Fecha: {{appointment.date | date:'dd/MM/yyyy'}}</div>
+                  <div>Hora: {{appointment.time}}</div>
+                  <div>Estado: {{getStatusText(appointment.status)}}</div>
+                </div>
+              }
             </div>
-          </div>
-          <div *ngIf="upcomingAppointments.length === 0" class="no-appointments">
-            No tienes citas próximas agendadas
-          </div>
+          }
+          @if (upcomingAppointments.length === 0) {
+            <div class="no-appointments">
+              No tienes citas próximas agendadas
+            </div>
+          }
         </div>
       </section>
     </div>

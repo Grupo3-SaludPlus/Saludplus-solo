@@ -43,8 +43,7 @@
         @for (doctor of filteredDoctors; track doctor.id) {
           <div class="doctor-card">
             <div class="doctor-image">
-              <img [src]="doctor.image" [alt]="doctor.name" onerror="this.src='assets/avatar-placeholder.png'">
-            </div>
+              </div>
             <div class="doctor-info">
               <h3>{{ doctor.name }}</h3>
               <p class="doctor-specialty">{{ doctor.specialty }}</p>
@@ -57,11 +56,8 @@
                 <span>{{ doctor?.rating || 'Sin valoración' }}</span>
               </div>
               <ul class="doctor-details">
-                <li><i class="fas fa-graduation-cap"></i> {{ doctor.education }}</li>
-                <li><i class="fas fa-history"></i> {{ doctor.experience }}</li>
                 <li><i class="fas fa-calendar-alt"></i> {{ doctor.availability }}</li>
               </ul>
-              <p class="doctor-bio">{{ doctor.biography }}</p>
               <div class="doctor-actions">
                 <button 
                   class="btn btn-primary"

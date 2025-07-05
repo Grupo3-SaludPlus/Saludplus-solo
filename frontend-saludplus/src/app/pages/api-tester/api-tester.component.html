@@ -1,0 +1,96 @@
+<div class="api-tester">
+  <h1>🧪 Probador de APIs - SaludPlus</h1>
+  
+  <!-- REGISTRO -->
+  <div class="api-section">
+    <h2>📝 Registro de Usuario</h2>
+    <div class="form-grid">
+      <input [(ngModel)]="registerData.name" placeholder="Nombre completo" class="form-input">
+      <input [(ngModel)]="registerData.email" placeholder="Email" type="email" class="form-input">
+      <input [(ngModel)]="registerData.password" placeholder="Contraseña" type="password" class="form-input">
+      <select [(ngModel)]="registerData.role" class="form-input">
+        <option value="patient">Paciente</option>
+        <option value="doctor">Doctor</option>
+        <option value="admin">Admin</option>
+      </select>
+      <input [(ngModel)]="registerData.phone" placeholder="Teléfono" class="form-input">
+      <input [(ngModel)]="registerData.birthdate" placeholder="Fecha nacimiento" type="date" class="form-input">
+    </div>
+    <button (click)="testRegister()" class="btn-test">🚀 Probar Registro</button>
+    <div class="result" [innerHTML]="registerResult"></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="api-section">
+    <h2>🔐 Iniciar Sesión</h2>
+    <div class="form-grid">
+      <input [(ngModel)]="loginData.email" placeholder="Email" type="email" class="form-input">
+      <input [(ngModel)]="loginData.password" placeholder="Contraseña" type="password" class="form-input">
+    </div>
+    <button (click)="testLogin()" class="btn-test">🚀 Probar Login</button>
+    <div class="result" [innerHTML]="loginResult"></div>
+  </div>
+
+  <!-- CREAR CITA -->
+  <div class="api-section">
+    <h2>📅 Crear Cita</h2>
+    
+    <!-- ✅ DEBUG SECTION -->
+    <div class="debug-section">
+      <button (click)="loadPatientsAndDoctors()" class="btn-debug">🔄 Recargar Listas</button>
+      <span *ngIf="isLoadingData" class="loading">🔄 Cargando...</span>
+      <div class="debug-info">
+        <small>👥 Pacientes: {{patients.length}} | 👨‍⚕️ Doctores: {{doctors.length}}</small>
+        <br>
+        <small *ngIf="appointmentData.patient_name">Paciente seleccionado: {{appointmentData.patient_name}}</small>
+        <br>
+        <small *ngIf="appointmentData.doctor_name">Doctor seleccionado: {{appointmentData.doctor_name}}</small>
+      </div>
+    </div>
+    
+    <div class="form-grid">
+      <!-- ✅ SELECTOR DE PACIENTES -->
+      <select [(ngModel)]="appointmentData.patient_name" class="form-input" [disabled]="isLoadingData">
+        <option value="">-- Seleccionar Paciente ({{patients.length}} disponibles) --</option>
+        <option *ngFor="let patient of patients" [value]="patient.name">
+          {{patient.name}} ({{patient.email}})
+        </option>
+      </select>
+      
+      <!-- ✅ SELECTOR DE DOCTORES -->
+      <select [(ngModel)]="appointmentData.doctor_name" class="form-input" [disabled]="isLoadingData">
+        <option value="">-- Seleccionar Doctor ({{doctors.length}} disponibles) --</option>
+        <option *ngFor="let doctor of doctors" [value]="doctor.name">
+          {{doctor.name}} - {{doctor.specialty}}
+        </option>
+      </select>
+      
+      <input [(ngModel)]="appointmentData.date" placeholder="Fecha" type="date" class="form-input">
+      <input [(ngModel)]="appointmentData.time" placeholder="Hora" type="time" class="form-input">
+      <input [(ngModel)]="appointmentData.reason" placeholder="Motivo" class="form-input">
+      <select [(ngModel)]="appointmentData.priority" class="form-input">
+        <option value="low">Baja</option>
+        <option value="medium">Media</option>
+        <option value="high">Alta</option>
+        <option value="urgent">Urgente</option>
+      </select>
+    </div>
+    <button (click)="testCreateAppointment()" class="btn-test" [disabled]="isLoadingData">🚀 Crear Cita</button>
+    <div class="result" [innerHTML]="appointmentResult"></div>
+  </div>
+
+  <!-- HISTORIAL DE RESPUESTAS -->
+  <div class="api-section">
+    <h2>📋 Historial de Respuestas</h2>
+    <div class="response-history">
+      <div *ngFor="let response of responseHistory" class="response-item">
+        <div class="response-header">
+          <span class="method">{{response.method}}</span>
+          <span class="url">{{response.url}}</span>
+          <span class="status" [class]="'status-' + response.statusClass">{{response.status}}</span>
+        </div>
+        <pre class="response-body">{{response.body}}</pre>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,45 +1,43 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterModule } from '@angular/router';
-import { AuthService, User } from '../../services/auth.service';
+import { RouterOutlet } from '@angular/router'; // AGREGAR ESTO
+import { AuthService } from '../../services/auth.service';
+import { User } from '../../services/api.service';
 
 @Component({
   selector: 'app-doctor-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterModule],
+  imports: [CommonModule, RouterOutlet], // AGREGAR RouterOutlet
   templateUrl: './doctor-layout.component.html',
-  styleUrl: './doctor-layout.component.css'
+  styleUrls: ['./doctor-layout.component.css']
 })
 export class DoctorLayoutComponent implements OnInit {
-  doctorName = '';
-  doctorSpecialty = '';
-  currentDate = new Date();
-  notificationCount = 0;
-  userInitials = '';
+  doctorSpecialty: string = '';
+  doctorName: string = '';
+  currentDate: Date = new Date();
+  notificationCount: number = 0;
+  userInitials: string = ''; // AGREGAR ESTO
 
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
     this.authService.currentUser$.subscribe((user: User | null) => {
       if (user) {
-        this.doctorName = user.name;
         this.doctorSpecialty = user.specialty || 'Medicina General';
-        this.userInitials = this.getInitials(user.name);
+        this.doctorName = user.name || '';
+        this.userInitials = this.getUserInitials(user.name || ''); // AGREGAR ESTO
       }
     });
-    
-    // Actualizar fecha cada minuto
-    setInterval(() => {
-      this.currentDate = new Date();
-    }, 60000);
   }
 
-  private getInitials(name: string): string {
-    return name.split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+  // AGREGAR ESTE MÉTODO
+  private getUserInitials(name: string): string {
+    if (!name) return 'DR';
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return names[0].substring(0, 2).toUpperCase();
   }
 
   logout() {

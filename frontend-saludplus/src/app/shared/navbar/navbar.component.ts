@@ -1,43 +1,82 @@
-import { Component, ElementRef, HostListener } from '@angular/core';
-import { AuthService, User } from '../../services/auth.service';
-import { Router } from '@angular/router';
-import { CommonModule, NgIf } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, OnInit, ElementRef, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { User } from '../../services/api.service';
 
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
   standalone: true,
-  imports: [NgIf, RouterLink, RouterLinkActive]
+  imports: [
+    CommonModule,       // ← Para *ngIf, *ngFor, etc.
+    RouterLink,         // ← Para routerLink
+    RouterLinkActive    // ← Para routerLinkActive
+  ]
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   menuOpen = false;
   showUserMenu = false;
   showLogoutPopup = false;
   currentUser: User | null = null;
   isLoggedIn = false;
+  isMenuOpen = false;
 
   navItems = [
     { path: '/', label: 'Inicio', roles: ['admin', 'doctor', 'patient'] },
     { path: '/doctors', label: 'Nuestros Médicos', roles: ['admin', 'doctor', 'patient'] },
-    { path: '/appointments', label: 'Agenda', roles: ['admin', 'doctor', 'patient'] },
-    { path: '/account', label: 'Mi Cuenta', roles: ['admin', 'doctor', 'patient'] }
+    { path: '/appointments', label: 'Agenda', roles: ['admin', 'doctor', 'patient'] }
   ];
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private elementRef: ElementRef
-  ) {
-    this.authService.currentUser$.subscribe((user: User | null) => {
+  ) {}
+
+  ngOnInit() {
+    this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
       this.isLoggedIn = !!user;
     });
   }
 
+  // ✅ MÉTODO para manejar Mi Cuenta
+  goToMyAccount(event: Event) {
+    event.preventDefault();
+    
+    if (!this.currentUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    // Redirigir según el rol del usuario
+    switch (this.currentUser.role) {
+      case 'admin':
+        this.router.navigate(['/admin/dashboard']);
+        break;
+      case 'doctor':
+        this.router.navigate(['/doctor/dashboard']);
+        break;
+      case 'patient':
+        this.router.navigate(['/patient/dashboard']);
+        break;
+      default:
+        this.router.navigate(['/login']);
+        break;
+    }
+    
+    this.closeMenu();
+  }
+
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
+  }
+
+  closeMenu() {
+    this.menuOpen = false;
+    this.showUserMenu = false;
   }
 
   toggleUserMenu(event: Event) {
@@ -46,7 +85,7 @@ export class NavbarComponent {
   }
 
   isAuthenticated(): boolean {
-    return !!this.currentUser;
+    return this.isLoggedIn;
   }
 
   hasAccess(roles: string[]): boolean {
@@ -69,18 +108,10 @@ export class NavbarComponent {
     }
   }
 
-  cancelLogout() {
-    this.showLogoutPopup = false;
-  }
-
-  executeLogout() {
-    this.showLogoutPopup = false;
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-
-  logout(event: Event) {
-    event.preventDefault();
+  logout(event?: Event) {
+    if (event) {
+      event.preventDefault();
+    }
     this.authService.logout();
     this.currentUser = null;
     this.showUserMenu = false;

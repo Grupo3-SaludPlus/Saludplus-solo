@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService, User } from '../../services/auth.service';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { User } from '../../services/api.service';
 
 @Component({
   selector: 'app-header',
@@ -11,54 +13,31 @@ import { AuthService, User } from '../../services/auth.service';
 })
 export class HeaderComponent implements OnInit {
   title: string = 'SaludPlus';
-  slogan: string = 'Cuidando tu salud, siempre cerca de ti';
+  slogan: string = 'Tu salud, nuestra prioridad';
 
   currentUser: User | null = null;
-  isLoggedIn = false;
-  showUserMenu = false;
-  
-  constructor(
-    private authService: AuthService
-  ) {}
+  isAuthenticated = false;
+
+  constructor(private authService: AuthService) {}
 
   ngOnInit() {
-    this.authService.currentUser$.subscribe((user: User | null) => {
+    this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+      this.isAuthenticated = !!user;
     });
   }
 
-  toggleUserMenu() {
-    this.showUserMenu = !this.showUserMenu;
-  }
-
-  closeUserMenu() {
-    this.showUserMenu = false;
-  }
-
-  // SIMPLE logout para pacientes y médicos
   logout() {
     this.authService.logout();
-    this.closeUserMenu();
   }
 
   getUserInitials(): string {
-    if (this.currentUser?.name) {
-      return this.currentUser.name
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .substring(0, 2)
-        .toUpperCase();
-    }
-    return 'U';
-  }
-
-  getUserRole(): string {
-    switch(this.currentUser?.role) {
-      case 'doctor': return 'Médico';
-      case 'admin': return 'Administrador';
-      case 'patient': return 'Paciente';
-      default: return 'Usuario';
-    }
+    if (!this.currentUser?.name) return 'U';
+    return this.currentUser.name
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   }
 }

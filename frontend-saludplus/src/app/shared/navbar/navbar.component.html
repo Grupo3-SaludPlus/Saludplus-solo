@@ -16,6 +16,10 @@
              [routerLinkActiveOptions]="{exact: item.path === '/'}">{{ item.label }}</a>
         </li>
       }
+      <!-- ✅ AGREGAR MI CUENTA AQUÍ -->
+      <li class="nav-item">
+        <a class="nav-link" (click)="goToMyAccount($event)" href="#" style="cursor: pointer;">Mi Cuenta</a>
+      </li>
     </ul>
 
     <!-- Usuario no autenticado -->

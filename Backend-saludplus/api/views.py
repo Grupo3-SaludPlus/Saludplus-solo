@@ -265,41 +265,73 @@ class AuthLoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
-        user_type = request.data.get('user_type', 'patient')
         
         try:
             user = User.objects.get(email=email)
-            user = authenticate(username=user.username, password=password)
+            authenticated_user = authenticate(username=user.username, password=password)
             
-            if user:
-                token, created = Token.objects.get_or_create(user=user)
+            if authenticated_user:
+                token, created = Token.objects.get_or_create(user=authenticated_user)
                 
-                # Obtener información del perfil
+                # ✅ DETECTAR automáticamente el rol del usuario
                 profile_data = {}
-                try:
-                    if user_type == 'patient':
-                        profile = Patient.objects.get(user=user)
-                        profile_data = PatientSerializer(profile).data
-                    else:
-                        profile = Doctor.objects.get(user=user)
-                        profile_data = DoctorSerializer(profile).data
-                except (Patient.DoesNotExist, Doctor.DoesNotExist):
-                    pass
+                detected_role = 'patient'  # Default
+                
+                # 🔑 VERIFICAR PRIMERO SI ES ADMIN/SUPERUSER (ANTES de buscar Doctor/Patient)
+                if authenticated_user.is_superuser or authenticated_user.is_staff:
+                    detected_role = 'admin'
+                    profile_data = {
+                        'name': authenticated_user.get_full_name() or authenticated_user.username,
+                        'email': authenticated_user.email,
+                        'is_admin': True,
+                        'is_superuser': authenticated_user.is_superuser,
+                        'is_staff': authenticated_user.is_staff
+                    }
+                    print(f"🔑 Admin detected: {authenticated_user.email}")  # DEBUG
+                else:
+                    try:
+                        # Buscar si es doctor
+                        doctor_profile = Doctor.objects.get(user=authenticated_user)
+                        profile_data = DoctorSerializer(doctor_profile).data
+                        detected_role = 'doctor'
+                        print(f"👨‍⚕️ Doctor detected: {doctor_profile.name}")  # DEBUG
+                    except Doctor.DoesNotExist:
+                        try:
+                            # Buscar si es paciente
+                            patient_profile = Patient.objects.get(user=authenticated_user)
+                            profile_data = PatientSerializer(patient_profile).data
+                            detected_role = 'patient'
+                            print(f"🏥 Patient detected: {patient_profile.name}")  # DEBUG
+                        except Patient.DoesNotExist:
+                            # Si no tiene perfil, mantener como paciente por defecto
+                            detected_role = 'patient'
+                            profile_data = {
+                                'name': authenticated_user.get_full_name() or authenticated_user.username,
+                                'email': authenticated_user.email
+                            }
+                            print(f"👤 Default patient role assigned")  # DEBUG
+                
+                print(f"✅ Final role: {detected_role}")  # DEBUG
                 
                 return Response({
                     'token': token.key,
                     'user': {
-                        'id': user.id,
-                        'name': user.get_full_name() or user.username,
-                        'email': user.email,
-                        'role': user_type,
+                        'id': authenticated_user.id,
+                        'name': authenticated_user.get_full_name() or authenticated_user.username,
+                        'email': authenticated_user.email,
+                        'role': detected_role,  # ✅ Rol detectado automáticamente
                         'profile': profile_data
                     }
                 })
             else:
+                print(f"❌ Authentication failed for: {email}")  # DEBUG
                 return Response({'error': 'Credenciales inválidas'}, status=400)
         except User.DoesNotExist:
-            return Response({'error': 'Usuario no encontrado'}, status=400)
+            print(f"❌ User not found: {email}")  # DEBUG
+            return Response({'error': 'Usuario no encontrado'}, status=404)
+        except Exception as e:
+            print(f"💥 Unexpected error: {str(e)}")  # DEBUG
+            return Response({'error': 'Error interno del servidor'}, status=500)
 
 class AuthRegisterView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -377,8 +409,286 @@ class UserListView(APIView):
         
         return Response(user_list)
 
+class PatientListView(APIView):
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        try:
+            patients = Patient.objects.all()
+            patients_data = []
+            
+            for patient in patients:
+                # ✅ MANEJO SEGURO: Verificar qué campos existen
+                patient_info = {
+                    'id': patient.id,
+                    'name': patient.name,
+                }
+                
+                # Manejar email de diferentes formas
+                if hasattr(patient, 'user') and patient.user:
+                    patient_info['email'] = patient.user.email
+                elif hasattr(patient, 'email'):
+                    patient_info['email'] = patient.email
+                else:
+                    patient_info['email'] = 'Sin email'
+                
+                # Manejar teléfono
+                if hasattr(patient, 'phone'):
+                    patient_info['phone'] = patient.phone
+                else:
+                    patient_info['phone'] = 'Sin teléfono'
+                
+                # ✅ PROBAR DIFERENTES NOMBRES para fecha de nacimiento
+                birth_date_value = None
+                for field_name in ['birth_date', 'birthdate', 'date_of_birth', 'birthday']:
+                    if hasattr(patient, field_name):
+                        birth_date_value = getattr(patient, field_name)
+                        break
+                
+                patient_info['birth_date'] = str(birth_date_value) if birth_date_value else 'Sin fecha'
+                
+                # Agregar otros campos comunes
+                if hasattr(patient, 'gender'):
+                    patient_info['gender'] = patient.gender
+                
+                patients_data.append(patient_info)
+            
+            print(f"✅ Enviando {len(patients_data)} pacientes")
+            print(f"📋 Ejemplo de paciente: {patients_data[0] if patients_data else 'Sin pacientes'}")
+            
+            return Response(patients_data, status=200)
+            
+        except Exception as e:
+            print(f"❌ Error en PatientListView: {str(e)}")
+            import traceback
+            print(f"📋 Traceback completo: {traceback.format_exc()}")
+            return Response({'error': str(e)}, status=500)
+
+class DoctorListView(APIView):
+    permission_classes = [permissions.AllowAny]  # ✅ CAMBIAR: Sin autenticación para testing
+    
+    def get(self, request):
+        try:
+            doctors = Doctor.objects.all()
+            doctors_data = []
+            for doctor in doctors:
+                doctors_data.append({
+                    'id': doctor.id,
+                    'name': doctor.name,
+                    'email': doctor.user.email if doctor.user else doctor.email,
+                    'specialty': doctor.specialty,
+                    'phone': doctor.phone,
+                    'license_number': doctor.license_number
+                })
+            print(f"✅ Enviando {len(doctors_data)} doctores")
+            return Response(doctors_data, status=200)
+        except Exception as e:
+            print(f"❌ Error en DoctorListView: {str(e)}")
+            return Response({'error': str(e)}, status=500)
+
+class AppointmentCreateView(APIView):
+    permission_classes = [permissions.AllowAny]  # ✅ CAMBIAR: Sin autenticación para testing
+    
+    def post(self, request):
+        try:
+            data = request.data
+            print(f"📅 Datos recibidos para cita: {data}")
+            
+            # Obtener paciente y doctor
+            try:
+                patient = Patient.objects.get(id=data.get('patient_id'))
+                print(f"✅ Paciente encontrado: {patient.name}")
+            except Patient.DoesNotExist:
+                return Response({'error': f'Paciente con ID {data.get("patient_id")} no encontrado'}, status=400)
+            
+            try:
+                doctor = Doctor.objects.get(id=data.get('doctor_id'))
+                print(f"✅ Doctor encontrado: {doctor.name}")
+            except Doctor.DoesNotExist:
+                return Response({'error': f'Doctor con ID {data.get("doctor_id")} no encontrado'}, status=400)
+            
+            # Crear la cita
+            appointment = Appointment.objects.create(
+                patient=patient,
+                doctor=doctor,
+                date=data.get('date'),
+                time=data.get('time'),
+                reason=data.get('reason', ''),
+                priority=data.get('priority', 'medium'),
+                status='scheduled'
+            )
+            
+            appointment_data = {
+                'id': appointment.id,
+                'patient': {
+                    'id': patient.id,
+                    'name': patient.name
+                },
+                'doctor': {
+                    'id': doctor.id,
+                    'name': doctor.name,
+                    'specialty': doctor.specialty
+                },
+                'date': str(appointment.date),
+                'time': str(appointment.time),
+                'reason': appointment.reason,
+                'priority': appointment.priority,
+                'status': appointment.status,
+                'created_at': appointment.created_at.isoformat()
+            }
+            
+            print(f"✅ Cita creada exitosamente: ID {appointment.id}")
+            return Response(appointment_data, status=201)
+            
+        except Exception as e:
+            print(f"❌ Error creando cita: {str(e)}")
+            return Response({'error': str(e)}, status=500)
+
+class AppointmentDetailView(APIView):
+    permission_classes = [permissions.AllowAny]  # Para testing
+    
+    def get(self, request, pk):
+        try:
+            appointment = Appointment.objects.get(id=pk)
+            appointment_data = {
+                'id': appointment.id,
+                'patient': {
+                    'id': appointment.patient.id,
+                    'name': appointment.patient.name
+                },
+                'doctor': {
+                    'id': appointment.doctor.id,
+                    'name': appointment.doctor.name,
+                    'specialty': appointment.doctor.specialty
+                },
+                'date': appointment.date,
+                'time': appointment.time,
+                'reason': appointment.reason,
+                'priority': appointment.priority,
+                'status': appointment.status,
+                'created_at': appointment.created_at
+            }
+            return Response(appointment_data, status=200)
+        except Appointment.DoesNotExist:
+            return Response({'error': 'Cita no encontrada'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
 def register_form_view(request):
     return render(request, 'register.html')
 
 def login_form_view(request):
     return render(request, 'login.html')
+
+# En views.py - AGREGAR vista para crear datos de prueba
+class CreateTestDataView(APIView):
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        try:
+            # Crear usuario de prueba para paciente
+            user_patient = User.objects.create_user(
+                username='test_patient',
+                email='patient@test.com',
+                password='123456'
+            )
+            
+            # Crear paciente
+            patient = Patient.objects.create(
+                user=user_patient,
+                name='Juan Pérez Test',
+                phone='+56912345678',
+                birth_date='1990-01-01',
+                gender='male'
+            )
+            
+            # Crear usuario de prueba para doctor
+            user_doctor = User.objects.create_user(
+                username='test_doctor',
+                email='doctor@test.com',
+                password='123456'
+            )
+            
+            # Crear doctor
+            doctor = Doctor.objects.create(
+                user=user_doctor,
+                name='Dr. María García',
+                specialty='Medicina General',
+                phone='+56987654321',
+                license_number='12345'
+            )
+            
+            return Response({
+                'message': 'Datos de prueba creados exitosamente',
+                'patient': {'id': patient.id, 'name': patient.name},
+                'doctor': {'id': doctor.id, 'name': doctor.name}
+            }, status=201)
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+# AGREGAR esta vista temporal para debug
+
+class DebugPatientFieldsView(APIView):
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        try:
+            # Obtener el primer paciente para ver sus campos
+            patient = Patient.objects.first()
+            
+            if not patient:
+                return Response({'message': 'No hay pacientes en la base de datos'}, status=200)
+            
+            # Obtener todos los campos del modelo
+            fields = []
+            for field in Patient._meta.fields:
+                field_value = getattr(patient, field.name, 'N/A')
+                fields.append({
+                    'field_name': field.name,
+                    'field_type': str(field.__class__.__name__),
+                    'value': str(field_value)
+                })
+            
+            return Response({
+                'patient_id': patient.id,
+                'patient_name': patient.name,
+                'available_fields': fields
+            }, status=200)
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+# AGREGAR esta nueva vista
+
+class AppointmentListView(APIView):
+    permission_classes = [permissions.AllowAny]  # Para testing
+    
+    def get(self, request):
+        """Obtener todas las citas"""
+        try:
+            appointments = Appointment.objects.all().select_related('patient', 'doctor').order_by('-date', '-time')
+            appointments_data = []
+            
+            for appointment in appointments:
+                appointment_info = {
+                    'id': appointment.id,
+                    'patientName': appointment.patient.name,
+                    'doctorName': appointment.doctor.name,
+                    'doctorSpecialty': getattr(appointment.doctor, 'specialty', 'Sin especialidad'),
+                    'date': str(appointment.date),
+                    'time': str(appointment.time),
+                    'reason': appointment.reason,
+                    'priority': appointment.priority,
+                    'status': appointment.status,
+                    'notes': getattr(appointment, 'notes', ''),
+                    'location': getattr(appointment, 'location', 'Consulta Externa')
+                }
+                appointments_data.append(appointment_info)
+            
+            print(f"✅ AppointmentListView: Enviando {len(appointments_data)} citas")
+            return Response(appointments_data, status=200)
+            
+        except Exception as e:
+            print(f"❌ Error en AppointmentListView: {str(e)}")
+            return Response({'error': str(e)}, status=500)

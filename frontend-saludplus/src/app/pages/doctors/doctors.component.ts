@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DoctorsService, Doctor } from '../../services/doctors.service';
+import { DoctorsService } from '../../services/doctors.service';
+import { Doctor } from '../../services/api.service';
 
 @Component({
   selector: 'app-doctors',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './doctors.component.html',
   styleUrl: './doctors.component.css'
 })
@@ -29,7 +30,7 @@ export class DoctorsComponent implements OnInit {
 
   ngOnInit() {
     // Suscribirse a cambios en la lista de médicos
-    this.doctorsService.getDoctors().subscribe(doctors => {
+    this.doctorsService.getAllDoctors().subscribe((doctors: Doctor[]) => {
       this.doctors = doctors;
       this.filteredDoctors = [...this.doctors];
       this.specialties = [...new Set(this.doctors.map(doctor => doctor.specialty))];
@@ -88,7 +89,7 @@ export class DoctorsComponent implements OnInit {
     // Por ahora mostrar alerta, luego implementar ruta al perfil
     const doctor = this.doctors.find(d => d.id === doctorId);
     if (doctor) {
-      alert(`Ver perfil de ${doctor.name}\n\nEsta funcionalidad se implementará próximamente.\n\nInformación:\n- Especialidad: ${doctor.specialty}\n- Email: ${doctor.email}\n- Teléfono: ${doctor.phoneNumber}`);
+      alert(`Ver perfil de ${doctor.name}\n\nEsta funcionalidad se implementará próximamente.\n\nInformación:\n- Especialidad: ${doctor.specialty}\n- Email: ${doctor.email}\n- Teléfono: ${doctor.phone}`);
     }
   }
 

@@ -5,36 +5,13 @@
       <p>Bienvenido a SaludPlus</p>
     </div>
 
-    <!-- Selector de tipo de usuario -->
-    <div class="user-type-selector">
-      <button 
-        type="button" 
-        class="user-type-btn" 
-        [class.active]="loginForm.userType === 'patient'"
-        (click)="selectUserType('patient')">
-        Paciente
-      </button>
-      <button 
-        type="button" 
-        class="user-type-btn" 
-        [class.active]="loginForm.userType === 'doctor'"
-        (click)="selectUserType('doctor')">
-        Doctor
-      </button>
-      <button 
-        type="button" 
-        class="user-type-btn" 
-        [class.active]="loginForm.userType === 'admin'"
-        (click)="selectUserType('admin')">
-        Admin
-      </button>
-    </div>
-
     <form (ngSubmit)="onSubmit()" #loginFormRef="ngForm">
       <!-- Mensaje de error -->
-      <div class="error-message" *ngIf="errorMessage">
-        {{ errorMessage }}
-      </div>
+      @if (errorMessage) {
+        <div class="error-message">
+          {{ errorMessage }}
+        </div>
+      }
 
       <!-- Email -->
       <div class="form-group">
@@ -65,12 +42,16 @@
       </div>
 
       <!-- Botón de login -->
-      <button 
-        type="submit" 
-        class="btn-primary" 
+      <button
+        type="submit"
+        class="btn-primary"
         [disabled]="isLoading || !loginFormRef.valid">
-        <span *ngIf="isLoading">Iniciando sesión...</span>
-        <span *ngIf="!isLoading">Iniciar Sesión</span>
+        @if (isLoading) {
+          <span>Iniciando sesión...</span>
+        }
+        @if (!isLoading) {
+          <span>Iniciar Sesión</span>
+        }
       </button>
     </form>
 

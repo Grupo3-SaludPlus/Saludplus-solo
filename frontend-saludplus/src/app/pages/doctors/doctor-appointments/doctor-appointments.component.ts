@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AppointmentsService, MedicalAppointment } from '../../../services/appointments.service';
 import { AuthService } from '../../../services/auth.service';
+import { AppointmentsService } from '../../../services/appointments.service';
+import { User, Appointment } from '../../../services/api.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -13,610 +14,421 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./doctor-appointments.component.css']
 })
 export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
-  // Variables de estado
-  currentUser: any;
-  appointments: MedicalAppointment[] = [];
-  filteredAppointments: MedicalAppointment[] = [];
-  todayAppointments: MedicalAppointment[] = [];
-  selectedAppointment: MedicalAppointment | null = null;
-  showAppointmentModal = false;
+  appointments: Appointment[] = [];
+  filteredAppointments: Appointment[] = [];
+  todayAppointments: Appointment[] = [];
+  selectedAppointment: Appointment | null = null;
+  currentDoctor: User | null = null;
   
-  // Variables de filtros
-  viewMode: 'list' | 'calendar' = 'list';
-  searchTerm = '';
-  statusFilter = '';
-  dateFilter = '';
-  selectedDate: string | null = null;
-  
-  // Variables para calendario
-  currentDate = new Date();
-  weekDays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  calendarDays: any[] = [];
-  
+  // ✅ AGREGAR TODAS LAS PROPIEDADES QUE FALTAN
   // Estadísticas
   stats = {
     total: 0,
     scheduled: 0,
     completed: 0,
-    cancelled: 0,
-    inProgress: 0
+    cancelled: 0
   };
   
-  // Propiedades para el reagendamiento
-  showRescheduleModal = false;
+  // Filtros
+  statusFilter: string = 'all';
+  dateFilter: string = '';
+  searchTerm: string = '';
+  
+  // Estados del modal
+  showModal: boolean = false;
+  showRescheduleModal: boolean = false;
+  showAppointmentModal: boolean = false;
+  
+  // ✅ AGREGAR PROPIEDADES QUE FALTABAN
   newAppointmentDate: string = '';
   newAppointmentTime: string = '';
-
-  // Agregar propiedad para almacenar temporalmente las notas
-  tempNotes: string = '';
-
-  private appointmentSubscription: Subscription | undefined;
+  rescheduleDate: string = '';
+  rescheduleTime: string = '';
   
+  // Vista y calendario
+  viewMode: 'list' | 'calendar' = 'list';
+  selectedDate: string = '';
+  calendarDays: any[] = [];
+  weekDays: string[] = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  currentCalendarDate: Date = new Date();
+  
+  // Estadísticas de hoy
+  todayTotal: number = 0;
+  todayCompleted: number = 0;
+  todayPending: number = 0;
+  todayCancelled: number = 0;
+  
+  private subscription: Subscription = new Subscription();
+
   constructor(
     private authService: AuthService,
-    private appointmentsService: AppointmentsService
-  ) {}
-  
-  ngOnInit() {
-    // Obtener usuario actual
-    this.authService.currentUser.subscribe(user => {
-      this.currentUser = user;
-      if (user) {
-        this.loadAppointments();
-      }
-    });
-    
-    // Inicializar fecha seleccionada con la fecha actual
-    this.selectedDate = new Date().toISOString().split('T')[0];
-    
-    // Generar días del calendario
+    private appointmentsService: AppointmentsService // ✅ CORREGIR NOMBRE
+  ) {
     this.generateCalendarDays();
   }
-  
-  ngOnDestroy() {
-    if (this.appointmentSubscription) {
-      this.appointmentSubscription.unsubscribe();
-    }
-  }
-  
-  // Cargar citas médicas
-  loadAppointments() {
-    this.appointmentSubscription = this.appointmentsService.getAllAppointments()
-      .subscribe(appointments => {
-        if (this.currentUser?.id) {
-          const doctorId = this.currentUser.id;
-          
-          // Mejorar la comparación para manejar diferentes formatos de ID
-          this.appointments = appointments.filter(a => {
-            // Convertir a string para comparación si es necesario
-            const appointmentDoctorId = String(a.doctorId);
-            const currentDoctorId = String(doctorId);
-            
-            return appointmentDoctorId === currentDoctorId || 
-                   appointmentDoctorId === currentDoctorId.replace('doctor-', '');
-          });
-          
-          console.log('Citas cargadas para doctor:', this.appointments);
-          
-          // Si no hay citas, crear algunas de prueba (solo para desarrollo)
-          if (this.appointments.length === 0) {
-            this.createTestAppointments();
-          }
-          
-          this.calculateStats();
-          this.loadTodayAppointments();
-          this.applyFilters();
-          this.updateCalendarData();
+
+  ngOnInit() {
+    this.subscription.add(
+      this.authService.currentUser$.subscribe((user: User | null) => {
+        if (user) {
+          this.currentDoctor = user;
+          this.loadDoctorAppointments();
         }
-      });
+      })
+    );
   }
-  
-  // Método para crear citas de prueba
-  createTestAppointments() {
-    const testAppointments = [
-      {
-        patientId: 1,
-        patientName: "Juan Pérez",
-        doctorId: this.currentUser?.id || 1,
-        doctorName: "Dr. " + (this.currentUser?.name || "Test"),
-        specialty: "Medicina general",
-        date: new Date().toISOString().split('T')[0],
-        time: "10:00",
-        status: "scheduled" as "scheduled", // Tipado correcto
-        reason: "Control rutinario",
-        room: "101",
-        notes: "",
-        priority: "medium" as "low" | "medium" | "high" | "urgent"
-      },
-      {
-        patientId: 2,
-        patientName: "María González",
-        doctorId: this.currentUser?.id || 1,
-        doctorName: "Dr. " + (this.currentUser?.name || "Test"),
-        specialty: "Medicina general",
-        date: new Date().toISOString().split('T')[0],
-        time: "11:30",
-        status: "confirmed" as "confirmed", // Tipado correcto
-        reason: "Dolor de cabeza",
-        room: "102",
-        notes: "",
-        priority: "high" as "low" | "medium" | "high" | "urgent"
-      }
-    ];
-    
-    testAppointments.forEach(appt => {
-      this.appointmentsService.createAppointment(appt);
-    });
-    
-    // Recargar después de crear las citas
-    setTimeout(() => this.loadAppointments(), 500);
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
   }
-  
-  // Cargar citas de hoy
-  loadTodayAppointments() {
+
+  private loadDoctorAppointments() {
+    this.subscription.add(
+      this.appointmentsService.getAllAppointments().subscribe((appointments: Appointment[]) => {
+        this.appointments = appointments
+          .filter((apt: Appointment) => apt.doctor_name === this.currentDoctor?.name)
+          .map(apt => ({
+            ...apt,
+            patientName: apt.patient_name,
+            doctorName: apt.doctor_name,
+            notes: apt.notes,
+            priority: apt.priority,
+            // ELIMINAR estas líneas porque los campos no existen:
+            // patientAge: apt.patient_age,
+            // endTime: apt.end_time,
+            // room: apt.room,
+          }));
+      
+        this.applyFilters();
+        this.calculateStats();
+        this.calculateTodayStats();
+      })
+    );
+  }
+
+  private calculateStats() {
+    this.stats.total = this.appointments.length;
+    this.stats.scheduled = this.appointments.filter(apt => apt.status === 'scheduled').length;
+    this.stats.completed = this.appointments.filter(apt => apt.status === 'completed').length;
+    this.stats.cancelled = this.appointments.filter(apt => apt.status === 'cancelled').length;
+  }
+
+  private calculateTodayStats() {
     const today = new Date().toISOString().split('T')[0];
-    this.todayAppointments = this.appointments
-      .filter(a =>
-        a.date === today &&
-        a.doctorId === this.currentUser?.id &&
-        (a.status === 'scheduled' || a.status === 'confirmed')
-      )
-      .sort((a, b) => a.time.localeCompare(b.time));
-  }
-  
-  // Calcular estadísticas
-  calculateStats() {
-    // Reiniciar estadísticas
-    this.stats = {
-      total: this.appointments.length,
-      scheduled: 0,
-      completed: 0,
-      cancelled: 0,
-      inProgress: 0
-    };
+    this.todayAppointments = this.appointments.filter(apt => apt.date === today);
     
-    // Contar por estado
-    this.appointments.forEach(a => {
-      if (a.status === 'scheduled' || a.status === 'confirmed') {
-        this.stats.scheduled++;
-      } else if (a.status === 'completed') {
-        this.stats.completed++;
-      } else if (a.status === 'cancelled') {
-        this.stats.cancelled++;
-      } else if (a.status === 'in-progress') {
-        this.stats.inProgress++;
-      }
-    });
+    this.todayTotal = this.todayAppointments.length;
+    this.todayCompleted = this.todayAppointments.filter(apt => apt.status === 'completed').length;
+    this.todayPending = this.todayAppointments.filter(apt => 
+      apt.status === 'scheduled' || apt.status === 'confirmed'
+    ).length;
+    this.todayCancelled = this.todayAppointments.filter(apt => apt.status === 'cancelled').length;
   }
-  
-  // Aplicar filtros a las citas
+
+  // Métodos de filtrado
   applyFilters() {
     let filtered = [...this.appointments];
-    
-    // Filtrar por término de búsqueda
+
+    if (this.statusFilter !== 'all') {
+      filtered = filtered.filter(apt => apt.status === this.statusFilter);
+    }
+
+    if (this.dateFilter) {
+      filtered = filtered.filter(apt => apt.date === this.dateFilter);
+    }
+
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(a => 
-        a.patientName?.toLowerCase().includes(term) || 
-        a.reason?.toLowerCase().includes(term)
+      filtered = filtered.filter(apt => 
+        apt.patient_name.toLowerCase().includes(term.toLowerCase()) ||
+        apt.reason.toLowerCase().includes(term.toLowerCase())
       );
     }
-    
-    // Filtrar por estado
-    if (this.statusFilter) {
-      filtered = filtered.filter(a => a.status === this.statusFilter);
-    }
-    
-    // Filtrar por fecha
-    if (this.dateFilter) {
-      filtered = filtered.filter(a => a.date === this.dateFilter);
-    } else if (this.selectedDate && this.viewMode === 'calendar') {
-      filtered = filtered.filter(a => a.date === this.selectedDate);
-    }
-    
+
     this.filteredAppointments = filtered;
   }
-  
-  // Manejar cambio en búsqueda
+
+  onFilterChange() {
+    this.applyFilters();
+  }
+
   onSearchChange() {
     this.applyFilters();
   }
-  
-  // Manejar cambio en filtro de estado
+
   onStatusFilterChange() {
     this.applyFilters();
   }
-  
-  // Manejar cambio en filtro de fecha
+
   onDateFilterChange() {
-    // Si hay filtro de fecha, actualizar la fecha seleccionada en el calendario
-    if (this.dateFilter) {
-      this.selectedDate = this.dateFilter;
-      
-      // Actualizar el mes actual del calendario si es necesario
-      const filterDate = new Date(this.dateFilter);
-      if (filterDate.getMonth() !== this.currentDate.getMonth() || 
-          filterDate.getFullYear() !== this.currentDate.getFullYear()) {
-        this.currentDate = new Date(filterDate);
-        this.generateCalendarDays();
-      }
-    }
-    
     this.applyFilters();
   }
-  
-  // Restablecer todos los filtros
+
   resetFilters() {
-    this.searchTerm = '';
-    this.statusFilter = '';
+    this.statusFilter = 'all';
     this.dateFilter = '';
-    this.selectedDate = new Date().toISOString().split('T')[0];
-    this.currentDate = new Date();
-    this.generateCalendarDays();
+    this.searchTerm = '';
     this.applyFilters();
   }
-  
-  // Generar días para el calendario
+
+  // ✅ AGREGAR MÉTODOS QUE FALTABAN
+  saveNotes() {
+    this.saveAppointmentNotes();
+  }
+
+  saveRescheduledAppointment() {
+    if (this.selectedAppointment) {
+      this.rescheduleAppointment(this.selectedAppointment);
+    }
+  }
+
+  // Métodos de calendario
   generateCalendarDays() {
+    const year = this.currentCalendarDate.getFullYear();
+    const month = this.currentCalendarDate.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
     this.calendarDays = [];
     
-    // Obtener primer día del mes
-    const firstDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
-    const lastDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
-    
-    // Días del mes anterior para completar la primera semana
-    const daysFromPrevMonth = firstDay.getDay();
-    const prevLastDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 0).getDate();
-    
-    for (let i = prevLastDay - daysFromPrevMonth + 1; i <= prevLastDay; i++) {
-      const date = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, i);
-      this.calendarDays.push({
-        day: i,
-        isCurrentMonth: false,
-        isToday: false,
-        date: date,
-        hasAppointments: false,
-        appointments: 0
-      });
-    }
-    
-    // Días del mes actual
-    const today = new Date();
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      const date = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), i);
-      const dateStr = date.toISOString().split('T')[0];
-      const appointmentsForDay = this.appointments.filter(a => a.date === dateStr);
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
       
       this.calendarDays.push({
-        day: i,
-        isCurrentMonth: true,
-        isToday: i === today.getDate() && 
-                 this.currentDate.getMonth() === today.getMonth() && 
-                 this.currentDate.getFullYear() === today.getFullYear(),
         date: date,
-        hasAppointments: appointmentsForDay.length > 0,
-        appointments: appointmentsForDay.length
-      });
-    }
-    
-    // Días del próximo mes para completar la última semana
-    const daysFromNextMonth = 42 - this.calendarDays.length;
-    for (let i = 1; i <= daysFromNextMonth; i++) {
-      const date = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, i);
-      this.calendarDays.push({
-        day: i,
-        isCurrentMonth: false,
-        isToday: false,
-        date: date,
-        hasAppointments: false,
-        appointments: 0
+        day: date.getDate(),
+        isCurrentMonth: date.getMonth() === month,
+        isToday: this.isToday(date),
+        hasAppointments: this.hasAppointmentsOnDate(date)
       });
     }
   }
-  
-  // Actualizar datos del calendario
-  updateCalendarData() {
-    // Actualizar indicadores de citas en los días del calendario
-    this.calendarDays.forEach(day => {
-      const dateStr = day.date.toISOString().split('T')[0];
-      const appointmentsForDay = this.appointments.filter(a => a.date === dateStr);
-      day.hasAppointments = appointmentsForDay.length > 0;
-      day.appointments = appointmentsForDay.length;
-    });
+
+  private isToday(date: Date): boolean {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
   }
-  
-  // Seleccionar una fecha en el calendario
+
+  private hasAppointmentsOnDate(date: Date): boolean {
+    const dateStr = date.toISOString().split('T')[0];
+    return this.appointments.some(apt => apt.date === dateStr);
+  }
+
+  prevMonth() {
+    this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() - 1);
+    this.generateCalendarDays();
+  }
+
+  nextMonth() {
+    this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() + 1);
+    this.generateCalendarDays();
+  }
+
+  getCurrentMonth(): string {
+    return this.currentCalendarDate.toLocaleDateString('es-ES', { month: 'long' });
+  }
+
+  getCurrentYear(): number {
+    return this.currentCalendarDate.getFullYear();
+  }
+
+  selectToday() {
+    this.currentCalendarDate = new Date();
+    this.selectedDate = new Date().toISOString().split('T')[0];
+    this.generateCalendarDays();
+  }
+
   selectDate(date: Date) {
     this.selectedDate = date.toISOString().split('T')[0];
-    this.dateFilter = this.selectedDate;
-    this.applyFilters();
   }
-  
-  // Seleccionar hoy en el calendario
-  selectToday() {
-    const today = new Date();
-    if (today.getMonth() !== this.currentDate.getMonth() || 
-        today.getFullYear() !== this.currentDate.getFullYear()) {
-      this.currentDate = today;
-      this.generateCalendarDays();
-    }
-    this.selectedDate = today.toISOString().split('T')[0];
-    this.dateFilter = this.selectedDate;
-    this.applyFilters();
+
+  formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-ES', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   }
-  
-  // Cambiar al mes anterior
-  prevMonth() {
-    this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
-    this.generateCalendarDays();
-    this.updateCalendarData();
-  }
-  
-  // Cambiar al mes siguiente
-  nextMonth() {
-    this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
-    this.generateCalendarDays();
-    this.updateCalendarData();
-  }
-  
-  // Obtener el nombre del mes actual
-  getCurrentMonth(): string {
-    return this.currentDate.toLocaleString('default', { month: 'long' });
-  }
-  
-  // Obtener el año actual
-  getCurrentYear(): number {
-    return this.currentDate.getFullYear();
-  }
-  
-  // Ver detalles de una cita
-  viewAppointmentDetails(appointment: MedicalAppointment) {
-    this.selectedAppointment = { ...appointment };
+
+  // Métodos de modal
+  viewAppointmentDetails(appointment: Appointment) {
+    this.selectedAppointment = appointment;
+    this.showModal = true;
     this.showAppointmentModal = true;
   }
-  
-  // Cerrar modal de detalles
+
+  closeModal() {
+    this.showModal = false;
+    this.selectedAppointment = null;
+  }
+
   closeAppointmentModal() {
     this.showAppointmentModal = false;
     this.selectedAppointment = null;
   }
-  
-  // Iniciar una consulta médica
-  startAppointment(appointment: MedicalAppointment) {
-    this.appointmentsService.updateAppointmentStatus(appointment.id, 'in-progress');
-    
-    // Si estamos en el modal, actualizar el estado del appointment seleccionado
-    if (this.selectedAppointment && this.selectedAppointment.id === appointment.id) {
-      this.selectedAppointment.status = 'in-progress';
-    }
+
+  // Métodos de citas
+  startAppointment(appointment: Appointment) {
+    this.appointmentsService.updateAppointment(appointment.id, { 
+      status: 'in-progress' 
+    }).subscribe(() => {
+      this.loadDoctorAppointments();
+    });
   }
-  
-  // Completar una consulta médica
-  completeAppointment(appointment: MedicalAppointment) {
-    this.appointmentsService.updateAppointmentStatus(appointment.id, 'completed');
-    
-    // Si estamos en el modal, actualizar el estado del appointment seleccionado
-    if (this.selectedAppointment && this.selectedAppointment.id === appointment.id) {
-      this.selectedAppointment.status = 'completed';
-    }
+
+  completeAppointment(appointment: Appointment) {
+    this.appointmentsService.updateAppointment(appointment.id, { 
+      status: 'completed' 
+    }).subscribe(() => {
+      this.loadDoctorAppointments();
+      this.closeModal();
+    });
   }
-  
-  // Cancelar una consulta médica
-  cancelAppointment(appointment: MedicalAppointment) {
-    if (confirm('¿Está seguro de cancelar esta cita?')) {
-      this.appointmentsService.updateAppointmentStatus(appointment.id, 'cancelled');
-      
-      // Si estamos en el modal, actualizar el estado del appointment seleccionado
-      if (this.selectedAppointment && this.selectedAppointment.id === appointment.id) {
-        this.selectedAppointment.status = 'cancelled';
-      }
-    }
-  }
-  
-  // Método para mostrar notificaciones
-  showNotification(message: string, type: 'success' | 'error' | 'info' = 'success') {
-    // Implementación simple con console.log
-    console.log(`[${type.toUpperCase()}] ${message}`);
-    
-    // Si tienes un servicio de notificaciones, úsalo así:
-    // this.notificationService.show(message, type);
-    
-    // Alternativa: muestra una notificación nativa del navegador
-    if (Notification.permission === 'granted') {
-      new Notification('SaludPlus', {
-        body: message,
-        icon: '/assets/images/logo.png'
+
+  cancelAppointment(appointment: Appointment) {
+    if (confirm('¿Está seguro de que desea cancelar esta cita?')) {
+      this.appointmentsService.updateAppointment(appointment.id, { 
+        status: 'cancelled' 
+      }).subscribe(() => {
+        this.loadDoctorAppointments();
+        this.closeModal();
       });
     }
   }
 
-  // Reagendar una cita
-  rescheduleAppointment(appointment: MedicalAppointment) {
-    this.selectedAppointment = appointment;
-    
-    // Establecer los valores iniciales para la fecha y hora
-    this.newAppointmentDate = new Date().toISOString().split('T')[0]; // Fecha actual como valor inicial
-    this.newAppointmentTime = '10:00'; // Hora predeterminada
-    
-    this.showRescheduleModal = true;
-  }
-  
-  // Guardar cita reagendada
-  saveRescheduledAppointment() {
-    if (this.selectedAppointment && this.newAppointmentDate && this.newAppointmentTime) {
-      const updatedAppointment = {
-        id: this.selectedAppointment.id,
-        date: this.newAppointmentDate,
-        time: this.newAppointmentTime,
-        status: "rescheduled" as "rescheduled" // Tipado correcto
-      };
-      
-      this.appointmentsService.updateAppointment(updatedAppointment);
-      
-      // Actualizar UI
-      this.showRescheduleModal = false;
-      this.showNotification('Cita reagendada correctamente');
-      
-      // Limpiar los campos
-      this.newAppointmentDate = '';
-      this.newAppointmentTime = '';
-    }
-  }
-  
-  // Confirmar una cita
-  confirmAppointment(appointment: MedicalAppointment) {
-    if (appointment && appointment.id) {
-      const updatedAppointment = {
-        id: appointment.id,
-        status: 'confirmed' as 'confirmed'
-      };
-      
-      this.appointmentsService.updateAppointment(updatedAppointment);
-      
-      // Si estamos viendo este appointment, actualizar la UI
-      if (this.selectedAppointment && this.selectedAppointment.id === appointment.id) {
-        this.selectedAppointment.status = 'confirmed';
-      }
-      
-      this.showNotification('Cita confirmada correctamente');
-      
-      // Recargar datos para actualizar las estadísticas
-      setTimeout(() => this.calculateStats(), 500);
-    }
-  }
-  
-  // Método para guardar las notas actualizadas
-  saveNotes() {
-    if (this.selectedAppointment && this.selectedAppointment.id) {
-      // Crear objeto con las actualizaciones
-      const updatedAppointment = {
-        id: this.selectedAppointment.id,
-        notes: this.selectedAppointment.notes
-      };
-      
-      // Guardar los cambios
-      this.appointmentsService.updateAppointment(updatedAppointment);
-      
-      // Mostrar confirmación
-      this.showNotification('Notas guardadas correctamente');
-      
-      // Actualizar en la lista local
-      const index = this.appointments.findIndex(a => a.id === this.selectedAppointment?.id);
-      if (index >= 0) {
-        this.appointments[index].notes = this.selectedAppointment.notes;
-        
-        // Actualizar listas filtradas
-        this.applyFilters();
-        this.loadTodayAppointments();
-      }
-    }
-  }
-  
-  // Método para iniciar la edición de notas
-  editNotes() {
-    if (this.selectedAppointment) {
-      // Guardar notas actuales por si se cancela la edición
-      this.tempNotes = this.selectedAppointment.notes || '';
-    }
-  }
-  
-  // Método para cancelar la edición de notas
-  cancelEditNotes() {
-    if (this.selectedAppointment) {
-      // Restaurar notas anteriores
-      this.selectedAppointment.notes = this.tempNotes;
-    }
-  }
-  
-  // Verificar si una cita puede iniciarse (solo si está agendada o confirmada)
-  canStart(appointment: MedicalAppointment): boolean {
-    return appointment.status === 'scheduled' || appointment.status === 'confirmed';
-  }
-  
-  // Verificar si una cita puede completarse (solo si está in progreso)
-  canComplete(appointment: MedicalAppointment): boolean {
-    return appointment.status === 'in-progress';
-  }
-  
-  // Verificar si una cita puede cancelarse
-  canCancel(appointment: MedicalAppointment): boolean {
-    return appointment.status === 'scheduled' || appointment.status === 'confirmed' || 
-           appointment.status === 'in-progress';
-  }
-  
-  // Verificar si una cita puede ser confirmada (solo pendientes o programadas)
-  canConfirm(appointment: MedicalAppointment | null): boolean {
-    if (!appointment) return false;
-    return appointment.status === 'scheduled';
-  }
-  
-  // Verificar si una cita puede ser reagendada
-  canReschedule(appointment: MedicalAppointment | null): boolean {
-    if (!appointment) return false;
-    return ['scheduled', 'confirmed'].includes(appointment.status);
-  }
-  
-  // Formatear fecha
-  formatDate(dateString: string | null): string {
-    if (!dateString) return '';
-    
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+  confirmAppointment(appointment: Appointment) {
+    this.appointmentsService.updateAppointment(appointment.id, { 
+      status: 'confirmed' 
+    }).subscribe(() => {
+      this.loadDoctorAppointments();
     });
   }
 
-  // Obtener clase de prioridad
-  getPriorityClass(priority: string | undefined): string {
-    if (!priority) return 'priority-medium';
-    return `priority-${priority}`;
+  rescheduleAppointment(appointment: Appointment) {
+    if (!this.newAppointmentDate || !this.newAppointmentTime) {
+      alert('Por favor seleccione fecha y hora');
+      return;
+    }
+
+    this.appointmentsService.updateAppointment(appointment.id, {
+      date: this.newAppointmentDate,
+      time: this.newAppointmentTime,
+      status: 'scheduled'
+    }).subscribe(() => {
+      this.loadDoctorAppointments();
+      this.closeRescheduleModal();
+      this.closeModal();
+    });
   }
-  
-  // Obtener texto de prioridad
-  getPriorityText(priority: string | undefined): string {
-    if (!priority) return 'Media';
-    
-    switch(priority) {
-      case 'low': return 'Baja';
-      case 'medium': return 'Media';
-      case 'high': return 'Alta';
-      case 'urgent': return 'Urgente';
-      default: return priority;
+
+  openRescheduleModal() {
+    this.showRescheduleModal = true;
+    if (this.selectedAppointment) {
+      this.rescheduleDate = this.selectedAppointment.date;
+      this.rescheduleTime = this.selectedAppointment.time;
+      this.newAppointmentDate = this.selectedAppointment.date;
+      this.newAppointmentTime = this.selectedAppointment.time;
     }
   }
-  
-  // Obtener texto de estado
-  getStatusText(status: string | undefined): string {
-    if (!status) return 'Agendada';
-    
-    switch(status) {
-      case 'scheduled': return 'Agendada';
+
+  closeRescheduleModal() {
+    this.showRescheduleModal = false;
+    this.rescheduleDate = '';
+    this.rescheduleTime = '';
+    this.newAppointmentDate = '';
+    this.newAppointmentTime = '';
+  }
+
+  saveAppointmentNotes() {
+    if (!this.selectedAppointment) return;
+
+    this.appointmentsService.updateAppointment(this.selectedAppointment.id, {
+      notes: this.selectedAppointment.notes || ''
+    }).subscribe(() => {
+      const index = this.appointments.findIndex(apt => apt.id === this.selectedAppointment?.id);
+      if (index !== -1) {
+        this.appointments[index] = { ...this.appointments[index], notes: this.selectedAppointment?.notes };
+      }
+      this.applyFilters();
+    });
+  }
+
+  // Métodos de estado
+  canStart(appointment: Appointment): boolean {
+    return appointment.status === 'confirmed' || appointment.status === 'scheduled';
+  }
+
+  canComplete(appointment: Appointment): boolean {
+    return appointment.status === 'in-progress' || appointment.status === 'confirmed';
+  }
+
+  canCancel(appointment: Appointment): boolean {
+    return appointment.status !== 'completed' && appointment.status !== 'cancelled';
+  }
+
+  canConfirm(appointment: Appointment | null): boolean {
+    return appointment?.status === 'scheduled';
+  }
+
+  canReschedule(appointment: Appointment | null): boolean {
+    return appointment?.status === 'scheduled' || appointment?.status === 'confirmed';
+  }
+
+  // Métodos de estilo
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'scheduled': return '#ffa500';
+      case 'confirmed': return '#28a745';
+      case 'in-progress': return '#007bff';
+      case 'completed': return '#6f42c1';
+      case 'cancelled': return '#dc3545';
+      default: return '#6c757d';
+    }
+  }
+
+  getStatusText(status: string): string {
+    switch (status) {
+      case 'scheduled': return 'Programada';
       case 'confirmed': return 'Confirmada';
-      case 'in-progress': return 'En curso';
+      case 'in-progress': return 'En Progreso';
       case 'completed': return 'Completada';
       case 'cancelled': return 'Cancelada';
-      case 'rescheduled': return 'Reagendada';
-      case 'emergency': return 'Emergencia';
       default: return status;
     }
   }
-  
-  // Obtener clase CSS para el estado
-  getStatusClass(status: string | undefined): string {
-    if (!status) return 'status-scheduled';
-    
-    switch(status) {
-      case 'scheduled': return 'status-scheduled';
-      case 'confirmed': return 'status-confirmed';
-      case 'in-progress': return 'status-in-progress';
-      case 'completed': return 'status-completed';
-      case 'cancelled': return 'status-cancelled';
-      case 'rescheduled': return 'status-rescheduled';
-      case 'emergency': return 'status-emergency';
-      default: return `status-${status}`;
+
+  getStatusClass(status: string): string {
+    return `status-${status}`;
+  }
+
+  getPriorityColor(priority: string): string {
+    switch (priority) {
+      case 'urgent': return '#dc3545';
+      case 'high': return '#fd7e14';
+      case 'medium': return '#ffc107';
+      case 'low': return '#28a745';
+      default: return '#6c757d';
     }
+  }
+
+  getPriorityText(priority: string): string {
+    switch (priority) {
+      case 'urgent': return 'Urgente';
+      case 'high': return 'Alta';
+      case 'medium': return 'Media';
+      case 'low': return 'Baja';
+      default: return priority;
+    }
+  }
+
+  // ✅ AGREGAR MÉTODO QUE FALTABA
+  getPriorityClass(priority: string): string {
+    return `priority-${priority}`;
   }
 }
