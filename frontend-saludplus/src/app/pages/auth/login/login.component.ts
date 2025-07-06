@@ -14,7 +14,6 @@ import { AuthService } from '../../../services/auth.service';
 export class LoginComponent {
   email: string = '';
   password: string = '';
-  userType: 'patient' | 'doctor' | 'admin' = 'patient';
   errorMessage: string = '';
   isLoading: boolean = false;
 
@@ -24,35 +23,27 @@ export class LoginComponent {
   ) {}
 
   onSubmit() {
-    if (this.email && this.password && this.userType) {
+    if (this.email && this.password) {
       this.isLoading = true;
       this.errorMessage = '';
-      
-      // ✅ CORREGIDO: Solo pasar email y password al método login
       this.authService.login(this.email, this.password).subscribe({
         next: (response) => {
-          console.log('✅ Login successful:', response);
           this.isLoading = false;
-          
-          // ✅ AÑADIDO: Verificar el tipo de usuario después del login
           if (response.user) {
             const userRole = response.user.role || response.user.type;
-            
-            // Verificar que el rol coincida con el tipo seleccionado
-            if (userRole === this.userType) {
-              // Navegar según el tipo de usuario
-              if (this.userType === 'patient') {
-                this.router.navigate(['/patient/dashboard']);
-              } else if (this.userType === 'doctor') {
-                this.router.navigate(['/doctor/dashboard']);
-              }
+            // Redirige según el rol recibido
+            if (userRole === 'patient') {
+              this.router.navigate(['/patient/dashboard']);
+            } else if (userRole === 'doctor') {
+              this.router.navigate(['/doctor/dashboard']);
+            } else if (userRole === 'admin') {
+              this.router.navigate(['/admin/dashboard']);
             } else {
-              this.errorMessage = `Este usuario no tiene permisos de ${this.userType === 'patient' ? 'paciente' : 'doctor'}`;
+              this.errorMessage = 'Rol de usuario desconocido.';
             }
           }
         },
         error: (error) => {
-          console.error('❌ Login error:', error);
           this.isLoading = false;
           this.errorMessage = error.error?.message || 'Error en el login. Verifique sus credenciales.';
         }
