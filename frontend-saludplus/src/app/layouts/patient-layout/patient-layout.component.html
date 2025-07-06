@@ -36,14 +36,7 @@
   
   <!-- Main Content -->
   <main class="main-content">
-    <header class="main-header">
-      <div class="header-content">
-        <h1>Bienvenido, {{ currentUser?.name || 'Paciente' }}</h1>
-        <div class="user-info">
-          <span class="user-avatar">{{ getUserInitials() }}</span>
-        </div>
-      </div>
-    </header>
+   
     
     <div class="content">
       <router-outlet></router-outlet>

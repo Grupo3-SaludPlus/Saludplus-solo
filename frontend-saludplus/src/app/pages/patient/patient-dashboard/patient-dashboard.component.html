@@ -1,207 +1,123 @@
-<main>
-  <div class="dashboard-container">
-    <!-- Header del Dashboard -->
-    <div class="dashboard-header">
-      <div class="header-content">
-        <h1>Mi Dashboard</h1>
-        <p *ngIf="currentUser">Bienvenido, {{ currentUser.name }}</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn-edit-profile" (click)="editProfile()">
-          Editar Perfil
-        </button>
-      </div>
+<main class="dashboard-container">
+  <!-- Encabezado minimalista -->
+  <header class="main-header">
+    <h1>Perfil Médico</h1>
+    <div class="header-actions">
+      <button class="btn-edit" (click)="isEditMode = true" *ngIf="!isEditMode">
+        <i class="far fa-edit"></i> Editar
+      </button>
     </div>
+  </header>
 
-    <!-- Grid Principal -->
-    <div class="main-grid">
-      <!-- Perfil del Paciente -->
-      <div class="card profile-card">
-        <div class="card-content">
-          <div *ngIf="!isEditMode" class="profile-view">
-            <div class="profile-info-grid">
-              <div class="info-item">
-                <label>Nombre:</label>
-                <span>{{ getUserName() }}</span>
-              </div>
-              
-              <div class="info-item">
-                <label>Email:</label>
-                <span>{{ getUserEmail() }}</span>
-              </div>
-              
-              <div class="info-item">
-                <label>Teléfono:</label>
-                <span>{{ getUserPhone() }}</span>
-              </div>
-              
-              <div class="info-item">
-                <label>Fecha de Nacimiento:</label>
-                <span>{{ getUserBirthdate() }}</span>
-              </div>
-              
-              <div class="info-item">
-                <label>Edad:</label>
-                <!-- ✅ USAR MÉTODO HELPER -->
-                <span>{{ getUserAge() }}</span>
-              </div>
-              
-              <div class="info-item">
-                <label>Género:</label>
-                <span>{{ getGenderText(currentUser?.gender) }}</span>
-              </div>
-              
-              <div class="info-item">
-                <label>Tipo de Sangre:</label>
-                <span>{{ getUserBloodType() }}</span>
-              </div>
-              
-              <div class="info-item">
-                <label>Contacto de Emergencia:</label>
-                <span>{{ getUserEmergencyContact() }}</span>
-              </div>
-              
-              <!-- ✅ USAR MÉTODOS HELPER -->
-              <div class="info-item full-width">
-                <label>Alergias:</label>
-                <span>{{ getUserAllergies() }}</span>
-              </div>
-              
-              <div class="info-item full-width">
-                <label>Condiciones Crónicas:</label>
-                <span>{{ getUserChronic() }}</span>
-              </div>
-            </div>
+  <!-- Contenido principal -->
+  <div class="content-container">
+    <div class="profile-card">
+      <!-- Vista de perfil -->
+      <section *ngIf="!isEditMode" class="profile-view">
+        <div class="profile-info-grid">
+          <div class="info-item">
+            <label><i class="far fa-user"></i> Nombre</label>
+            <span>{{ getUserName() }}</span>
           </div>
-
-          <!-- Formulario de Edición (sin cambios) -->
-          <div *ngIf="isEditMode" class="profile-edit">
-            <form class="edit-form" (ngSubmit)="saveProfile()">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="phone">Teléfono:</label>
-                  <input 
-                    type="tel" 
-                    id="phone" 
-                    name="phone"
-                    [(ngModel)]="editingUser.phone"
-                    class="form-control">
-                </div>
-                
-                <div class="form-group">
-                  <label for="birthdate">Fecha de Nacimiento:</label>
-                  <input 
-                    type="date" 
-                    id="birthdate" 
-                    name="birthdate"
-                    [(ngModel)]="editingUser.birthdate"
-                    class="form-control">
-                </div>
-              </div>
-              
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="gender">Género:</label>
-                  <select 
-                    id="gender" 
-                    name="gender"
-                    [(ngModel)]="editingUser.gender"
-                    class="form-control">
-                    <option value="M">Masculino</option>
-                    <option value="F">Femenino</option>
-                    <option value="O">Otro</option>
-                  </select>
-                </div>
-                
-                <div class="form-group">
-                  <label for="bloodType">Tipo de Sangre:</label>
-                  <select 
-                    id="bloodType" 
-                    name="bloodType"
-                    [(ngModel)]="editingUser.bloodType"
-                    class="form-control">
-                    <option value="">Seleccionar</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label for="emergencyContact">Contacto de Emergencia:</label>
-                <input 
-                  type="text" 
-                  id="emergencyContact" 
-                  name="emergencyContact"
-                  [(ngModel)]="editingUser.emergencyContact"
-                  class="form-control"
-                  placeholder="Nombre y teléfono">
-              </div>
-              
-              <div class="form-group">
-                <label for="allergies">Alergias (separadas por comas):</label>
-                <textarea 
-                  id="allergies" 
-                  name="allergies"
-                  [(ngModel)]="allergiesText" 
-                  class="form-control"
-                  placeholder="Ejemplo: Polen, Nueces, Mariscos"
-                  rows="2"></textarea>
-              </div>
-              
-              <div class="form-group">
-                <label for="chronic">Condiciones Crónicas (separadas por comas):</label>
-                <textarea 
-                  id="chronic" 
-                  name="chronic"
-                  [(ngModel)]="chronicText" 
-                  class="form-control"
-                  placeholder="Ejemplo: Hipertensión, Diabetes"
-                  rows="2"></textarea>
-              </div>
-              
-              <div class="form-actions">
-                <button type="submit" class="btn-save">Guardar Cambios</button>
-                <button type="button" class="btn-cancel" (click)="cancelEdit()">Cancelar</button>
-              </div>
-            </form>
+          <div class="info-item">
+            <label><i class="far fa-envelope"></i> Email</label>
+            <span>{{ getUserEmail() }}</span>
+          </div>
+          <div class="info-item">
+            <label><i class="fas fa-phone"></i> Teléfono</label>
+            <span>{{ getUserPhone() }}</span>
+          </div>
+          <div class="info-item">
+            <label><i class="far fa-calendar"></i> Fecha de Nacimiento</label>
+            <span>{{ getUserBirthdate() }}</span>
+          </div>
+          <div class="info-item">
+            <label><i class="far fa-clock"></i> Edad</label>
+            <span>{{ getUserAge() }}</span>
+          </div>
+          <div class="info-item">
+            <label><i class="fas fa-venus-mars"></i> Género</label>
+            <span>{{ getGenderText(currentUser?.gender) }}</span>
+          </div>
+          <div class="info-item">
+            <label><i class="fas fa-tint"></i> Tipo de Sangre</label>
+            <span>{{ getUserBloodType() }}</span>
+          </div>
+          <div class="info-item">
+            <label><i class="fas fa-id-card-alt"></i> Contacto de Emergencia</label>
+            <span>{{ getUserEmergencyContact() }}</span>
+          </div>
+          <div class="info-item full-width">
+            <label><i class="fas fa-exclamation-circle"></i> Alergias</label>
+            <span>{{ getUserAllergies() }}</span>
+          </div>
+          <div class="info-item full-width">
+            <label><i class="fas fa-heartbeat"></i> Condiciones Crónicas</label>
+            <span>{{ getUserChronic() }}</span>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Modal de Perfil -->
-    <div *ngIf="showProfileForm" class="modal-overlay" (click)="cancelEditProfile()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Editar Perfil</h2>
-          <button class="modal-close" (click)="cancelEditProfile()">×</button>
-        </div>
-        
-        <div class="modal-body">
-          <form (ngSubmit)="saveProfile()">
+      <!-- Formulario de edición -->
+      <section *ngIf="isEditMode" class="profile-edit">
+        <form class="edit-form" (ngSubmit)="saveProfile()">
+          <div class="form-row">
             <div class="form-group">
-              <label>Teléfono:</label>
-              <input 
-                type="tel" 
-                [(ngModel)]="editingUser.phone"
-                name="phone"
-                class="form-control">
+              <label for="phone"><i class="fas fa-phone"></i> Teléfono</label>
+              <input id="phone" name="phone" type="tel" [(ngModel)]="editingUser.phone">
             </div>
-            
-            <div class="modal-actions">
-              <button type="submit" class="btn-save">Guardar</button>
-              <button type="button" class="btn-cancel" (click)="cancelEditProfile()">Cancelar</button>
+            <div class="form-group">
+              <label for="birthdate"><i class="far fa-calendar"></i> Fecha de Nacimiento</label>
+              <input id="birthdate" name="birthdate" type="date" [(ngModel)]="editingUser.birthdate">
             </div>
-          </form>
-        </div>
-      </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="gender"><i class="fas fa-venus-mars"></i> Género</label>
+              <select id="gender" name="gender" [(ngModel)]="editingUser.gender">
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="O">Otro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bloodType"><i class="fas fa-tint"></i> Tipo de Sangre</label>
+              <select id="bloodType" name="bloodType" [(ngModel)]="editingUser.bloodType">
+                <option value="">Seleccionar</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="emergencyContact"><i class="fas fa-id-card-alt"></i> Contacto de Emergencia</label>
+            <input id="emergencyContact" name="emergencyContact" type="text" [(ngModel)]="editingUser.emergencyContact">
+          </div>
+          
+          <div class="form-group">
+            <label for="allergies"><i class="fas fa-exclamation-circle"></i> Alergias</label>
+            <textarea id="allergies" name="allergies" rows="2" [(ngModel)]="allergiesText"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="chronic"><i class="fas fa-heartbeat"></i> Condiciones Crónicas</label>
+            <textarea id="chronic" name="chronic" rows="2" [(ngModel)]="chronicText"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Guardar</button>
+            <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancelar</button>
+          </div>
+        </form>
+      </section>
     </div>
   </div>
 </main>

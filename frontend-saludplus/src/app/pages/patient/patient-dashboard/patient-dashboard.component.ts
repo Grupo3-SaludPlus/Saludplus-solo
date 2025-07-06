@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -24,7 +24,9 @@ interface EditableUser {
   imports: [CommonModule, FormsModule],
   templateUrl: './patient-dashboard.component.html',
   styleUrls: ['./patient-dashboard.component.css'],
-  providers: [AuthService, AppointmentsService]
+  host: { 'class': 'full-width-dashboard' }, // Añade esta clase al host
+  providers: [AuthService, AppointmentsService],
+  encapsulation: ViewEncapsulation.None  // Importante: deshabilita la encapsulación
 })
 export class PatientDashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
@@ -330,5 +332,19 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
       return this.currentUser.chronic.join(', ');
     }
     return 'No registradas';
+  }
+
+  // Agregar método para iniciales del usuario
+  getUserInitials(): string {
+    if (!this.currentUser?.name) {
+      return '';
+    }
+    // Toma las primeras dos iniciales de nombre y apellido
+    const parts = this.currentUser.name.trim().split(/\s+/);
+    const initials = parts
+      .map(part => part.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('');
+    return initials;
   }
 }

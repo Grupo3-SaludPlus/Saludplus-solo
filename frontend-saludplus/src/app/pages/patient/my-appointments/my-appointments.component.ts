@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -28,7 +28,8 @@ interface Appointment {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './my-appointments.component.html',
-  styleUrls: ['./my-appointments.component.css']
+  styleUrls: ['./my-appointments.component.css'],
+  encapsulation: ViewEncapsulation.None, // Esto permite que los estilos escapen del componente
 })
 export class MyAppointmentsComponent implements OnInit, OnDestroy {
   // Tabs y filtros

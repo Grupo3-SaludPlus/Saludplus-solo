@@ -4,12 +4,11 @@ import { Router } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { DoctorLayoutComponent } from './layouts/doctor-layout/doctor-layout.component';
 
-// ✅ CORREGIDO: Función guard que retorna Observable/Promise/boolean
+// Mantenemos el guard actual
 export const authGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
   
-  // ✅ CORREGIDO: Sin paréntesis si es un getter
   if (authService.isAuthenticated) {
     return true;
   } else {
@@ -19,17 +18,30 @@ export const authGuard = () => {
 };
 
 export const routes: Routes = [
+  // ✅ PÁGINA PRINCIPAL (primera que se ve)
   {
     path: '',
-    redirectTo: '/login',
-    pathMatch: 'full'
+    loadComponent: () => import('./shared/home/home.component').then(m => m.HomeComponent)
   },
+  
+  // Rutas de autenticación
   {
     path: 'login',
     loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent)
   },
+  //{ path: 'register', loadComponent: () => import('./pages/auth/register/register.component').then(m => m.RegisterComponent) },
   
-  // Rutas de paciente
+  // Rutas públicas
+  {
+    path: 'appointments',
+    loadComponent: () => import('./pages/appointments/appointments.component').then(m => m.AppointmentsComponent)
+  },
+  {
+    path: 'doctors',
+    loadComponent: () => import('./pages/doctors/doctors.component').then(m => m.DoctorsComponent)
+  },
+  
+  // Rutas de paciente (protegidas)
   {
     path: 'patient',
     loadComponent: () => import('./layouts/patient-layout/patient-layout.component').then(m => m.PatientLayoutComponent),
@@ -47,11 +59,16 @@ export const routes: Routes = [
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
+      },
+      // Redirección para rutas no encontradas dentro de patient
+      {
+        path: '**',
+        redirectTo: 'dashboard'
       }
     ]
   },
 
-  // Rutas de doctor
+  // Rutas de doctor (protegidas)
   {
     path: 'doctor',
     component: DoctorLayoutComponent,
@@ -73,13 +90,24 @@ export const routes: Routes = [
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
+      },
+      // Redirección para rutas no encontradas dentro de doctor
+      {
+        path: '**',
+        redirectTo: 'dashboard'
       }
     ]
   },
 
-  // Ruta comodín
+  // Ruta API Tester (como en la configuración anterior)
   {
-    path: '**',
-    redirectTo: '/login'
+    path: 'api-tester',
+    loadComponent: () => import('./pages/api-tester/api-tester.component').then(m => m.ApiTesterComponent)
+  },
+
+  // Ruta comodín - redirigir a home como en la configuración anterior
+  {
+    path: '**', 
+    redirectTo: ''
   }
 ];
