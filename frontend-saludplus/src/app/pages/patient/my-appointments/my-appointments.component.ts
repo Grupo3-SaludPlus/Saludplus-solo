@@ -129,48 +129,8 @@ export class MyAppointmentsComponent implements OnInit, OnDestroy {
   loadMockData() {
     console.log('🧪 Loading mock data...');
     this.allAppointments = [
-      {
-        id: 1,
-        patientName: 'Juan Pérez',
-        doctorName: 'Dr. María García',
-        doctorSpecialty: 'Cardiología',
-        date: '2025-07-10',
-        time: '10:00',
-        reason: 'Control rutinario',
-        priority: 'medium',
-        status: 'scheduled',
-        location: 'Consulta Externa - Piso 2',
-        doctor_name: 'Dr. María García',
-        specialty: 'Cardiología'
-      },
-      {
-        id: 2,
-        patientName: 'Juan Pérez',
-        doctorName: 'Dra. Ana López',
-        doctorSpecialty: 'Medicina General',
-        date: '2025-06-15',
-        time: '14:30',
-        reason: 'Consulta general',
-        priority: 'low',
-        status: 'completed',
-        location: 'Consulta Externa - Piso 1',
-        doctor_name: 'Dra. Ana López',
-        specialty: 'Medicina General'
-      },
-      {
-        id: 3,
-        patientName: 'Juan Pérez',
-        doctorName: 'Dr. Carlos Ruiz',
-        doctorSpecialty: 'Traumatología',
-        date: '2025-07-20',
-        time: '16:00',
-        reason: 'Dolor en rodilla',
-        priority: 'high',
-        status: 'scheduled',
-        location: 'Consulta Externa - Piso 3',
-        doctor_name: 'Dr. Carlos Ruiz',
-        specialty: 'Traumatología'
-      }
+     
+     
     ];
 
     this.categorizeAppointments();

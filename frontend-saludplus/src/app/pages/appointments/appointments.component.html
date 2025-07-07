@@ -93,32 +93,40 @@
             <span class="step-number">2</span>
             Selecciona el médico de preferencia
           </h3>
+          
+          @if (filteredDoctors.length === 0) {
+            <div class="no-doctors-message">
+              <i class="fas fa-info-circle"></i>
+              <p>No hay doctores disponibles para la especialidad "{{ appointmentForm.specialty }}". 
+              Puedes seleccionar "Cualquier médico disponible" o volver a elegir otra especialidad.</p>
+            </div>
+          }
+          
           <div class="doctor-selection">
-            @for (doctor of filteredDoctors; track doctor) {
+            @for (doctor of filteredDoctors; track doctor.id || doctor.name) {
               <div class="doctor-option"
                 [ngClass]="{'selected': appointmentForm.doctor === doctor.name}"
-                (click)="appointmentForm.doctor = doctor.name">
-                <div class="doctor-avatar">
-                  <div class="doctor-initials">{{ doctor.name.charAt(0) }}</div>
+                (click)="selectDoctor(doctor.name)">
+                <div class="doctor-avatar" [ngClass]="{'any-avatar': doctor.name.includes('Cualquier')}">
+                  @if (doctor.name.includes('Cualquier')) {
+                    <i class="fas fa-user-friends"></i>
+                  } @else {
+                    <span class="doctor-initials">{{ doctor.name.charAt(0) }}</span>
+                  }
                 </div>
                 <div class="doctor-details">
                   <div class="doctor-name">{{ doctor.name }}</div>
                   <div class="doctor-specialty">{{ doctor.specialty }}</div>
                 </div>
+                @if (appointmentForm.doctor === doctor.name) {
+                  <div class="selected-indicator">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                }
               </div>
             }
-            <div class="doctor-option"
-              [ngClass]="{'selected': appointmentForm.doctor === 'Cualquier especialista disponible'}"
-              (click)="appointmentForm.doctor = 'Cualquier especialista disponible'">
-              <div class="doctor-avatar any-avatar">
-                <i class="fas fa-user-friends"></i>
-              </div>
-              <div class="doctor-details">
-                <div class="doctor-name">Cualquier médico disponible</div>
-                <div class="doctor-specialty">{{ appointmentForm.specialty }}</div>
-              </div>
-            </div>
           </div>
+          
           <div class="step-actions">
             <button class="back-btn" (click)="previousStep()">
               <i class="fas fa-arrow-left"></i> Atrás
@@ -130,78 +138,151 @@
         </div>
       }
 
-      <!-- Paso 3: Fecha y hora -->
+      <!-- Paso 3: Fecha y hora - MEJORADO -->
       @if (isCurrentStep(3)) {
         <div class="appointment-form">
           <h3>
             <span class="step-number">3</span>
             Selecciona fecha y hora
           </h3>
+          
           <div class="date-time-container">
+            <!-- Selector de fecha mejorado -->
             <div class="date-selector">
+              <h4><i class="far fa-calendar-alt"></i> Selecciona una fecha</h4>
+              
+              <!-- Navegación del calendario -->
               <div class="calendar-header">
-                <button class="calendar-arrow" (click)="prevMonth()">
+                <button class="calendar-nav-btn" (click)="previousMonth()" type="button">
                   <i class="fas fa-chevron-left"></i>
                 </button>
-                <span class="calendar-month">
-                  {{ calendarMonth | date:'MMMM yyyy' }}
-                </span>
-                <button class="calendar-arrow" (click)="nextMonth()">
+                <div class="calendar-title">
+                  <span class="current-month">{{ getCurrentMonthName() }}</span>
+                  <span class="current-year">{{ getCurrentYear() }}</span>
+                </div>
+                <button class="calendar-nav-btn" (click)="nextMonth()" type="button">
                   <i class="fas fa-chevron-right"></i>
                 </button>
               </div>
-              <div class="calendar-days">
-                @for (d of ['Su','Mo','Tu','We','Th','Fr','Sa']; track d) {
-                  <span>{{ d }}</span>
-                }
+
+              <!-- Días de la semana -->
+              <div class="calendar-weekdays">
+                <div class="weekday">Dom</div>
+                <div class="weekday">Lun</div>
+                <div class="weekday">Mar</div>
+                <div class="weekday">Mié</div>
+                <div class="weekday">Jue</div>
+                <div class="weekday">Vie</div>
+                <div class="weekday">Sáb</div>
               </div>
-              <div class="date-grid">
-                @for (day of calendarDays; track day) {
-                  <div
-                    class="date-card"
-                   [ngClass]="{
-                     'selected': selectedDate && day.date && 
-                                (day.date | date:'yyyy-MM-dd') === (selectedDate | date:'yyyy-MM-dd'),
-                     'disabled': !day.available,
-                     'today': day.isToday,
-                     'outside-month': day.label === ''
-                   }"
-                    (click)="day.available && day.date && selectDate(day.date.toISOString())">
-                    {{ day.label }}
+
+              <!-- Grid de fechas -->
+              <div class="calendar-dates">
+                @for (date of getAvailableDates(); track date) {
+                  <div 
+                    class="date-option"
+                    [ngClass]="{
+                      'selected': appointmentForm.date === date,
+                      'today': isToday(date),
+                      'weekend': isWeekend(date),
+                      'past': isPastDate(date)
+                    }"
+                    [attr.disabled]="isPastDate(date) || isWeekend(date)"
+                    (click)="!isPastDate(date) && !isWeekend(date) && selectDate(date)">
+                    
+                    <div class="date-number">{{ getDateNumber(date) }}</div>
+                    <div class="date-day">{{ getDayName(date) }}</div>
+                    
+                    @if (isToday(date)) {
+                      <div class="date-badge today-badge">Hoy</div>
+                    }
+                    @if (isWeekend(date)) {
+                      <div class="date-badge weekend-badge">No disponible</div>
+                    }
                   </div>
                 }
               </div>
+
+              <!-- Fecha seleccionada -->
+              @if (appointmentForm.date) {
+                <div class="selected-date-display">
+                  <i class="fas fa-calendar-check"></i>
+                  <span>Fecha seleccionada: {{ formatSelectedDate(appointmentForm.date) }}</span>
+                </div>
+              }
             </div>
+
+            <!-- Selector de hora mejorado -->
             @if (appointmentForm.date) {
               <div class="time-selector">
                 <h4><i class="far fa-clock"></i> Selecciona una hora</h4>
-                <div class="time-grid">
+                
+                <div class="time-periods">
                   <!-- Horarios de mañana -->
-                  <div class="time-category">Mañana</div>
-                  @for (hour of availableHours; track hour) {
-                    @if (hour < '12:00') {
-                      <div class="time-card"
-                        [ngClass]="{'selected': appointmentForm.time === hour}"
-                        (click)="selectHour(hour)">
-                        {{ hour }}
-                      </div>
-                    }
-                  }
+                  <div class="time-period">
+                    <div class="period-header">
+                      <i class="fas fa-sun"></i>
+                      <span>Mañana</span>
+                    </div>
+                    <div class="time-slots">
+                      @for (time of getMorningTimes(); track time) {
+                        <button 
+                          type="button"
+                          class="time-slot"
+                          [ngClass]="{'selected': appointmentForm.time === time}"
+                          (click)="selectTime(time)">
+                          {{ time }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+
                   <!-- Horarios de tarde -->
-                  <div class="time-category">Tarde</div>
-                  @for (hour of availableHours; track hour) {
-                    @if (hour >= '12:00') {
-                      <div class="time-card"
-                        [ngClass]="{'selected': appointmentForm.time === hour}"
-                        (click)="selectHour(hour)">
-                        {{ hour }}
-                      </div>
-                    }
-                  }
+                  <div class="time-period">
+                    <div class="period-header">
+                      <i class="fas fa-cloud-sun"></i>
+                      <span>Tarde</span>
+                    </div>
+                    <div class="time-slots">
+                      @for (time of getAfternoonTimes(); track time) {
+                        <button 
+                          type="button"
+                          class="time-slot"
+                          [ngClass]="{'selected': appointmentForm.time === time}"
+                          (click)="selectTime(time)">
+                          {{ time }}
+                        </button>
+                      }
+                    </div>
+                  </div>
                 </div>
+
+                <!-- Hora seleccionada -->
+                @if (appointmentForm.time) {
+                  <div class="selected-time-display">
+                    <i class="fas fa-clock"></i>
+                    <span>Hora seleccionada: {{ appointmentForm.time }}</span>
+                  </div>
+                }
               </div>
             }
           </div>
+
+          <!-- Resumen de fecha y hora -->
+          @if (appointmentForm.date && appointmentForm.time) {
+            <div class="datetime-summary">
+              <div class="summary-card">
+                <i class="fas fa-calendar-alt"></i>
+                <div class="summary-info">
+                  <div class="summary-title">Tu cita será el:</div>
+                  <div class="summary-value">
+                    {{ formatSelectedDate(appointmentForm.date) }} a las {{ appointmentForm.time }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
           <div class="step-actions">
             <button class="back-btn" (click)="previousStep()">
               <i class="fas fa-arrow-left"></i> Atrás
@@ -218,150 +299,127 @@
         <div class="appointment-form">
           <h3>
             <span class="step-number">4</span>
-            {{ isLoggedIn ? 'Confirma tu cita' : 'Completa tus datos personales' }}
+            Información de contacto (opcional)
           </h3>
-          <!-- Campos ocultos para usuarios autenticados -->
+          
           @if (!isLoggedIn) {
-            <div class="form-group">
-              <label for="name">Nombre completo*</label>
-              <input
-                type="text"
-                id="name"
-                [(ngModel)]="appointmentForm.name"
-                name="name"
-                required
-                placeholder="Ingresa tu nombre completo">
+            <div class="info-message">
+              <i class="fas fa-info-circle"></i>
+              <p>Puedes proporcionar tu información de contacto para que podamos comunicarnos contigo, 
+              o continuar de forma anónima.</p>
+            </div>
+            
+            <div class="form-fields">
+              <div class="form-group">
+                <label for="name">Nombre completo (opcional)</label>
+                <input 
+                  type="text" 
+                  id="name"
+                  [(ngModel)]="appointmentForm.name" 
+                  placeholder="Ingresa tu nombre completo">
               </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="email">Correo electrónico*</label>
-                  <input
-                    type="email"
-                    id="email"
-                    [(ngModel)]="appointmentForm.email"
-                    name="email"
-                    required
-                    placeholder="ejemplo@correo.com">
-                  </div>
-                  <div class="form-group">
-                    <label for="phone">Teléfono*</label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      [(ngModel)]="appointmentForm.phone"
-                      name="phone"
-                      required
-                      placeholder="+56 9 XXXX XXXX">
-                    </div>
-                  </div>
-                }
-                <!-- Información del usuario autenticado (visible solo para mostrar que se usará) -->
-                @if (isLoggedIn) {
-                  <div class="user-profile-summary">
-                    <p class="info-message">
-                      <i class="fas fa-info-circle"></i>
-                      Se utilizarán tus datos de perfil para agendar la cita.
-                    </p>
-                  </div>
-                }
-                <!-- Motivo de consulta (siempre visible) -->
-                <div class="form-group">
-                  <label for="message">
-                    Motivo de consulta (opcional)
-                    <span class="tip">Puedes ajustar el tamaño desde la esquina inferior derecha</span>
-                  </label>
-                  <textarea
-                    id="message"
-                    [(ngModel)]="appointmentForm.message"
-                    name="message"
-                    rows="3"
-                    placeholder="Describe brevemente el motivo de tu consulta"
-                  aria-label="Motivo de consulta"></textarea>
-                </div>
-                <div class="appointment-summary">
-                  <h4>Resumen de tu cita</h4>
-                  <div class="summary-details">
-                    <div class="summary-item">
-                      <span class="summary-label">Especialidad:</span>
-                      <span class="summary-value">{{ appointmentForm.specialty }}</span>
-                    </div>
-                    <div class="summary-item">
-                      <span class="summary-label">Médico:</span>
-                      <span class="summary-value">{{ appointmentForm.doctor }}</span>
-                    </div>
-                    <div class="summary-item">
-                      <span class="summary-label">Fecha:</span>
-                      <span class="summary-value">{{ appointmentForm.date | date:'dd/MM/yyyy' }}</span>
-                    </div>
-                    <div class="summary-item">
-                      <span class="summary-label">Hora:</span>
-                      <span class="summary-value">{{ appointmentForm.time }}</span>
-                    </div>
-                    <!-- Información del paciente (solo para logueados) -->
-                    @if (isLoggedIn) {
-                      <div class="summary-item">
-                        <span class="summary-label">Paciente:</span>
-                        <span class="summary-value">{{ currentUserName }}</span>
-                      </div>
-                    }
-                  </div>
-                </div>
-                <div class="step-actions">
-                  <button class="back-btn" (click)="previousStep()">
-                    <i class="fas fa-arrow-left"></i> Atrás
-                  </button>
-                  <button class="submit-btn" [disabled]="!canAdvance()" (click)="submitAppointment()">
-                    <i class="fas fa-check-circle"></i> Confirmar Cita
-                  </button>
-                </div>
-                @if (!isLoggedIn) {
-                  <p class="form-disclaimer">* Campos requeridos</p>
-                }
+              
+              <div class="form-group">
+                <label for="email">Correo electrónico (opcional)</label>
+                <input 
+                  type="email" 
+                  id="email"
+                  [(ngModel)]="appointmentForm.email" 
+                  placeholder="ejemplo@correo.com">
               </div>
-            }
-
-            <!-- Información adicional (visible en todos los pasos) -->
-            <div class="appointment-info">
-              <div class="info-card">
-                <h3><i class="far fa-clock"></i> Horario de atención</h3>
-                <p><strong>Lunes a Viernes:</strong> 8:00 - 20:00 hrs.</p>
-                <p><strong>Sábados:</strong> 9:00 - 14:00 hrs.</p>
-                <p><strong>Domingos:</strong> Cerrado</p>
+              
+              <div class="form-group">
+                <label for="phone">Teléfono (opcional)</label>
+                <input 
+                  type="tel" 
+                  id="phone"
+                  [(ngModel)]="appointmentForm.phone" 
+                  placeholder="+56 9 1234 5678">
               </div>
-
-              <div class="info-card">
-                <h3><i class="far fa-address-card"></i> Contacto</h3>
-                <p><strong>Teléfono:</strong> +56 2 2345 6789</p>
-                <p><strong>Email:</strong> contacto&#64;saludplus.cl</p>
-                <p><strong>Dirección:</strong> Av. Providencia 1234, Santiago</p>
+              
+              <div class="form-group">
+                <label for="message">Mensaje adicional (opcional)</label>
+                <textarea 
+                  id="message"
+                  [(ngModel)]="appointmentForm.message" 
+                  placeholder="Describe brevemente el motivo de tu consulta o cualquier información adicional...">
+                </textarea>
               </div>
             </div>
-          </div>
-        </section>
-      </main>
-
-      <!-- Modal de confirmación - simplificado para garantizar funcionamiento -->
-      @if (showConfirmationModal) {
-        <div class="modal-overlay">
-          <div class="confirmation-modal">
-            <div class="modal-content">
-              <h3 class="modal-title">¡Confirmación de Cita!</h3>
-              <p>Tu cita médica ha sido agendada correctamente</p>
-              <div class="modal-actions">
-                <button class="modal-button primary" (click)="navigateToMyAppointments()">
-                  Ver Mis Citas
-                </button>
+            
+            <p class="optional-note">
+              <i class="fas fa-user-secret"></i>
+              Si prefieres mantener el anonimato, puedes continuar sin completar estos campos.
+            </p>
+          } @else {
+            <div class="logged-user-info">
+              <i class="fas fa-user-check"></i>
+              <p>Hola <strong>{{ currentUserName }}</strong>, tu información de usuario será utilizada para esta cita.</p>
+              
+              <div class="form-group">
+                <label for="message">Mensaje adicional (opcional)</label>
+                <textarea 
+                  id="message"
+                  [(ngModel)]="appointmentForm.message" 
+                  placeholder="Describe brevemente el motivo de tu consulta...">
+                </textarea>
               </div>
             </div>
+          }
+          
+          <div class="step-actions">
+            <button class="back-btn" (click)="previousStep()">
+              <i class="fas fa-arrow-left"></i> Atrás
+            </button>
+            <button class="confirm-btn" (click)="submitAppointment()">
+              <i class="fas fa-calendar-check"></i> Confirmar Cita
+            </button>
           </div>
         </div>
       }
 
-      <style>
-        .tip {
-        font-size: 12px;
-        color: #64748b;
-        font-weight: normal;
-        margin-left: 10px;
-      }
-    </style>
+      <!-- Información adicional (visible en todos los pasos) -->
+      <div class="appointment-info">
+        <div class="info-card">
+          <h3><i class="far fa-clock"></i> Horario de atención</h3>
+          <p><strong>Lunes a Viernes:</strong> 8:00 - 20:00 hrs.</p>
+          <p><strong>Sábados:</strong> 9:00 - 14:00 hrs.</p>
+          <p><strong>Domingos:</strong> Cerrado</p>
+        </div>
+
+        <div class="info-card">
+          <h3><i class="far fa-address-card"></i> Contacto</h3>
+          <p><strong>Teléfono:</strong> +56 2 2345 6789</p>
+          <p><strong>Email:</strong> contacto&#64;saludplus.cl</p>
+          <p><strong>Dirección:</strong> Av. Providencia 1234, Santiago</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Modal de confirmación - simplificado para garantizar funcionamiento -->
+@if (showConfirmationModal) {
+  <div class="modal-overlay">
+    <div class="confirmation-modal">
+      <div class="modal-content">
+        <h3 class="modal-title">¡Confirmación de Cita!</h3>
+        <p>Tu cita médica ha sido agendada correctamente</p>
+        <div class="modal-actions">
+          <button class="modal-button primary" (click)="navigateToMyAppointments()">
+            Ver Mis Citas
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<style>
+  .tip {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: normal;
+  margin-left: 10px;
+}
+</style>

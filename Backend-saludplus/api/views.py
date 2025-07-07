@@ -53,7 +53,7 @@ class PatientViewSet(viewsets.ModelViewSet):
 class DoctorViewSet(viewsets.ModelViewSet):
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny] 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['specialty', 'is_available']
     search_fields = ['name', 'email', 'specialty']
@@ -104,7 +104,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
 class AppointmentViewSet(viewsets.ModelViewSet):
     queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'priority', 'appointment_type', 'date']
     search_fields = ['patient__name', 'doctor__name', 'reason']

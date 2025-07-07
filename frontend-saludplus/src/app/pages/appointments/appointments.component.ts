@@ -1,459 +1,347 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { DoctorsService} from '../../services/doctors.service';
-import { Doctor } from '../../services/api.service';
-import { AuthService} from '../../services/auth.service';
-import { User } from '../../services/api.service';// Cambiar esta línea
-import { SharedAppointmentsService, AppointmentBase } from '../../services/shared-appointments.service';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { ApiService } from '../../services/api.service'; // importa el servicio
 
 @Component({
   selector: 'app-appointments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './appointments.component.html',
   styleUrls: ['./appointments.component.css']
 })
-export class AppointmentsComponent implements OnInit, OnDestroy {
-  title = 'Agenda tu Hora Médica';
-  subtitle = 'Programa una cita con nuestros profesionales en simples pasos';
-  
+export class AppointmentsComponent implements OnInit {
   currentStep = 1;
-  totalSteps = 4;
+  showConfirmationModal = false;
+  isLoggedIn = false;
+  currentUserName = '';
+  
+  title = 'Agenda tu Cita Médica';
+  subtitle = 'Reserva tu consulta médica de forma rápida y sencilla';
   
   appointmentForm = {
-    name: '',
-    email: '',
-    phone: '',
     specialty: '',
     doctor: '',
     date: '',
     time: '',
+    name: '',
+    email: '',
+    phone: '',
     message: ''
   };
 
-  specialties: string[] = [];
-  availableDoctors: Doctor[] = [];
-  filteredDoctors: Doctor[] = [];
-  availableDates: string[] = [];
-  selectedDate: string = '';
-  availableHours: string[] = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', 
-    '12:00', '14:00', '14:30', '15:00', '15:30', 
-    '16:00', '16:30', '17:00', '17:30'
+  specialties = [
+    'Medicina General',
+    'Cardiología',
+    'Dermatología',
+    'Neurología',
+    'Pediatría',
+    'Ginecología',
+    'Traumatología'
   ];
+
+  doctors: any[] = [];
+  currentMonth = new Date();
   
-  // Agregar estas propiedades
-  isLoggedIn = false;
-  currentUserName = '';
-
-  // Añadir esta propiedad a la clase
-  showConfirmationModal: boolean = false;
-
-  calendarMonth: Date = new Date();
-  calendarDays: { date: Date, label: number | string, available: boolean, isToday: boolean }[] = [];
-
-  // Nueva propiedad para el usuario actual
-  currentUser: User | null = null;
-  appointments: AppointmentBase[] = [];
-  filteredAppointments: AppointmentBase[] = [];
-  
-  // Suscripciones
-  private userSubscription?: Subscription;
-  private appointmentsSubscription?: Subscription;
+  availableTimes = [
+    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'
+  ];
 
   constructor(
-    private doctorsService: DoctorsService,
-    private route: ActivatedRoute,
+    private apiService: ApiService, // inyecta el ApiService
     private router: Router,
-    private appointmentsService: SharedAppointmentsService,
-    private authService: AuthService,
-    // Add ChangeDetectorRef
-    private cd: ChangeDetectorRef 
-  ) {
-    // Initialize showConfirmationModal explicitly
-    this.showConfirmationModal = false;
-  }
-  
+    private cd: ChangeDetectorRef
+  ) {}
+
   ngOnInit() {
-    // Cargar médicos desde el servicio
-    this.doctorsService.getAllDoctors().subscribe(doctors => {
-      this.availableDoctors = doctors;
-      
-      // Extraer especialidades únicas de los médicos
-      this.specialties = [...new Set(doctors.map(doctor => doctor.specialty))];
-      
-      // Verificar parámetros de consulta para preseleccionar médico
-      this.checkQueryParams();
-    });
-    
-    // Generar fechas disponibles (próximos 15 días, excluyendo domingos)
-    const today = new Date();
-    this.availableDates = Array(15).fill(null).map((_, i) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i + 1); // +1 para empezar mañana
-      
-      // Si es domingo (0), sumar un día más
-      if (date.getDay() === 0) {
-        date.setDate(date.getDate() + 1);
-      }
-      
-      return this.formatDate(date);
-    });
-    
-    // Verificar si el usuario está autenticado
-    this.authService.currentUser$.subscribe((user: User | null) => {
-      this.currentUser = user;
-      if (user) {
-        this.isLoggedIn = true;
-        this.currentUserName = user.name;
-        
-        // Pre-llenar los campos del formulario con los datos del usuario
-        this.appointmentForm.name = user.name;
-        this.appointmentForm.email = user.email || '';
-        this.appointmentForm.phone = user.phone || '';
-        
-        // Cargar citas del usuario
-        this.loadUserAppointments();
-      } else {
-        this.isLoggedIn = false;
-        this.currentUserName = '';
-      }
-    });
+    this.checkLoginStatus();
+    this.loadDoctors();
+  }
 
-    this.generateCalendar();
+  checkLoginStatus() {
+    const token = localStorage.getItem('token');
+    const userName = localStorage.getItem('userName');
+    
+    this.isLoggedIn = !!token;
+    this.currentUserName = userName || '';
+  }
 
-    // Suscribirse a los cambios del usuario
-    this.userSubscription = this.authService.currentUser$.subscribe((user: User | null) => {
-      this.currentUser = user;
-      if (user) {
-        this.loadUserAppointments();
+  loadDoctors() {
+    console.log('🔄 Cargando doctores...');
+    
+    this.apiService.getDoctors().subscribe({
+      next: (doctors) => {
+        console.log('✅ Doctores recibidos del backend:', doctors);
+        
+        this.doctors = [
+          { name: 'Cualquier médico disponible', specialty: 'General', id: null },
+          ...doctors
+        ];
+        
+        console.log('📋 Lista final de doctores:', this.doctors);
+        this.cd.detectChanges();
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar doctores:', error);
+        console.log('🔄 Usando doctores de fallback...');
+        
+        // Fallback con más doctores de ejemplo
+        this.doctors = [
+          { name: 'Cualquier médico disponible', specialty: 'General', id: null },
+          { name: 'Dr. Juan Pérez', specialty: 'Cardiología', id: 1 },
+          { name: 'Dra. María González', specialty: 'Dermatología', id: 2 },
+          { name: 'Dr. Carlos López', specialty: 'Neurología', id: 3 },
+          { name: 'Dra. Ana Martínez', specialty: 'Pediatría', id: 4 },
+          { name: 'Dr. Luis Rodríguez', specialty: 'Medicina General', id: 5 }
+        ];
+        
+        console.log('📋 Doctores de fallback cargados:', this.doctors);
+        this.cd.detectChanges();
       }
     });
   }
-  
-  ngOnDestroy() {
-    this.userSubscription?.unsubscribe();
-    this.appointmentsSubscription?.unsubscribe();
+
+  get filteredDoctors() {
+    console.log('🔍 Filtrando doctores por especialidad:', this.appointmentForm.specialty);
+    console.log('👥 Doctores disponibles:', this.doctors);
+    
+    if (!this.appointmentForm.specialty) {
+      console.log('📝 No hay especialidad seleccionada, mostrando todos');
+      return this.doctors;
+    }
+    
+    const filtered = this.doctors.filter(doctor => 
+      doctor.name === 'Cualquier médico disponible' || 
+      doctor.specialty === this.appointmentForm.specialty
+    );
+    
+    console.log('✨ Doctores filtrados:', filtered);
+    return filtered;
   }
-  
-  // Método para verificar si hay parámetros de consulta
-  checkQueryParams() {
-    this.route.queryParams.subscribe(params => {
-      if (params['doctorId'] && params['specialty']) {
-        // Preseleccionar especialidad
-        this.appointmentForm.specialty = params['specialty'];
-        
-        // Avanzar al paso 2
-        this.currentStep = 2;
-        
-        // Filtrar médicos por especialidad
-        this.filteredDoctors = this.availableDoctors.filter(
-          doctor => doctor.specialty === params['specialty']
-        );
-        
-        // Seleccionar el médico específico si existe
-        if (params['doctorName']) {
-          this.appointmentForm.doctor = params['doctorName'];
-          
-          // Automáticamente avanzar al paso 3 (fecha y hora)
-          setTimeout(() => this.currentStep = 3, 300);
+
+  // Métodos de navegación
+  isCurrentStep(step: number): boolean {
+    return this.currentStep === step;
+  }
+
+  canAdvance(): boolean {
+    switch (this.currentStep) {
+      case 1:
+        return !!this.appointmentForm.specialty;
+      case 2:
+        return !!this.appointmentForm.doctor;
+      case 3:
+        return !!this.appointmentForm.date && !!this.appointmentForm.time;
+      case 4:
+        if (this.isLoggedIn) {
+          return true;
+        } else {
+          return !!(this.appointmentForm.name && this.appointmentForm.email && this.appointmentForm.phone);
         }
-      }
-    });
-  }
-  
-  formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-  
-  nextStep() {
-    if (this.currentStep < this.totalSteps) {
-      this.currentStep++;
-      
-      if (this.currentStep === 2) {
-        // Filtrar médicos por especialidad seleccionada
-        this.filteredDoctors = this.availableDoctors.filter(
-          doctor => doctor.specialty === this.appointmentForm.specialty
-        );
-        
-        // Si no hay médicos para esta especialidad
-        if (this.filteredDoctors.length === 0) {
-          this.appointmentForm.doctor = 'Cualquier especialista disponible';
-        }
-      }
+      default:
+        return false;
     }
   }
-  
+
+  nextStep() {
+    if (this.canAdvance() && this.currentStep < 4) {
+      this.currentStep++;
+    }
+  }
+
   previousStep() {
     if (this.currentStep > 1) {
       this.currentStep--;
     }
   }
-  
-  selectDate(date: string) {
-    this.selectedDate = date;
-    this.appointmentForm.date = date;
-  }
-  
-  selectHour(hour: string) {
-    this.appointmentForm.time = hour;
-  }
-  
-  isCurrentStep(step: number): boolean {
-    return this.currentStep === step;
-  }
-  
-  canAdvance(): boolean {
-    // Validar según el paso actual
-    if (this.currentStep === 1) {
-      // Para el paso 1, solo necesitamos que haya seleccionado una especialidad
-      return !!this.appointmentForm.specialty;
-    } 
-    else if (this.currentStep === 2) {
-      // Para el paso 2, necesitamos que haya seleccionado un doctor
-      return !!this.appointmentForm.doctor;
-    } 
-    else if (this.currentStep === 3) {
-      // Para el paso 3, necesitamos fecha y hora
-      return !!this.appointmentForm.date && !!this.appointmentForm.time;
-    }
-    else if (this.currentStep === 4) {
-      if (this.isLoggedIn) {
-        // Si está logueado, solo verificamos que el resumen esté completo
-        return !!this.appointmentForm.specialty && 
-               !!this.appointmentForm.doctor && 
-               !!this.appointmentForm.date && 
-               !!this.appointmentForm.time;
-      } else {
-        // Si no está logueado, necesitamos todos los campos
-        return !!this.appointmentForm.name && 
-               !!this.appointmentForm.email && 
-               !!this.appointmentForm.phone &&
-               !!this.appointmentForm.specialty && 
-               !!this.appointmentForm.doctor && 
-               !!this.appointmentForm.date && 
-               !!this.appointmentForm.time;
-      }
-    }
-    
-    // Por defecto, si el paso no está definido
-    return false;
-  }
-  
-  submitAppointment(): void {
-    // Validar campos según si está logueado o no
-    if (!this.isLoggedIn) {
-      // Si no está logueado, verificar campos obligatorios
-      if (!this.appointmentForm.name || !this.appointmentForm.email || !this.appointmentForm.phone) {
-        alert('Por favor completa todos los campos obligatorios');
-        return;
-      }
-      
-      // Procesar cita para usuario no logueado
-      const doctorId = this.availableDoctors.find(
-        d => d.name === this.appointmentForm.doctor
-      )?.id || 0;
-      
-      // Usar ID genérico para usuarios no autenticados
-      const newAppointment = this.appointmentsService.createAppointment({
-        patientId: 9999, // ID provisional para usuarios no logueados
-        patientName: this.appointmentForm.name,
-        doctorId: doctorId,
-        doctorName: this.appointmentForm.doctor,
-        specialty: this.appointmentForm.specialty,
-        date: this.appointmentForm.date,
-        time: this.appointmentForm.time,
-        status: 'scheduled',
-        reason: this.appointmentForm.message || '',
-        location: 'Centro Médico SaludPlus'
-        // El servicio agregará automáticamente el guestId
-      });
-      
-      console.log('Cita guardada (usuario no logueado):', newAppointment);
-    } 
-    else {
-      // El código existente para usuarios logueados
-      const currentUser = this.authService.currentUserValue;
-      
-      if (!currentUser) {
-        console.error('Error: Usuario aparece como logueado pero no hay datos de usuario');
-        alert('Error al procesar su información. Por favor, vuelva a iniciar sesión');
-        return;
-      }
-      
-      const doctorId = this.availableDoctors.find(
-        d => d.name === this.appointmentForm.doctor
-      )?.id || 0;
-      
-      // Extraer correctamente el ID numérico del paciente
-      let patientId: number;
-      
-      // Si el ID tiene formato "patient-XXX", extraer el número
-      let idStr: string = typeof currentUser.id === 'number' ? currentUser.id.toString() : (currentUser.id || '');
-      if (idStr.includes('-')) {
-        const parts = idStr.split('-');
-        patientId = parseInt(parts[1], 10);
-      } else {
-        // Si es un ID simple, intentar convertirlo directamente
-        patientId = parseInt(idStr, 10);
-      }
-      
-      // Verificar que el patientId sea válido
-      if (isNaN(patientId)) {
-        console.error('ID de paciente inválido:', currentUser.id);
-        alert('Error al procesar el ID de usuario. Por favor, inicie sesión nuevamente.');
-        return;
-      }
 
-      // Crear la cita con el ID correcto
-      const newAppointment = this.appointmentsService.createAppointment({
-        patientId: patientId,
-        patientName: currentUser.name,
-        doctorId: doctorId,
-        doctorName: this.appointmentForm.doctor,
-        specialty: this.appointmentForm.specialty,
-        date: this.appointmentForm.date,
-        time: this.appointmentForm.time,
-        status: 'scheduled',
-        reason: this.appointmentForm.message || '',
-        location: 'Centro Médico SaludPlus'
-      });
-      
-      console.log('Cita guardada (usuario logueado):', newAppointment);
-    }
-    
-    // Mostrar modal de confirmación (para ambos casos)
-    console.log('About to show modal');
-    setTimeout(() => {
-      this.showConfirmationModal = true;
-      console.log('Modal should be visible now:', this.showConfirmationModal);
-      this.cd.detectChanges();
-    }, 0);
-  }
-
-  // Método para seleccionar una especialidad de forma controlada
-  selectSpecialty(specialty: string): void {
+  // Métodos de selección
+  selectSpecialty(specialty: string) {
     this.appointmentForm.specialty = specialty;
-    // Forzar la detección de cambios si es necesario
-    // this.cd.detectChanges(); // Necesitarías inyectar ChangeDetectorRef
+    this.appointmentForm.doctor = ''; // Reset doctor cuando cambia especialidad
   }
 
-  // Método para obtener el icono apropiado
-  getSpecialtyIcon(specialty: string): any {
-    const iconMap: {[key: string]: boolean} = {
-      'fa-baby': specialty === 'Pediatría',
-      'fa-heartbeat': specialty === 'Cardiología',
-      'fa-brain': specialty === 'Neurología',
-      'fa-bone': specialty === 'Traumatología',
-      'fa-allergies': specialty === 'Dermatología',
-      'fa-eye': specialty === 'Oftalmología',
-      'fa-stethoscope': specialty === 'Medicina General',
-      'fa-comments': specialty === 'Psiquiatría',
-      'fa-venus': specialty === 'Ginecología y Obstetricia',
-      'fa-pills': specialty === 'Endocrinología',
-      'fa-notes-medical': specialty === 'Gastroenterología',
-      'fa-dna': specialty === 'Oncología',
-      'fa-procedures': specialty === 'Urología',
-      'fa-lungs': specialty === 'Neumología',
-      'fa-tooth': specialty === 'Odontología'
+  selectDoctor(doctor: string) {
+    this.appointmentForm.doctor = doctor;
+  }
+
+  selectDate(date: string) {
+    this.appointmentForm.date = date;
+    this.appointmentForm.time = ''; // Reset time cuando cambia fecha
+  }
+
+  selectTime(time: string) {
+    this.appointmentForm.time = time;
+  }
+
+  // Métodos para iconos
+  getSpecialtyIcon(specialty: string): string {
+    const icons: { [key: string]: string } = {
+      'Medicina General': 'fa-user-md',
+      'Cardiología': 'fa-heartbeat',
+      'Dermatología': 'fa-hand-paper',
+      'Neurología': 'fa-brain',
+      'Pediatría': 'fa-baby',
+      'Ginecología': 'fa-venus',
+      'Traumatología': 'fa-bone'
     };
-    
-    // Añadir siempre fa-user-md como respaldo
-    return {...iconMap, 'fa-user-md': true};
+    return icons[specialty] || 'fa-stethoscope';
   }
 
-  // Añadir este nuevo método para cerrar el modal y navegar
-  navigateToMyAppointments(): void {
-    console.log('Navigating to appointments page');
-    // Hide modal first
-    this.showConfirmationModal = false;
-    this.cd.detectChanges();
-    
-    // Navigate after a short delay
-    setTimeout(() => {
-      this.router.navigate(['/my-appointments']);
-    }, 100);
+  // Métodos para el calendario
+  getCurrentMonthName(): string {
+    return this.currentMonth.toLocaleDateString('es-ES', { month: 'long' });
   }
 
-  generateCalendar() {
-    const year = this.calendarMonth.getFullYear();
-    const month = this.calendarMonth.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const days: any[] = [];
-    
-    // Días del mes anterior
-    for (let i = 0; i < firstDay.getDay(); i++) {
-      const prevDate = new Date(year, month, -i);
-      days.unshift({
-        date: prevDate,
-        label: prevDate.getDate(),
-        available: false,
-        isToday: false,
-        isCurrentMonth: false
-      });
+  getCurrentYear(): number {
+    return this.currentMonth.getFullYear();
+  }
+
+  previousMonth(): void {
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
+  }
+
+  nextMonth(): void {
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
+  }
+
+  getAvailableDates(): string[] {
+    const dates = [];
+    const today = new Date();
+    const startDate = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth(), 1);
+    const endDate = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 0);
+
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      if (date >= today && !this.isWeekend(date.toISOString().split('T')[0])) {
+        dates.push(date.toISOString().split('T')[0]);
+      }
     }
     
-    // Días del mes actual
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      const date = new Date(year, month, d);
-      const available = this.availableDates
-        ? this.availableDates.some(av =>
-            new Date(av).toDateString() === date.toDateString()
-          )
-        : true;
-      const isToday = new Date().toDateString() === date.toDateString();
-      days.push({ 
-        date, 
-        label: d, 
-        available, 
-        isToday,
-        isCurrentMonth: true
-      });
-    }
-    
-    // Días del mes siguiente para completar la cuadrícula
-    const daysNeeded = 42 - days.length; // 6 filas x 7 columnas = 42
-    for (let i = 1; i <= daysNeeded; i++) {
-      const nextDate = new Date(year, month + 1, i);
-      days.push({
-        date: nextDate,
-        label: i,
-        available: false,
-        isToday: false,
-        isCurrentMonth: false
-      });
-    }
-    
-    this.calendarDays = days;
+    return dates;
   }
 
-  prevMonth() {
-    this.calendarMonth = new Date(this.calendarMonth.getFullYear(), this.calendarMonth.getMonth() - 1, 1);
-    this.generateCalendar();
+  isToday(dateString: string): boolean {
+    const today = new Date().toISOString().split('T')[0];
+    return dateString === today;
   }
 
-  nextMonth() {
-    this.calendarMonth = new Date(this.calendarMonth.getFullYear(), this.calendarMonth.getMonth() + 1, 1);
-    this.generateCalendar();
+  isWeekend(dateString: string): boolean {
+    const date = new Date(dateString);
+    const day = date.getDay();
+    return day === 0 || day === 6;
   }
 
-  // Método para cargar las citas del usuario
-  private loadUserAppointments() {
-    const currentUser = this.currentUser;
-    if (!currentUser) return;
+  isPastDate(dateString: string): boolean {
+    const today = new Date().toISOString().split('T')[0];
+    return dateString < today;
+  }
 
-    this.appointmentsService.getAllAppointments().subscribe((allAppointments: AppointmentBase[]) => {
-      this.appointments = allAppointments.filter((apt: AppointmentBase) => 
-        apt.patientName === currentUser.name
-      );
-      this.filteredAppointments = [...this.appointments];
+  getDateNumber(dateString: string): string {
+    const date = new Date(dateString);
+    return date.getDate().toString();
+  }
+
+  getDayName(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { weekday: 'short' });
+  }
+
+  formatSelectedDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
     });
+  }
+
+  getMorningTimes(): string[] {
+    return this.availableTimes.filter(time => time < '13:00');
+  }
+
+  getAfternoonTimes(): string[] {
+    return this.availableTimes.filter(time => time >= '13:00');
+  }
+
+  // Envío del formulario
+  submitAppointment() {
+    if (!this.canAdvance()) {
+      alert('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    const appointmentData = {
+      specialty: this.appointmentForm.specialty,
+      doctor: this.appointmentForm.doctor,
+      date: this.appointmentForm.date,
+      time: this.appointmentForm.time,
+      message: this.appointmentForm.message || '',
+      ...(this.isLoggedIn ? {} : {
+        name: this.appointmentForm.name,
+        email: this.appointmentForm.email,
+        phone: this.appointmentForm.phone
+      })
+    };
+
+    console.log('Enviando cita:', appointmentData);
+
+    this.apiService.createAppointment(appointmentData).subscribe({
+      next: (response: any) => {
+        console.log('Cita creada exitosamente:', response);
+        this.showConfirmationModal = true;
+        this.cd.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al crear cita:', error);
+        let errorMessage = 'Error al agendar la cita. Por favor intenta nuevamente.';
+        
+        if (error.error?.error) {
+          errorMessage = error.error.error;
+        }
+        
+        alert(errorMessage);
+      }
+    });
+  }
+
+  navigateToMyAppointments() {
+    this.showConfirmationModal = false;
+    if (this.isLoggedIn) {
+      this.router.navigate(['/appointment-history']);
+    } else {
+      this.router.navigate(['/login']);
+    }
+  }
+
+  closeModal() {
+    this.showConfirmationModal = false;
+    // Reset form
+    this.currentStep = 1;
+    this.appointmentForm = {
+      specialty: '',
+      doctor: '',
+      date: '',
+      time: '',
+      name: '',
+      email: '',
+      phone: '',
+      message: ''
+    };
+  }
+
+  // Método para obtener iniciales del doctor:
+  getDoctorInitials(doctorName: string): string {
+    if (doctorName.includes('Cualquier')) return '';
+    
+    return doctorName
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
   }
 }
