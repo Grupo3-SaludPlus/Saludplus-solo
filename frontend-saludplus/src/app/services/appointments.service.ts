@@ -1,22 +1,39 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { ApiService, Appointment } from './api.service';
+
+export interface Appointment {
+  id?: number;
+  patient_id: number;       // Nuevo: id del paciente
+  doctor_id: number;        // Nuevo: id del médico
+  patient_name: string;     // Nuevo: nombre del paciente (en snake_case)
+  doctor_name: string;      // Nuevo: nombre del médico
+  doctorSpecialty: string;  // Puedes conservar camelCase si luego haces mapping
+  date: string;
+  time: string;
+  reason: string;
+  priority: string;
+  status: string;
+  notes?: string;
+  location?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppointmentsService {
+  private apiUrl = 'http://localhost:8000/api/appointments'; // Actualiza según tu API
   private appointmentsSubject = new BehaviorSubject<Appointment[]>([]);
   public appointments$ = this.appointmentsSubject.asObservable();
 
-  constructor(private apiService: ApiService) {
+  constructor(private http: HttpClient) {
     this.loadAppointments();
   }
 
   // **CARGAR CITAS**
   loadAppointments(): void {
-    this.apiService.getAppointments().subscribe({
+    this.getAllAppointments().subscribe({
       next: (appointments) => {
         this.appointmentsSubject.next(appointments);
       },
@@ -28,11 +45,11 @@ export class AppointmentsService {
 
   // **OBTENER CITAS**
   getAllAppointments(): Observable<Appointment[]> {
-    return this.appointments$;
+    return this.http.get<Appointment[]>(this.apiUrl);
   }
 
   getAppointment(id: number): Observable<Appointment> {
-    return this.apiService.getAppointment(id);
+    return this.http.get<Appointment>(`${this.apiUrl}/${id}`);
   }
 
   getPatientAppointments(patientId: number): Observable<Appointment[]> {
@@ -41,9 +58,9 @@ export class AppointmentsService {
     );
   }
 
-  getDoctorAppointments(doctorId: number): Observable<Appointment[]> {
+  getDoctorAppointments(doctorName: string): Observable<Appointment[]> {
     return this.appointments$.pipe(
-      map(appointments => appointments.filter(apt => apt.doctor_id === doctorId))
+      map(appointments => appointments.filter(apt => apt.doctor_name === doctorName))
     );
   }
 
@@ -64,15 +81,14 @@ export class AppointmentsService {
   }
 
   // **CREAR CITA**
-  createAppointment(appointmentData: Partial<Appointment>): Observable<Appointment> {
-    return this.apiService.createAppointment(appointmentData).pipe(
-      tap(() => this.loadAppointments())
-    );
+  createAppointment(appointment: Appointment): Observable<Appointment> {
+    const url = 'http://localhost:8000/admin/api/appointment/add/';
+    return this.http.post<Appointment>(url, appointment);
   }
 
   // **ACTUALIZAR CITA**
   updateAppointment(id: number, appointmentData: Partial<Appointment>): Observable<Appointment> {
-    return this.apiService.updateAppointment(id, appointmentData).pipe(
+    return this.http.put<Appointment>(`${this.apiUrl}/${id}`, appointmentData).pipe(
       tap(() => this.loadAppointments())
     );
   }
@@ -120,7 +136,7 @@ export class AppointmentsService {
 
   // **ELIMINAR CITA (solo admin)**
   deleteAppointment(id: number): Observable<any> {
-    return this.apiService.deleteAppointment(id).pipe(
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
       tap(() => this.loadAppointments())
     );
   }

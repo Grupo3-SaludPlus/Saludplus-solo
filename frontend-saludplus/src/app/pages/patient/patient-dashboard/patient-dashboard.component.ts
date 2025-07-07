@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AppointmentsService } from '../../../services/appointments.service';
-import { User, Appointment } from '../../../services/api.service';
+import { User } from '../../../services/api.service';
+import { Appointment } from '../../../models/appointment.model';
 import { Subscription } from 'rxjs';
 
 // ✅ INTERFACE SIMPLIFICADA

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 // Interfaz base para una cita
 export interface AppointmentBase {
@@ -17,14 +18,28 @@ export interface AppointmentBase {
   notes?: string;
 }
 
+export interface Appointment {
+  patientId: number;
+  patientName: string;
+  doctorId: number;
+  doctorName: string;
+  specialty: string;
+  date: string;
+  time: string;
+  status: string;
+  reason?: string;
+  location: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class SharedAppointmentsService {
+  private apiUrl = 'http://your-backend-api-url.com/api/appointments'; // Actualiza con tu URL
   private appointmentsSubject = new BehaviorSubject<AppointmentBase[]>([]);
   public appointments$ = this.appointmentsSubject.asObservable();
 
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
   // Obtener todas las citas
   getAllAppointments(): Observable<AppointmentBase[]> {
