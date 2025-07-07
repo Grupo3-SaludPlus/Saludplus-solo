@@ -4,6 +4,20 @@ Solo requiere docker-compose up --build
 
 Sistema completo de gestión médica desarrollado con Django REST Framework y Angular, diseñado para administrar pacientes, doctores y citas médicas de manera eficiente.
 
+## Guardar los archivos docker en una carpeta
+
+luego ejecutar
+
+''docker-compose up --build''
+
+
+## Registrar medicos
+
+localhost:4200/registro-medico
+
+## Registro Paciente
+Mediante la pagina
+
 ## 📋 Características Principales
 
 ### 🔐 Autenticación y Autorización
