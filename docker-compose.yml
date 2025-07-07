@@ -1,30 +1,55 @@
+version: '3.8'
+
 services:
+  # Servicio para clonar el repositorio
+  git-clone:
+    image: alpine/git
+    container_name: saludplus-git-clone
+    volumes:
+      - ./cloned-repo:/git
+    command: >
+      sh -c "
+        if [ ! -d /git/.git ]; then
+          echo '🔄 Clonando repositorio...';
+          git clone https://github.com/Grupo3-SaludPlus/Saludplus-solo.git /git;
+          echo '✅ Repositorio clonado exitosamente';
+        else
+          echo '📁 Repositorio ya existe, actualizando...';
+          cd /git && git pull;
+        fi
+      "
+
   backend:
     build:
-      context: ./Backend-saludplus
+      context: ./cloned-repo/Backend-saludplus
       dockerfile: Dockerfile
     container_name: saludplus-backend
     ports:
       - "8000:8000"
     volumes:
-      - ./Backend-saludplus:/app
+      - ./cloned-repo/Backend-saludplus:/app
       - /app/__pycache__
     environment:
       - DEBUG=1
       - PYTHONUNBUFFERED=1
+    depends_on:
+      git-clone:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   frontend:
     build:
-      context: ./frontend-saludplus
+      context: ./cloned-repo/frontend-saludplus
       dockerfile: Dockerfile
     container_name: saludplus-frontend
     ports:
       - "4200:4200"
     depends_on:
-      - backend
+      git-clone:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
     restart: unless-stopped
 
 volumes:
-  backend_data:
-  frontend_data:
+  repo_data:
