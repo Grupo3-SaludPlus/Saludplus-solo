@@ -29,8 +29,10 @@ interface Appointment {
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './my-appointments.component.html',
   styleUrls: ['./my-appointments.component.css'],
-  encapsulation: ViewEncapsulation.None, // Esto permite que los estilos escapen del componente
+  encapsulation: ViewEncapsulation.None,
 })
+
+
 export class MyAppointmentsComponent implements OnInit, OnDestroy {
   // Tabs y filtros
   activeTab: 'upcoming' | 'history' | 'all' = 'upcoming';

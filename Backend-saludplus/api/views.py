@@ -12,6 +12,7 @@ from django.db.models import Q, Count, Avg
 from datetime import datetime, timedelta
 from .models import Patient, Doctor, Appointment, DoctorSchedule
 from .serializers import PatientSerializer, DoctorSerializer, AppointmentSerializer
+from rest_framework.permissions import AllowAny
 
 class PatientViewSet(viewsets.ModelViewSet):
     queryset = Patient.objects.all()
@@ -334,62 +335,49 @@ class AuthLoginView(APIView):
             return Response({'error': 'Error interno del servidor'}, status=500)
 
 class AuthRegisterView(APIView):
-    permission_classes = [permissions.AllowAny]
-    
+    permission_classes = [AllowAny]
+
     def post(self, request):
-        name = request.data.get('name')
-        email = request.data.get('email')
-        password = request.data.get('password')
-        role = request.data.get('role', 'patient')
-        
-        if User.objects.filter(email=email).exists():
-            return Response({'error': 'El email ya está registrado'}, status=400)
-        
-        # Crear usuario
+        data      = request.data
+        name      = data.get('name', '').strip()
+        email     = data.get('email', '').strip().lower()
+        password  = data.get('password', '')
+        role      = data.get('role')
+        phone     = data.get('phone', '')
+        birthdate = data.get('birthdate', None)
+        specialty = data.get('specialty', '').strip()
+
+        # Validaciones básicas
+        if not all([name, email, password, role]):
+            return Response({'error': 'Faltan datos obligatorios.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # 1) Crear usuario
         user = User.objects.create_user(
             username=email,
             email=email,
             password=password,
-            first_name=name.split()[0] if name else '',
-            last_name=' '.join(name.split()[1:]) if name and len(name.split()) > 1 else ''
+            first_name=name
         )
-        
-        # Crear perfil según el rol
-        if role == 'patient':
-            patient = Patient.objects.create(
+
+        # 2) Crear perfil según el rol
+        if role == 'doctor':
+            Doctor.objects.create(
                 user=user,
                 name=name,
-                email=email
+                phone=phone,
+                specialty=specialty
             )
-            profile_data = PatientSerializer(patient).data
-        else:
-            # Generar número de licencia único
-            last_doctor = Doctor.objects.order_by('-id').first()
-            license_num = f"LIC-{(last_doctor.id + 1) if last_doctor else 1:06d}"
-            
-            doctor = Doctor.objects.create(
-                user=user,
-                name=name,
-                email=email,
-                specialty=request.data.get('specialty', 'general'),
-                license_number=license_num
-            )
-            profile_data = DoctorSerializer(doctor).data
-        
-        # Crear token
-        token = Token.objects.create(user=user)
-        
-        return Response({
-            'message': 'Usuario registrado exitosamente',
-            'token': token.key,
-            'user': {
-                'id': user.id,
-                'name': name,
-                'email': email,
-                'role': role,
-                'profile': profile_data
-            }
-        })
+            return Response({'message': 'Doctor registrado'}, status=status.HTTP_201_CREATED)
+
+        # rol 'patient' u otros
+        Patient.objects.create(
+            user=user,
+            name=name,
+            phone=phone,
+            birth_date=birthdate
+        )
+        return Response({'message': 'Paciente registrado'}, status=status.HTTP_201_CREATED)
 
 class UserListView(APIView):
     permission_classes = [permissions.IsAuthenticated]

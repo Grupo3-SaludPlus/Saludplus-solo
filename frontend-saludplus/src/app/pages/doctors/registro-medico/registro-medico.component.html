@@ -1,0 +1,74 @@
+<div class="registro-medico">
+  <h1>Registro de Médico</h1>
+  <div class="form-grid">
+    <input
+      [(ngModel)]="doctorData.name"
+      (ngModelChange)="updateEmail()"
+      placeholder="Nombre completo"
+      class="form-input"
+    >
+    <!-- muestra la sugerencia solo si existe -->
+    <small *ngIf="recommendedEmail" style="color: #555;">
+      Recomendado:
+      <a href="#" (click)="selectRecommended($event)">
+        {{ recommendedEmail }}
+      </a>
+    </small>
+
+    <input
+      [(ngModel)]="doctorData.email"
+      (blur)="normalizeEmail()"
+      placeholder="Email"
+      type="email"
+      class="form-input"
+    >
+    <!-- checkbox para contraseña genérica -->
+    <label>
+      <input
+        type="checkbox"
+        [(ngModel)]="useGenericPassword"
+        (change)="toggleGenericPassword()"
+      >
+      Usar contraseña genérica (doctor123)
+    </label>
+
+    <!-- input de contraseña deshabilitado si usan la genérica -->
+    <input
+      [(ngModel)]="doctorData.password"
+      [disabled]="useGenericPassword"
+      placeholder="Contraseña"
+      type="password"
+      class="form-input"
+    >
+    <input
+      [(ngModel)]="doctorData.phone"
+      placeholder="Teléfono"
+      class="form-input"
+    >
+    <input
+      [(ngModel)]="doctorData.birthdate"
+      placeholder="Fecha de nacimiento"
+      type="date"
+      class="form-input"
+    >
+
+    <!-- selector de especialidad -->
+    <select
+      [(ngModel)]="doctorData.specialty"
+      class="form-input"
+    >
+      <option value="" disabled selected>Selecciona especialidad</option>
+      <option
+        *ngFor="let spec of specialties"
+        [value]="spec.key"
+      >
+        {{ spec.label }}
+      </option>
+    </select>
+  </div>
+
+  <button (click)="registerDoctor()" class="btn-submit">
+    Registrar Médico
+  </button>
+  <pre class="result">{{ result }}</pre>
+</div>

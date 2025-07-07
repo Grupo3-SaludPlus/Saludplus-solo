@@ -478,71 +478,7 @@ export class DoctorAppointmentsComponent implements OnInit, OnDestroy {
     console.log('🧪 Loading mock appointments for doctor...');
     
     this.appointments = [
-      {
-        id: 1,
-        patient_id: 101,
-        patient_name: 'Ana García López', // ✅ CORREGIDO: patient_name en lugar de patientName
-        doctor_id: this.currentDoctor?.id || 1,
-        doctor_name: this.currentDoctor?.name || 'Dr. Médico', // ✅ CORREGIDO: doctor_name en lugar de doctorName
-        date: '2025-07-05',
-        time: '10:00',
-        status: 'scheduled',
-        reason: 'Control rutinario',
-        priority: 'medium',
-        specialty: this.currentDoctor?.specialty || 'Medicina General',
-        notes: '',
-        created_at: new Date().toISOString(),
-        location: 'Consulta Externa - Piso 2'
-      },
-      {
-        id: 2,
-        patient_id: 102,
-        patient_name: 'Carlos Rodríguez', // ✅ CORREGIDO
-        doctor_id: this.currentDoctor?.id || 1,
-        doctor_name: this.currentDoctor?.name || 'Dr. Médico', // ✅ CORREGIDO
-        date: '2025-07-05',
-        time: '14:30',
-        status: 'confirmed',
-        reason: 'Dolor en el pecho',
-        priority: 'high',
-        specialty: this.currentDoctor?.specialty || 'Medicina General',
-        notes: '',
-        created_at: new Date().toISOString(),
-        location: 'Consulta Externa - Piso 2'
-      },
-      {
-        id: 3,
-        patient_id: 103,
-        patient_name: 'María Fernández', // ✅ CORREGIDO
-        doctor_id: this.currentDoctor?.id || 1,
-        doctor_name: this.currentDoctor?.name || 'Dr. Médico', // ✅ CORREGIDO
-        date: '2025-07-10',
-        time: '16:00',
-        status: 'scheduled',
-        reason: 'Revisión post-operatoria',
-        priority: 'high',
-        specialty: this.currentDoctor?.specialty || 'Medicina General',
-        notes: '',
-        created_at: new Date().toISOString(),
-        location: 'Consulta Externa - Piso 3'
-      },
-      {
-        id: 4,
-        patient_id: 104,
-        patient_name: 'Luis Martínez', // ✅ CORREGIDO
-        doctor_id: this.currentDoctor?.id || 1,
-        doctor_name: this.currentDoctor?.name || 'Dr. Médico', // ✅ CORREGIDO
-        date: '2025-06-30',
-        time: '11:15',
-        status: 'completed',
-        reason: 'Consulta general',
-        priority: 'low',
-        specialty: this.currentDoctor?.specialty || 'Medicina General',
-        notes: 'Paciente en buen estado general.',
-        created_at: new Date().toISOString(),
-        location: 'Consulta Externa - Piso 1'
-      }
-    ];
+          ];
     
     console.log('✅ Mock appointments loaded:', this.appointments);
     

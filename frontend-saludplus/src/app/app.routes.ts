@@ -30,8 +30,18 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent)
   },
   //{ path: 'register', loadComponent: () => import('./pages/auth/register/register.component').then(m => m.RegisterComponent) },
+  {
+  path: 'registro-medico',
+    loadComponent: () =>
+      import('./pages/doctors/registro-medico/registro-medico.component')
+        .then(m => m.RegistroMedicoComponent)
   
+  },
+
+
   // Rutas públicas
+
+  
   {
     path: 'appointments',
     loadComponent: () => import('./pages/appointments/appointments.component').then(m => m.AppointmentsComponent)

@@ -117,30 +117,7 @@ export class MyPatientsComponent implements OnInit, OnDestroy {
   loadMockData() {
     console.log('🧪 Loading mock patient data...');
     this.allPatients = [
-      {
-        id: 1,
-        patientName: 'Ana García',
-        doctorName: this.currentUser?.name || 'Dr. Médico',
-        doctorSpecialty: this.currentUser?.specialty || 'Cardiología',
-        date: '2025-07-05',
-        time: '10:00',
-        reason: 'Control rutinario',
-        priority: 'medium',
-        status: 'scheduled',
-        location: 'Consulta Externa - Piso 2'
-      },
-      {
-        id: 2,
-        patientName: 'Carlos López',
-        doctorName: this.currentUser?.name || 'Dr. Médico',
-        doctorSpecialty: this.currentUser?.specialty || 'Cardiología',
-        date: '2025-07-05',
-        time: '14:30',
-        reason: 'Dolor en el pecho',
-        priority: 'high',
-        status: 'scheduled',
-        location: 'Consulta Externa - Piso 2'
-      }
+      
     ];
 
     this.categorizePatients();

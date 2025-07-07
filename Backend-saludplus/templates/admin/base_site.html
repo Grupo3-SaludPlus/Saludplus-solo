@@ -21,6 +21,13 @@
 {% block extrahead %}
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap');
+     html { color-scheme: light !important; }
+    body { background-color: var(--admin-bg-light) !important; color: var(--admin-fg-light) !important; }
+
+    /* Oculta el botón de cambio de tema */
+    .theme-toggle { display: none !important; }
+ 
+
     
     * {
         font-family: 'Inter', sans-serif;

@@ -1,59 +1,3 @@
-/* SUPER OVERRIDE DE ANCHO - AL PRINCIPIO DEL ARCHIVO */
-:host {
-  display: block;
-  width: 100vw !important; /* Usar viewport width */
-  max-width: 100vw !important;
-  margin-left: -24px !important; /* Compensar cualquier padding del contenedor padre */
-}
-
-.fullwidth-container {
-  width: 100vw !important; /* Forzar viewport width */
-  max-width: 100vw !important;
-  margin: 0 !important;
-  padding-left: 24px !important; /* Recuperar margen visual */
-  padding-right: 24px !important;
-  box-sizing: border-box !important;
-}
-
-/* Sobreescribir cualquier media query que restrinja */
-@media (min-width: 320px) and (max-width: 5000px) {
-  :host {
-    max-width: 100vw !important;
-    width: 100vw !important;
-    margin-left: -24px !important;
-  }
-  
-  .fullwidth-container {
-    max-width: 100vw !important;
-    width: 100vw !important;
-  }
-}
-
-/* --- Estilos Base Minimalistas --- */
-.fullwidth-container {
-  width: 100% !important;
-  max-width: none !important;
-  padding: 30px 40px !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-}
-
-.appointments-header,
-.tabs-container,
-.filters-section,
-.appointments-container,
-.appointments-grid,
-.appointments-summary {
-  width: 100% !important;
-  max-width: none !important;
-  box-sizing: border-box !important;
-}
-
-.appointments-header {
-  margin-bottom: 36px;
-  text-align: left; /* Cambiado a left para aspecto más profesional */
-  padding: 0 15px;
-}
 
 .page-title {
   font-size: 24px;
@@ -69,12 +13,12 @@
 .page-title i {
   color: #2a7d8c;
   font-size: 22px;
+  
 }
 
 .page-subtitle {
   font-size: 15px;
   color: #5c6a7a;
-  margin: 0 auto; /* Centrar horizontalmente */
   max-width: 600px;
 }
 

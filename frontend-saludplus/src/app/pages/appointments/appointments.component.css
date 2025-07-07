@@ -1067,23 +1067,13 @@ button:active, a.btn:active {
   padding-right: 5px;
 }
 
-/* Estilo para la barra de desplazamiento */
+/* Oculta la barra de desplazamiento en todos los navegadores modernos */
+.time-grid {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE y Edge */
+}
 .time-grid::-webkit-scrollbar {
-  width: 6px;
-}
-
-.time-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.time-grid::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 10px;
-}
-
-.time-grid::-webkit-scrollbar-thumb:hover {
-  background: #008080;
+  display: none; /* Chrome, Safari y Opera */
 }
 
 .time-card {

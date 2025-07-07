@@ -195,3 +195,11 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--primary-very-light);
   transform: translateY(-3px);
 }
+
+app-patient-layout .content {
+  max-width: none     !important;
+  width:     100%     !important;
+  margin:    0        !important;
+  padding:   0 20px   !important;
+  box-sizing: border-box !important;
+}

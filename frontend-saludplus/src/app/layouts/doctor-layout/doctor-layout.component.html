@@ -53,9 +53,6 @@
   <main class="content-area">
     <header class="doctor-header">
       <div class="header-left">
-        <button class="btn-menu-toggle" (click)="toggleSidebar()">
-          <i class="fas fa-bars"></i>
-        </button>
         <div class="user-welcome">
           <h2>Bienvenido, Dr. {{ doctorName || 'Doctor' }}</h2>
           <p>{{ doctorSpecialty }} · {{ currentDate | date:'EEEE, d MMMM yyyy':'es-ES' }}</p>
@@ -63,10 +60,7 @@
       </div>
 
       <div class="header-actions">
-        <!-- ✅ AÑADIDO: Botón de búsqueda rápida -->
-        <button class="btn-search" title="Búsqueda rápida">
-          <i class="fas fa-search"></i>
-        </button>
+     
         
         <!-- ✅ MEJORADO: Notificaciones con dropdown -->
         <div class="notification-container">
@@ -108,34 +102,10 @@
         
         <!-- ✅ MEJORADO: Menú de usuario con dropdown -->
         <div class="user-menu-container">
-          <button class="btn-user" (click)="toggleUserMenu()" title="Menú de usuario">
-            <div class="user-avatar">{{ userInitials }}</div>
             <div class="user-info">
               <span class="user-name">Dr. {{ doctorName || 'Doctor' }}</span>
-              <span class="user-status">En línea</span>
+              <span class="user-status">   En línea</span>
             </div>
-            <i class="fas fa-chevron-down"></i>
-          </button>
-          
-          <!-- Dropdown del usuario -->
-          <div class="user-dropdown" *ngIf="showUserMenu">
-            <div class="dropdown-section">
-              <a routerLink="/doctor/profile" (click)="closeUserMenu()">
-                <i class="fas fa-user-circle"></i> Mi Perfil
-              </a>
-              <a routerLink="/doctor/settings" (click)="closeUserMenu()">
-                <i class="fas fa-cog"></i> Configuración
-              </a>
-              <a routerLink="/doctor/help" (click)="closeUserMenu()">
-                <i class="fas fa-question-circle"></i> Ayuda
-              </a>
-            </div>
-            <div class="dropdown-section border-top">
-              <a (click)="logout()" class="logout-link">
-                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-              </a>
-            </div>
-          </div>
         </div>
       </div>
     </header>

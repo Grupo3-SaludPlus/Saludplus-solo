@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import uuid
 
 class Patient(models.Model):
@@ -222,17 +222,14 @@ class Appointment(models.Model):
     
     def clean(self):
         """Validaciones personalizadas"""
-        # Validar que la fecha no sea en el pasado
-        if self.date < datetime.now().date():
-            raise ValidationError("No se pueden crear citas en fechas pasadas")
-        
-        # Validar horario de trabajo (8:00 - 18:00)
-        if self.time.hour < 8 or self.time.hour >= 18:
-            raise ValidationError("Las citas solo pueden ser entre 8:00 y 18:00")
-        
-        # Validar que el doctor esté disponible
-        if not self.doctor.is_available:
-            raise ValidationError("El doctor no está disponible")
+        errors = {}
+        # Solo validar si tenemos fecha
+        if self.date is not None:
+            if self.date < date.today():
+                errors['date'] = "La fecha no puede ser anterior a hoy"
+        # (aquí podrías validar hora, status, etc.)
+        if errors:
+            raise ValidationError(errors)
 
 # Modelo adicional para horarios de doctores
 class DoctorSchedule(models.Model):
