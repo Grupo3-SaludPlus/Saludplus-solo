@@ -1,0 +1,30 @@
+services:
+  backend:
+    build:
+      context: ./Backend-saludplus
+      dockerfile: Dockerfile
+    container_name: saludplus-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Backend-saludplus:/app
+      - /app/__pycache__
+    environment:
+      - DEBUG=1
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend-saludplus
+      dockerfile: Dockerfile
+    container_name: saludplus-frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend_data:
+  frontend_data:

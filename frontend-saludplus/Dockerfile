@@ -1,4 +1,4 @@
-# Usar una imagen base de Node.js
+# Usar Node.js 20 (versión requerida por Angular)
 FROM node:20
 
 # Instalar git
@@ -18,7 +18,7 @@ RUN npm install -g @angular/cli
 WORKDIR /app/frontend-saludplus
 RUN npm install
 
-# Exponer el puerto 4200 (predeterminado para ng serve)
+# Exponer el puerto 4200
 EXPOSE 4200
 
 # Comando para iniciar el servidor de desarrollo
